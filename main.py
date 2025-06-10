@@ -280,7 +280,7 @@ st.markdown("""
 # Header Aplikasi with Radix Logo
 st.markdown("""
 <div class="app-header">
-    <div class="pulcra-logo">PULCRA</div>
+    <div class="pulcra-logo">PULCRA CHEMICLAS INDONESIA</div>
     <h1 style="margin-top: 0; color: #FFFFFF; font-size: 36px;">Analisis Abrasi Benang</h1>
     <p style="color: #A0A0A0; font-size: 16px;">Alat profesional untuk memvisualisasikan data abrasi benang dan menghitung nilai persimpangan</p>
 </div>
@@ -340,7 +340,7 @@ def generate_graph_data(x_values, y_values):
             intercept = y_values.iloc[0] - slope * x_values.iloc[0]
 
     else:
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x_values, y_values)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x_values, y_values) # INI MENGGUNAKAN SELURUH DATA
 
     # Hitung nilai y pada x=50 menggunakan garis regresi
     y_at_x_50_line = slope * 50 + intercept
