@@ -655,7 +655,7 @@ with st.expander("Lihat Tabel Data Lengkap"):
             'x_values (Nilai yang sudah tetap)': st.session_state.data['x_values'],
             'y_values (N atau nilai benang putus)': st.session_state.data['y_values']
         }),
-        hide_index=True,
+        hide_index=False, # Ini yang diubah menjadi False
         use_container_width=True
     )
 
