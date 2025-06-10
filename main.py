@@ -13,22 +13,27 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi) ---
+# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Background) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
+    /* Pastikan background body dan stApp juga hitam, tidak mengikuti browser */
+    body {
+        background-color: #0A0A0A !important; 
+    }
+    .stApp {
+        background-color: #0A0A0A !important; /* Background untuk seluruh aplikasi Streamlit */
+        max-width: 1300px; /* Sedikit lebih lebar */
+        margin: 0 auto;
+        padding-top: 30px; /* Padding atas lebih besar */
+        padding-bottom: 50px; /* Padding bawah untuk footer */
+    }
     /* General Styles */
     .main {
         background-color: #0A0A0A; /* Lebih gelap dari #121212 */
         color: #E0E0E0;
         font-family: 'Montserrat', sans-serif; /* Font umum yang lebih modern */
-    }
-    .stApp {
-        max-width: 1300px; /* Sedikit lebih lebar */
-        margin: 0 auto;
-        padding-top: 30px; /* Padding atas lebih besar */
-        padding-bottom: 50px; /* Padding bawah untuk footer */
     }
     
     /* Typography */
@@ -746,7 +751,7 @@ elif analysis_choice == "Garis Titik 10 & 20":
 elif analysis_choice == "Garis Regresi RANSAC":
     val = results['y_at_x_50_ransac_line']
     if not np.isnan(val):
-        desc = "Berdasarkan model Regresi Linear Robust (RANSAC), yang secara cerdas menemukan garis terbaik dengan mengabaikan data outlier untuk menghasilkan prediksi yang lebih stabil."
+        desc = "Berdasarkan model Regresi Linear Robust (RANSAC), yang secara cerdas menemukan garis terbaik dengan mengabaikan data *outlier* untuk menghasilkan prediksi yang lebih stabil."
         st.markdown(f"""
         <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
         <h1 style="color: #00CED1; font-size: 60px; margin: 10px 0;">{val:.2f}</h1>
@@ -757,77 +762,39 @@ elif analysis_choice == "Garis Regresi RANSAC":
         <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
         <h1 style="color: #00CED1; font-size: 60px; margin: 10px 0;">N/A</h1>
         <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">
-            Tidak cukup data atau data tidak valid untuk menghitung Regresi RANSAC (membutuhkan minimal 2 titik).
+            Data tidak cukup atau terlalu sedikit variasi untuk menghitung regresi RANSAC yang stabil.
         </div>
         """, unsafe_allow_html=True)
 
 elif analysis_choice == "Tampilkan Semua":
+    val_original = results['y_at_x_50_original_curve']
+    val_10_20 = results['y_at_x_50_pt10_20_line']
+    val_ransac = results['y_at_x_50_ransac_line']
+
     st.markdown(f"""
-    <p style="color: #B0B0B0; font-size: 16px;">Hasil Kurva Data Asli:</p>
-    <h1 style="color: #FF4500; font-size: 48px; margin: 10px 0;">{results['y_at_x_50_original_curve']:.2f}</h1>
-    <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 20px;">Nilai perpotongan kurva data abrasi asli pada x=50.</p>
+    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Kurva Data Asli:</p>
+            <h2 style="color: #FF4500; font-size: 48px; margin: 0; text-align: center;">{val_original:.2f}</h2>
+        </div>
+        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Garis Titik 10 & 20:</p>
+            <h2 style="color: #B8860B; font-size: 48px; margin: 0; text-align: center;">{val_10_20:.2f}</h2>
+        </div>
+        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Garis Regresi RANSAC:</p>
+            <h2 style="color: #00CED1; font-size: 48px; margin: 0; text-align: center;">{val_ransac:.2f}</h2>
+        </div>
+    </div>
+    <div style="margin-top: 25px; font-size: 15px; color: #B0B0B0; text-align: center;">
+        Ini adalah perbandingan nilai perpotongan dari berbagai metode pada x=50.
+    </div>
     """, unsafe_allow_html=True)
-
-    if not np.isnan(results['y_at_x_50_pt10_20_line']):
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Titik 10 & 20:</p>
-        <h1 style="color: #B8860B; font-size: 48px; margin: 10px 0;">{results['y_at_x_50_pt10_20_line']:.2f}</h1>
-        <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 20px;">Berdasarkan garis linear antara titik data ke-10 ({results['specific_x1_pt10_20']:.2f}, {results['specific_y1_pt10_20']:.2f}) dan titik data ke-20 ({results['specific_x2_pt10_20']:.2f}, {results['specific_y2_pt10_20']:.2f}).</p>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Titik 10 & 20:</p>
-        <h1 style="color: #B8860B; font-size: 48px; margin: 10px 0;">N/A</h1>
-        <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 20px;">Tidak cukup data untuk menghitung garis ini (membutuhkan setidaknya 20 titik).</p>
-        """, unsafe_allow_html=True)
-    
-    if not np.isnan(results['y_at_x_50_ransac_line']):
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
-        <h1 style="color: #00CED1; font-size: 48px; margin: 10px 0;">{results['y_at_x_50_ransac_line']:.2f}</h1>
-        <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 20px;">Berdasarkan model Regresi Linear Robust (RANSAC) yang mempertimbangkan outlier.</p>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
-        <h1 style="color: #00CED1; font-size: 48px; margin: 10px 0;">N/A</h1>
-        <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 20px;">Tidak cukup data atau data tidak valid untuk menghitung Regresi RANSAC.</p>
-        """, unsafe_allow_html=True)
-
 st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Tampilan Tabel Data Lengkap --- 
-with st.expander("Lihat Tabel Data Lengkap"): 
-    # Menampilkan index dari 1 untuk tabel data lengkap 
-    display_df_full = pd.DataFrame({ 
-        'Nilai Tetap (x)': st.session_state.data['x_values'], 
-        'Nilai Benang Putus (N)': st.session_state.data['y_values'] 
-    }) 
-    display_df_full.index = display_df_full.index + 1 # Ubah indeks menjadi dari 1 
-    st.dataframe( 
-        display_df_full, 
-        hide_index=False, # Tampilkan indeks 
-        use_container_width=True, 
-        height=400 # Atur tinggi agar bisa di-scroll jika data banyak 
-    ) 
-
-# --- Informasi & Footer --- 
-st.markdown(""" 
-<div class="dark-card"> 
-    <h3>Tentang Grafik</h3> 
-    <p>Grafik ini menunjukkan hubungan antara nilai tetap (sumbu-x) dan nilai benang putus (sumbu-y). Anda dapat memilih jenis analisis yang ingin ditampilkan menggunakan pilihan di atas.</p> 
-    <ul> 
-        <li><strong style="color: #DAA520;">Kurva Data Asli:</strong> Garis emas/tembaga mewakili data abrasi benang yang Anda masukkan. Ini adalah interpolasi linear sederhana antara setiap titik data.</li> 
-        <li><strong style="color: #B8860B;">Garis Titik 10 & 20:</strong> Garis putus-putus berwarna emas gelap yang dihitung berdasarkan dua titik data spesifik: titik ke-10 dan titik ke-20. Metode ini sering digunakan dalam standar industri tertentu.</li> 
-        <li><strong style="color: #00CED1;">Garis Regresi RANSAC:</strong> Garis putus-putus berwarna biru-cyan ini adalah hasil dari Regresi Linear Robust (RANSAC). RANSAC dirancang untuk mengabaikan data outlier (pencilan) dan menemukan garis tren terbaik dari sebagian besar data yang "inlier", menjadikannya pilihan yang kuat untuk data yang mungkin bising atau memiliki anomali.</li> 
-    </ul> 
-    <p>Setiap titik perpotongan di x=50 ditandai pada grafik dengan warna yang sesuai dengan garisnya, dan nilainya ditampilkan di bagian "Hasil Nilai Perpotongan".</p>
-</div>
-""", unsafe_allow_html=True)
-
+# Footer
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh PULCRA Chemicals <br>
-    © 2025 Semua Hak Dilindungi.
+    Dikembangkan oleh Tim Radix (2025)
 </div>
 """, unsafe_allow_html=True)
