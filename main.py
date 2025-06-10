@@ -34,7 +34,7 @@ if not check_password():
 
 # Set page configuration
 st.set_page_config(
-    page_title="Abrasion Graph by Radix",
+    page_title="Radix Thread Abrasion Graph",
     page_icon="📊",
     layout="wide"
 )
@@ -275,6 +275,57 @@ st.markdown("""
     ::-webkit-scrollbar-thumb:hover {
         background: #64CCC9;
     }
+
+    /* --- MOBILE FRIENDLY ADJUSTMENTS --- */
+    @media (max-width: 768px) { /* Adjustments for tablets and smaller */
+        .app-header h1 {
+            font-size: 32px !important; /* Slightly smaller main title */
+        }
+        .pulcra-logo {
+            font-size: 34px !important; /* Slightly smaller logo text */
+        }
+        .dark-card {
+            padding: 20px !important; /* Slightly less padding on cards */
+        }
+        .stTabs [data-baseweb="tab-panel"] {
+            padding: 15px; /* Reduce tab content padding */
+        }
+    }
+
+    @media (max-width: 600px) { /* Adjustments for typical phone portrait */
+        .app-header {
+            padding: 20px; /* Reduce header padding */
+        }
+        .app-header h1 {
+            font-size: 28px !important; /* Smaller main title */
+        }
+        .pulcra-logo {
+            font-size: 30px !important; /* Smaller logo text */
+        }
+        .dark-card {
+            padding: 15px !important; /* Further reduce padding on cards */
+        }
+        .stButton>button {
+            padding: 6px 12px !important; /* Slightly smaller buttons */
+            font-size: 14px;
+        }
+        /* Ensure inputs and data editor are full width */
+        [data-testid="stTextInput"], [data-testid="stDataEditor"] {
+            width: 100% !important;
+        }
+    }
+
+    @media (max-width: 400px) { /* Even smaller screens */
+        .app-header h1 {
+            font-size: 24px !important;
+        }
+        .pulcra-logo {
+            font-size: 26px !important;
+        }
+        p, li, span {
+            font-size: 14px; /* Smaller general text */
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -326,47 +377,37 @@ def load_excel_data(uploaded_file):
 
 @st.cache_data
 def generate_graph_data(x_values, y_values):
-    # Buat fungsi interpolasi dari data asli (untuk kurva teal)
-    # Gunakan numpy array untuk interpolasi agar lebih konsisten
     x_np = x_values.to_numpy()
     y_np = y_values.to_numpy()
 
-    # Default values in case of insufficient data or invalid regression
     slope = 0
     intercept = 0
-    y_at_x_50_line = np.nan # Use NaN for undefined values
+    y_at_x_50_line = np.nan
     y_at_x_50_curve = np.nan
 
     if y_values.empty:
         st.warning("Data kosong. Tidak dapat melakukan analisis.")
         return slope, intercept, y_at_x_50_line, y_at_x_50_curve
     
-    # Check if x_values have enough unique points for linear regression
-    # This covers cases where len(x_values) < 2 OR all x_values are identical (e.g., [10, 10, 10])
     if x_values.nunique() < 2:
         st.warning("Tidak cukup variasi pada data X untuk melakukan regresi linear yang valid. Garis regresi akan horizontal atau tidak ditentukan.")
         if len(x_values) >= 1:
-            slope = 0 # Horizontal line
-            intercept = y_values.mean() # At the mean of Y values
-        else: # Should be caught by y_values.empty, but for safety
+            slope = 0
+            intercept = y_values.mean()
+        else:
             slope = 0
             intercept = 0
 
     else:
-        # Perform global linear regression for the entire dataset
         slope, intercept, r_value, p_value, std_err = stats.linregress(x_np, y_np)
 
-    # Calculate y value at x=50 using the regression line
     y_at_x_50_line = slope * 50 + intercept
     
-    # Calculate y value at x=50 using the original curve (interpolation)
-    # Only try to interpolate if there's enough data for it
-    if len(x_np) >= 2: # interp1d needs at least 2 points
-        # Ensure f_curve can handle 50. If x_values are all > 50 or all < 50, extrapolation works.
+    if len(x_np) >= 2:
         f_curve = interpolate.interp1d(x_np, y_np, kind='linear', fill_value='extrapolate')
-        y_at_x_50_curve = float(f_curve(50)) # Ensure it's a float for display
+        y_at_x_50_curve = float(f_curve(50))
     else:
-        y_at_x_50_curve = np.nan # Cannot interpolate with less than 2 points
+        y_at_x_50_curve = np.nan
 
     return slope, intercept, y_at_x_50_line, y_at_x_50_curve
 
@@ -374,7 +415,6 @@ def generate_graph_data(x_values, y_values):
 def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line, y_at_x_50_curve):
     fig = go.Figure()
     
-    # Add main data line (teal curve)
     fig.add_trace(go.Scatter(
         x=x_values, 
         y=y_values,
@@ -384,43 +424,34 @@ def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line,
         marker=dict(size=8, color='#64CCC9')
     ))
     
-    # Define x-range for the regression line (from min x to max x, then extrapolate to 50)
-    # Handle cases where x_values might be empty or contain NaNs
     x_line_start = x_values.min() if not x_values.empty else 0
     x_line_end_initial = x_values.max() if not x_values.empty else 0
     x_line_extrapolate_to = 50
 
-    # Calculate y-values for the regression line over the relevant x-range
     y_line_start = slope * x_line_start + intercept
     y_line_end_initial = slope * x_line_end_initial + intercept
     
-    # Add the regression line (orange line)
-    # This line now represents the "best fit" through all points
-    # Only draw if slope/intercept are not NaN and there's enough data
     if not np.isnan(slope) and not np.isnan(intercept) and x_values.nunique() >= 2:
         fig.add_trace(go.Scatter(
             x=[x_line_start, x_line_end_initial, x_line_extrapolate_to],
             y=[y_line_start, y_line_end_initial, y_at_x_50_line],
             mode='lines',
-            name='Garis Regresi Linear (Kecocokan Terbaik)', # Changed name
-            line=dict(color="#FF6347", width=3, dash="dot"), # Dotted for emphasis on extrapolation
+            name='Garis Regresi Linear (Kecocokan Terbaik)',
+            line=dict(color="#FF6347", width=3, dash="dot"),
         ))
 
-        # Add point at the line's intersection with x=50
         fig.add_trace(go.Scatter(
             x=[50],
             y=[y_at_x_50_line],
             mode='markers',
-            name=f'Perpotongan Garis Regresi pada x=50, y={y_at_x_50_line:.2f}', # Changed name
+            name=f'Perpotongan Garis Regresi pada x=50, y={y_at_x_50_line:.2f}',
             marker=dict(size=14, color='#FF6347', symbol='circle-open', line=dict(width=3, color='#FF6347'))
         ))
         
-        # Add label for linear extrapolation at x=50
-        # Ensure y value is not NaN before adding annotation
         if not np.isnan(y_at_x_50_line):
             fig.add_annotation(
                 x=50,
-                y=y_at_x_50_line + 50, # Offset to avoid overlap
+                y=y_at_x_50_line + 50,
                 text=f"Nilai Garis: {y_at_x_50_line:.2f}",
                 showarrow=True,
                 arrowhead=2,
@@ -430,7 +461,6 @@ def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line,
                 font=dict(size=14, color='#FF6347', family="Arial, sans-serif"),
             )
     else:
-        # If regression line cannot be drawn, display a message instead of the value
         fig.add_annotation(
             x=0.5, y=0.5, xref="paper", yref="paper",
             text="Tidak dapat menampilkan garis regresi.<br>Perlu setidaknya 2 titik X yang berbeda.",
@@ -438,8 +468,6 @@ def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line,
             font=dict(size=16, color="#FF6347")
         )
 
-    # Add vertical line at x=50
-    # Ensure y1 is valid if y_values is empty
     max_y_val = max(y_values) if not y_values.empty else 1000
     fig.add_shape(
         type="line",
@@ -447,10 +475,9 @@ def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line,
         y0=0,
         x1=50,
         y1=max_y_val * 1.1,
-        line=dict(color="#DC3545", width=2, dash="dash"), # Red for x=50
+        line=dict(color="#DC3545", width=2, dash="dash"),
     )
     
-    # Add text label for x=50 line
     fig.add_annotation(
         x=50,
         y=max_y_val * 1.05,
@@ -459,18 +486,15 @@ def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line,
         font=dict(color="#DC3545", size=14, family="Arial, sans-serif", weight="bold")
     )
     
-    # Add point at the intersection of the original curve with x=50
-    # Only draw if y_at_x_50_curve is a valid number
     if not np.isnan(y_at_x_50_curve):
         fig.add_trace(go.Scatter(
             x=[50],
             y=[y_at_x_50_curve],
             mode='markers',
-            name=f'Perpotongan Kurva Asli pada x=50, y={y_at_x_50_curve:.2f}', # Changed name
-            marker=dict(size=14, color='#DC3545', symbol='circle', line=dict(width=2, color='white')) # Solid red circle
+            name=f'Perpotongan Kurva Asli pada x=50, y={y_at_x_50_curve:.2f}',
+            marker=dict(size=14, color='#DC3545', symbol='circle', line=dict(width=2, color='white'))
         ))
     
-    # Update layout with more elegant dark theme styling for plotly
     fig.update_layout(
         title=None,
         xaxis_title=dict(text="Nilai yang sudah tetap", font=dict(family="Arial, sans-serif", size=14, color="#F0F2F6")),
@@ -482,7 +506,7 @@ def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line,
             xanchor="center", 
             x=0.5,
             font=dict(family="Arial, sans-serif", size=12, color="#F0F2F6"),
-            bgcolor="rgba(28,31,38,0.7)", # Semi-transparent dark background for legend
+            bgcolor="rgba(28,31,38,0.7)",
             bordercolor="#2C303A",
             borderwidth=1,
             itemclick="toggleothers"
@@ -495,7 +519,6 @@ def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line,
         hovermode="x unified"
     )
     
-    # Add gridlines for better readability
     fig.update_xaxes(
         showgrid=True, gridwidth=1, gridcolor='#2C303A', zeroline=True, zerolinewidth=1.5, zerolinecolor='#2C303A', showline=True, linewidth=1.5, linecolor='#2C303A', tickfont=dict(color="#A0A0A0")
     )
@@ -516,24 +539,21 @@ with tabs[0]:
         'x_value': st.session_state.data['x_values'],
         'y_value': st.session_state.data['y_values']
     })
-    # Set 1-based index for display in data_editor
     edited_data.index = np.arange(1, len(edited_data) + 1)
 
     edited_df = st.data_editor(
         edited_data,
         disabled=["x_value"],
-        hide_index=False, # Tampilkan indeks
+        hide_index=False,
         use_container_width=True,
         key="data_editor",
-        on_change=None # Don't auto-update
+        on_change=None
     )
     
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("Terapkan Perubahan", key="apply_changes"):
-            # When applying changes, retrieve data based on the internal structure, not the displayed index
             st.session_state.data['y_values'] = edited_df['y_value'].tolist()
-            # Clear caches that depend on data to force recalculation
             generate_graph_data.clear()
             generate_plotly_figure.clear()
             st.session_state.update_graph = True
@@ -541,8 +561,7 @@ with tabs[0]:
     
     with col2:
         if st.button("Reset ke Nilai Awal", key="reset_values"):
-            st.session_state.data = get_initial_data_df() # Use cached function which now returns 1-based index
-            # Clear caches that depend on data
+            st.session_state.data = get_initial_data_df()
             generate_graph_data.clear()
             generate_plotly_figure.clear()
             st.session_state.update_graph = True
@@ -555,15 +574,14 @@ with tabs[1]:
     uploaded_file = st.file_uploader("Pilih file Excel", type=['xlsx', 'xls'])
     
     if uploaded_file is not None:
-        imported_df = load_excel_data(uploaded_file) # Use cached function which now returns 1-based index
+        imported_df = load_excel_data(uploaded_file)
         if imported_df is not None:
             st.write("Pratinjau Data:")
             # Display entire imported_df with 1-based index and scroll capability
             st.dataframe(imported_df, use_container_width=True, hide_index=False)
             
             if st.button("Gunakan Data Ini", key="use_imported"):
-                st.session_state.data = imported_df # This DataFrame already has 1-based index
-                # Clear caches that depend on data
+                st.session_state.data = imported_df
                 generate_graph_data.clear()
                 generate_plotly_figure.clear()
                 st.session_state.update_graph = True
@@ -573,10 +591,9 @@ with tabs[1]:
 st.divider()
 if st.button("Unduh Template Excel Contoh"):
     sample_df = pd.DataFrame(INITIAL_DATA)
-    # Ensure sample template also has 1-based index if displayed in Excel
     sample_df.index = np.arange(1, len(sample_df) + 1) 
     buffer = io.BytesIO()
-    sample_df.to_excel(buffer, index=False) # index=False prevents writing the DataFrame index to Excel
+    sample_df.to_excel(buffer, index=False)
     buffer.seek(0)
     st.download_button(
         label="Klik untuk Mengunduh",
@@ -589,22 +606,15 @@ if st.button("Unduh Template Excel Contoh"):
 st.divider()
 st.subheader("Grafik Abrasi Benang")
 
-# Ambil data dari session state
 x_values_current = st.session_state.data['x_values']
 y_values_current = st.session_state.data['y_values']
 
-# Panggil fungsi yang di-cache untuk menghasilkan data grafik (slope, intercept, dll)
-# Sekarang hanya mengembalikan slope dan intercept dari regresi global
 slope, intercept, y_line_intersection, y_at_x_50_curve = generate_graph_data(x_values_current, y_values_current)
 
-# Panggil fungsi yang di-cache untuk membuat figure Plotly
 fig = generate_plotly_figure(x_values_current, y_values_current, slope, intercept, y_line_intersection, y_at_x_50_curve)
     
-# Display the graph
 st.plotly_chart(fig, use_container_width=True)
 
-# Display results in a cleaner format
-# Hanya tampilkan hasil jika y_line_intersection bukan NaN (artinya regresi valid)
 if not np.isnan(y_line_intersection):
     st.markdown(f"""
     <div class="dark-card">
@@ -626,21 +636,18 @@ else:
     """, unsafe_allow_html=True)
 
 
-# Display table data view
 with st.expander("Lihat Tabel Data Lengkap"):
     display_df = pd.DataFrame({
         'x_values (Nilai yang sudah tetap)': st.session_state.data['x_values'],
         'y_values (N atau nilai benang putus)': st.session_state.data['y_values']
     })
-    # Set 1-based index for the full data display
     display_df.index = np.arange(1, len(display_df) + 1)
     st.dataframe(
         display_df,
-        hide_index=False, # Tampilkan indeks
+        hide_index=False,
         use_container_width=True
     )
 
-# Add important graph information
 st.markdown("""
 <div class="dark-card">
     <h3 style="color: #FFFFFF;">Analisis Abrasi Benang</h3>
@@ -654,7 +661,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Add additional information in an expander
 with st.expander("Informasi Tambahan & Tips Interaksi"):
     st.markdown("""
     <div style="padding: 10px;">
@@ -674,7 +680,6 @@ with st.expander("Informasi Tambahan & Tips Interaksi"):
     </div>
     """, unsafe_allow_html=True)
 
-# Add Radix footer
 st.markdown("""
 <div style="text-align: center; margin-top: 40px; padding: 15px; font-size: 14px; font-family: 'Helvetica Neue', sans-serif; color: #A0A0A0; border-top: 1px solid #2C303A; background-color: #1C1F26; border-radius: 0 0 8px 8px;">
     <p>Dikembangkan oleh <span style="font-weight: bold; color: #64CCC9;">RADIX</span> &copy; 2025</p>
