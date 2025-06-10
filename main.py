@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from scipy import interpolate
+from scipy import interpolate, stats # Import stats for linear regression
 import io
 
 # --- START OF ACCESS CODE IMPLEMENTATION ---
@@ -168,11 +168,8 @@ st.markdown("""
     }
     
     /* General Container Styling */
-    .css-1r6slb0 { /* Another common Streamlit container class */
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        padding: 20px;
-        background-color: #1C1F26 !important;
+    .css-1v3fvcr { /* Specific class for some Streamlit containers */
+        background-color: #0E1117;
     }
     
     /* Custom Card for Results/Important Info */
@@ -283,7 +280,7 @@ st.markdown("""
 # Header Aplikasi with Radix Logo
 st.markdown("""
 <div class="app-header">
-    <div class="pulcra-logo">PULCRA CHEMICALS</div>
+    <div class="pulcra-logo">PULCRA</div>
     <h1 style="margin-top: 0; color: #FFFFFF; font-size: 36px;">Analisis Abrasi Benang</h1>
     <p style="color: #A0A0A0; font-size: 16px;">Alat profesional untuk memvisualisasikan data abrasi benang dan menghitung nilai persimpangan</p>
 </div>
@@ -302,185 +299,97 @@ if 'data' not in st.session_state:
 if 'update_graph' not in st.session_state:
     st.session_state.update_graph = False
 
-# Create tabs for different data input methods
-tabs = st.tabs(["Input Manual", "Impor dari Excel"])
+# --- Caching untuk Performansi ---
+@st.cache_data
+def get_initial_data_df():
+    return pd.DataFrame(INITIAL_DATA)
 
-with tabs[0]:
-    st.subheader("Input Data Manual")
-    st.write("Modifikasi nilai sumbu-y (N atau nilai benang putus):")
-    
-    # Create editable dataframe for y-values
-    edited_data = pd.DataFrame({
-        'x_value': st.session_state.data['x_values'],
-        'y_value': st.session_state.data['y_values']
-    })
-    
-    # Make it editable
-    edited_df = st.data_editor(
-        edited_data,
-        disabled=["x_value"],
-        hide_index=True,
-        use_container_width=True,
-        key="data_editor",
-        on_change=None # Don't auto-update
-    )
-    
-    # Add buttons to apply changes
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("Terapkan Perubahan", key="apply_changes"):
-            st.session_state.data['y_values'] = edited_df['y_value'].tolist()
-            st.session_state.update_graph = True
-            st.success("Data berhasil diperbarui!")
-    
-    with col2:
-        # Button to reset to initial values
-        if st.button("Reset ke Nilai Awal", key="reset_values"):
-            st.session_state.data = pd.DataFrame(INITIAL_DATA)
-            st.session_state.update_graph = True
-            st.success("Data direset ke nilai awal!")
-
-with tabs[1]:
-    st.subheader("Impor Data dari Excel")
-    st.write("Unggah file Excel dengan nilai x dan y (harus memiliki kolom 'x_values' dan 'y_values')")
-    
-    uploaded_file = st.file_uploader("Pilih file Excel", type=['xlsx', 'xls'])
-    
+@st.cache_data
+def load_excel_data(uploaded_file):
     if uploaded_file is not None:
         try:
-            # Read Excel file
             df = pd.read_excel(uploaded_file)
-            
-            # Check if required columns exist
             if 'x_values' in df.columns and 'y_values' in df.columns:
-                # Preview data
-                st.write("Pratinjau Data:")
-                st.dataframe(df.head(), use_container_width=True)
-                
-                # Button to apply imported data
-                if st.button("Gunakan Data Ini", key="use_imported"):
-                    st.session_state.data = df[['x_values', 'y_values']]
-                    st.session_state.update_graph = True
-                    st.success("Data yang diimpor berhasil diterapkan!")
+                return df[['x_values', 'y_values']]
             else:
                 st.error("File Excel harus berisi kolom 'x_values' dan 'y_values'.")
+                return None
         except Exception as e:
             st.error(f"Error membaca file Excel: {e}")
+            return None
+    return None
 
-# Display example Excel template for download
-st.divider()
-if st.button("Unduh Template Excel Contoh"):
-    # Create example DataFrame
-    sample_df = pd.DataFrame(INITIAL_DATA)
+@st.cache_data
+def generate_graph_data(x_values, y_values):
+    # Buat fungsi interpolasi dari data asli (untuk kurva teal)
+    f_curve = interpolate.interp1d(x_values, y_values, kind='linear', fill_value='extrapolate')
     
-    # Create a buffer to save the Excel file
-    buffer = io.BytesIO()
-    sample_df.to_excel(buffer, index=False)
-    buffer.seek(0)
+    # Hitung garis regresi linear (best fit) untuk SELURUH dataset
+    # Ini akan menjadi "garis oranye" yang melewati paling banyak titik atau mendekati banyak titik
     
-    # Create download button
-    st.download_button(
-        label="Klik untuk Mengunduh",
-        data=buffer,
-        file_name="thread_abrasion_template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-# Create graph section
-st.divider()
-st.subheader("Grafik Abrasi Benang")
-
-# Plot graph
-if st.session_state.update_graph or not 'fig' in st.session_state:
-    # Get data from session state
-    x_values = st.session_state.data['x_values']
-    y_values = st.session_state.data['y_values']
-    
-    # Create interpolation function
-    f = interpolate.interp1d(x_values, y_values, kind='linear', fill_value='extrapolate')
-    
-    # Find indices for 10th and 20th points in the dataset
-    x_values_list = list(x_values)
-    
-    # Find 10th point (approximately the 10th value in the dataset)
-    point_10_index = min(9, len(x_values_list) - 1) # Ensure index is within bounds
-    specific_x1 = x_values_list[point_10_index]
-    specific_y1 = y_values[point_10_index]
-    
-    # Find 20th point (approximately the 20th value in the dataset)
-    point_20_index = min(19, len(x_values_list) - 1) # Ensure index is within bounds
-    specific_x2 = x_values_list[point_20_index]
-    specific_y2 = y_values[point_20_index]
-    
-    # Calculate slope and intercept of the line connecting these two points
-    if (specific_x2 - specific_x1) != 0: # Avoid division by zero
-        slope = (specific_y2 - specific_y1) / (specific_x2 - specific_x1)
-        intercept = specific_y1 - slope * specific_x1
-    else: # If x1 and x2 are the same, it's a vertical line or error case
+    # Pastikan ada cukup data untuk regresi
+    if len(x_values) < 2:
+        st.warning("Tidak cukup data untuk melakukan regresi linear. Perlu setidaknya 2 titik.")
+        # Fallback to a simple line if not enough data
         slope = 0
-        intercept = specific_y1 # Treat as horizontal at y1 for plotting line projection
-        st.warning("Titik ke-10 dan ke-20 memiliki nilai X yang sama. Proyeksi garis mungkin tidak akurat.")
+        intercept = y_values.iloc[0] if not y_values.empty else 0
+        if len(x_values) == 1:
+            slope = 0 # Horizontal line if only one point
+        elif len(x_values) > 1 and (x_values.iloc[-1] - x_values.iloc[0]) != 0:
+            slope = (y_values.iloc[-1] - y_values.iloc[0]) / (x_values.iloc[-1] - x_values.iloc[0])
+            intercept = y_values.iloc[0] - slope * x_values.iloc[0]
 
-    # Function to calculate y value using the line equation
-    def line_equation(x):
-        return slope * x + intercept
+    else:
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x_values, y_values)
+
+    # Hitung nilai y pada x=50 menggunakan garis regresi
+    y_at_x_50_line = slope * 50 + intercept
     
-    # Calculate y value at x=50 using the line equation
-    y_at_x_50_line = line_equation(50)
-    
-    # Interpolate original curve at specific points
-    y_at_x_10 = float(f(10))
-    y_at_x_20 = float(f(20))
-    y_at_x_50 = float(f(50))
-    
-    # Create figure
+    # Hitung nilai y pada x=50 menggunakan kurva asli (untuk lingkaran merah)
+    y_at_x_50_curve = float(f_curve(50))
+
+    # Kita hanya mengembalikan slope dan intercept dari regresi global
+    return slope, intercept, y_at_x_50_line, y_at_x_50_curve
+
+@st.cache_data
+def generate_plotly_figure(x_values, y_values, slope, intercept, y_at_x_50_line, y_at_x_50_curve):
     fig = go.Figure()
     
-    # Add main data line
+    # Add main data line (teal curve)
     fig.add_trace(go.Scatter(
         x=x_values, 
         y=y_values,
         mode='lines+markers',
         name='Data Abrasi',
-        line=dict(color='#64CCC9', width=3), # Teal color for main line
+        line=dict(color='#64CCC9', width=3),
         marker=dict(size=8, color='#64CCC9')
     ))
     
-    # Add specific points (10th and 20th points)
+    # Define x-range for the regression line (from min x to max x, then extrapolate to 50)
+    x_line_start = x_values.min()
+    x_line_end_initial = x_values.max()
+    x_line_extrapolate_to = 50
+
+    # Calculate y-values for the regression line over the relevant x-range
+    y_line_start = slope * x_line_start + intercept
+    y_line_end_initial = slope * x_line_end_initial + intercept
+    
+    # Add the regression line (orange line)
+    # This line now represents the "best fit" through all points
     fig.add_trace(go.Scatter(
-        x=[specific_x1, specific_x2],
-        y=[specific_y1, specific_y2],
-        mode='markers',
-        name='Titik Referensi Terpilih',
-        marker=dict(size=12, color='#FFD700', symbol='star', line=dict(width=2, color='white')) # Gold star
+        x=[x_line_start, x_line_end_initial, x_line_extrapolate_to],
+        y=[y_line_start, y_line_end_initial, y_at_x_50_line],
+        mode='lines',
+        name='Garis Regresi Linear (Kecocokan Terbaik)', # Changed name
+        line=dict(color="#FF6347", width=3, dash="dot"), # Dotted for emphasis on extrapolation
     ))
-    
-    # Add line connecting the two specific points and extending to x=50
-    fig.add_shape(
-        type="line",
-        x0=specific_x1,
-        y0=specific_y1,
-        x1=specific_x2,
-        y1=specific_y2,
-        line=dict(color="#FF6347", width=3), # Tomato red for the line
-    )
-    
-    # Extend line to x=50
-    fig.add_shape(
-        type="line",
-        x0=specific_x2,
-        y0=specific_y2,
-        x1=50,
-        y1=y_at_x_50_line,
-        line=dict(color="#FF6347", width=3, dash="dot"), # Dotted extension
-    )
-    
+
     # Add point at the line's intersection with x=50
     fig.add_trace(go.Scatter(
         x=[50],
         y=[y_at_x_50_line],
         mode='markers',
-        name=f'Persimpangan Garis pada x=50, y={y_at_x_50_line:.2f}',
+        name=f'Perpotongan Garis Regresi pada x=50, y={y_at_x_50_line:.2f}', # Changed name
         marker=dict(size=14, color='#FF6347', symbol='circle-open', line=dict(width=3, color='#FF6347'))
     ))
     
@@ -496,30 +405,6 @@ if st.session_state.update_graph or not 'fig' in st.session_state:
         arrowcolor='#FF6347',
         font=dict(size=14, color='#FF6347', family="Arial, sans-serif"),
     )
-    
-    # Add vertical lines at x=17.7 (10th point) and x=40.4 (20th point)
-    for x_pos, y_val, color, name, index in [
-        (specific_x1, specific_y1, "#FFD700", f"Titik 10 ({specific_x1}, {specific_y1})", 10),
-        (specific_x2, specific_y2, "#FFD700", f"Titik 20 ({specific_x2}, {specific_y2})", 20),
-    ]:
-        # Add vertical dashed line
-        fig.add_shape(
-            type="line",
-            x0=x_pos,
-            y0=0,
-            x1=x_pos,
-            y1=max(y_values) * 1.1, # Extend beyond max y for visibility
-            line=dict(color=color, width=1.5, dash="dash"),
-        )
-        
-        # Add text label for vertical line
-        fig.add_annotation(
-            x=x_pos,
-            y=y_val - 50 if y_val > 50 else y_val + 50, # Offset below point, adjust if too low
-            text=f"Titik {index}",
-            showarrow=False,
-            font=dict(color=color, size=12, family="Arial, sans-serif", weight="bold")
-        )
     
     # Add vertical line at x=50
     fig.add_shape(
@@ -543,15 +428,15 @@ if st.session_state.update_graph or not 'fig' in st.session_state:
     # Add point at the intersection of the original curve with x=50
     fig.add_trace(go.Scatter(
         x=[50],
-        y=[y_at_x_50],
+        y=[y_at_x_50_curve],
         mode='markers',
-        name=f'Persimpangan pada x=50, y={y_at_x_50:.2f}',
+        name=f'Perpotongan Kurva Asli pada x=50, y={y_at_x_50_curve:.2f}', # Changed name
         marker=dict(size=14, color='#DC3545', symbol='circle', line=dict(width=2, color='white')) # Solid red circle
     ))
     
     # Update layout with more elegant dark theme styling for plotly
     fig.update_layout(
-        title=None, # Title is already in markdown
+        title=None,
         xaxis_title=dict(text="Nilai yang sudah tetap", font=dict(family="Arial, sans-serif", size=14, color="#F0F2F6")),
         yaxis_title=dict(text="N atau nilai benang putus", font=dict(family="Arial, sans-serif", size=14, color="#F0F2F6")),
         legend=dict(
@@ -564,86 +449,126 @@ if st.session_state.update_graph or not 'fig' in st.session_state:
             bgcolor="rgba(28,31,38,0.7)", # Semi-transparent dark background for legend
             bordercolor="#2C303A",
             borderwidth=1,
-            itemclick="toggleothers" # Allow clicking legend items to toggle visibility
+            itemclick="toggleothers"
         ),
-        margin=dict(l=40, r=40, t=20, b=40), # More margin
+        margin=dict(l=40, r=40, t=20, b=40),
         height=600,
-        plot_bgcolor="#1C1F26", # Dark background for plot area
-        paper_bgcolor="#1C1F26", # Dark background for entire figure
+        plot_bgcolor="#1C1F26",
+        paper_bgcolor="#1C1F26",
         font=dict(family="Arial, sans-serif", size=12, color="#F0F2F6"),
-        hovermode="x unified" # Unified hover tooltips
+        hovermode="x unified"
     )
     
     # Add gridlines for better readability
     fig.update_xaxes(
-        showgrid=True, 
-        gridwidth=1, 
-        gridcolor='#2C303A', # Darker grid lines
-        zeroline=True,
-        zerolinewidth=1.5,
-        zerolinecolor='#2C303A',
-        showline=True,
-        linewidth=1.5,
-        linecolor='#2C303A',
-        tickfont=dict(color="#A0A0A0")
+        showgrid=True, gridwidth=1, gridcolor='#2C303A', zeroline=True, zerolinewidth=1.5, zerolinecolor='#2C303A', showline=True, linewidth=1.5, linecolor='#2C303A', tickfont=dict(color="#A0A0A0")
     )
     
     fig.update_yaxes(
-        showgrid=True, 
-        gridwidth=1, 
-        gridcolor='#2C303A',
-        zeroline=True,
-        zerolinewidth=1.5,
-        zerolinecolor='#2C303A',
-        showline=True,
-        linewidth=1.5,
-        linecolor='#2C303A',
-        tickfont=dict(color="#A0A0A0")
+        showgrid=True, gridwidth=1, gridcolor='#2C303A', zeroline=True, zerolinewidth=1.5, zerolinecolor='#2C303A', showline=True, linewidth=1.5, linecolor='#2C303A', tickfont=dict(color="#A0A0A0")
+    )
+    return fig
+
+# Create tabs for different data input methods
+tabs = st.tabs(["Input Manual", "Impor dari Excel"])
+
+with tabs[0]:
+    st.subheader("Input Data Manual")
+    st.write("Modifikasi nilai sumbu-y (N atau nilai benang putus):")
+    
+    edited_data = pd.DataFrame({
+        'x_value': st.session_state.data['x_values'],
+        'y_value': st.session_state.data['y_values']
+    })
+    
+    edited_df = st.data_editor(
+        edited_data,
+        disabled=["x_value"],
+        hide_index=True,
+        use_container_width=True,
+        key="data_editor",
+        on_change=None # Don't auto-update
     )
     
-    # Save in session state
-    st.session_state.fig = fig
-    st.session_state.y_at_x_50 = y_at_x_50
-    st.session_state.update_graph = False
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Terapkan Perubahan", key="apply_changes"):
+            st.session_state.data['y_values'] = edited_df['y_value'].tolist()
+            # Clear caches that depend on data to force recalculation
+            generate_graph_data.clear()
+            generate_plotly_figure.clear()
+            st.session_state.update_graph = True
+            st.success("Data berhasil diperbarui!")
+    
+    with col2:
+        if st.button("Reset ke Nilai Awal", key="reset_values"):
+            st.session_state.data = get_initial_data_df() # Use cached function
+            # Clear caches that depend on data
+            generate_graph_data.clear()
+            generate_plotly_figure.clear()
+            st.session_state.update_graph = True
+            st.success("Data direset ke nilai awal!")
 
+with tabs[1]:
+    st.subheader("Impor Data dari Excel")
+    st.write("Unggah file Excel dengan nilai x dan y (harus memiliki kolom 'x_values' dan 'y_values')")
+    
+    uploaded_file = st.file_uploader("Pilih file Excel", type=['xlsx', 'xls'])
+    
+    if uploaded_file is not None:
+        imported_df = load_excel_data(uploaded_file) # Use cached function
+        if imported_df is not None:
+            st.write("Pratinjau Data:")
+            st.dataframe(imported_df.head(), use_container_width=True)
+            
+            if st.button("Gunakan Data Ini", key="use_imported"):
+                st.session_state.data = imported_df
+                # Clear caches that depend on data
+                generate_graph_data.clear()
+                generate_plotly_figure.clear()
+                st.session_state.update_graph = True
+                st.success("Data yang diimpor berhasil diterapkan!")
+
+# Display example Excel template for download
+st.divider()
+if st.button("Unduh Template Excel Contoh"):
+    sample_df = pd.DataFrame(INITIAL_DATA)
+    buffer = io.BytesIO()
+    sample_df.to_excel(buffer, index=False)
+    buffer.seek(0)
+    st.download_button(
+        label="Klik untuk Mengunduh",
+        data=buffer,
+        file_name="thread_abrasion_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+# Create graph section
+st.divider()
+st.subheader("Grafik Abrasi Benang")
+
+# Ambil data dari session state
+x_values_current = st.session_state.data['x_values']
+y_values_current = st.session_state.data['y_values']
+
+# Panggil fungsi yang di-cache untuk menghasilkan data grafik (slope, intercept, dll)
+# Sekarang hanya mengembalikan slope dan intercept dari regresi global
+slope, intercept, y_line_intersection, y_at_x_50_curve = generate_graph_data(x_values_current, y_values_current)
+
+# Panggil fungsi yang di-cache untuk membuat figure Plotly
+fig = generate_plotly_figure(x_values_current, y_values_current, slope, intercept, y_line_intersection, y_at_x_50_curve)
+    
 # Display the graph
-st.plotly_chart(st.session_state.fig, use_container_width=True)
-
-# Function to recalculate line values using session state data
-def recalculate_line_values():
-    x_values = st.session_state.data['x_values']
-    y_values = st.session_state.data['y_values']
-    
-    x_values_list = list(x_values)
-    
-    point_10_index = min(9, len(x_values_list) - 1)
-    specific_x1 = x_values_list[point_10_index]
-    specific_y1 = y_values[point_10_index]
-    
-    point_20_index = min(19, len(x_values_list) - 1)
-    specific_x2 = x_values_list[point_20_index]
-    specific_y2 = y_values[point_20_index]
-    
-    if (specific_x2 - specific_x1) != 0:
-        slope = (specific_y2 - specific_y1) / (specific_x2 - specific_x1)
-        intercept = specific_y1 - slope * specific_x1
-    else:
-        slope = 0
-        intercept = specific_y1
-    
-    return slope * 50 + intercept, specific_x1, specific_y1, specific_x2, specific_y2
-
-# Calculate line intersection and get points
-y_line_intersection, p10_x, p10_y, p20_x, p20_y = recalculate_line_values()
+st.plotly_chart(fig, use_container_width=True)
 
 # Display results in a cleaner format
 st.markdown(f"""
 <div class="dark-card">
     <h2 style="color: #FFFFFF; margin-bottom: 5px;">Hasil Analisis pada x=50</h2>
     <h1 style="color: #64CCC9; font-size: 48px; margin: 10px 0;">{y_line_intersection:.2f}</h1>
-    <p style="color: #A0A0A0; font-size: 16px;">Nilai perpotongan garis pada x=50</p>
+    <p style="color: #A0A0A0; font-size: 16px;">Nilai perpotongan garis regresi linear pada x=50</p>
     <div style="margin-top: 15px; font-size: 14px; color: #A0A0A0;">
-        Berdasarkan garis antara titik 10 ({p10_x:.2f}, {p10_y:.2f}) dan titik 20 ({p20_x:.2f}, {p20_y:.2f})
+        Berdasarkan garis kecocokan terbaik (regresi linear) dari <strong style="color: #64CCC9;">seluruh data</strong>.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -655,7 +580,7 @@ with st.expander("Lihat Tabel Data Lengkap"):
             'x_values (Nilai yang sudah tetap)': st.session_state.data['x_values'],
             'y_values (N atau nilai benang putus)': st.session_state.data['y_values']
         }),
-        hide_index=False, # Ini yang diubah menjadi False
+        hide_index=False,
         use_container_width=True
     )
 
@@ -666,9 +591,9 @@ st.markdown("""
     <p style="color: #F0F2F6;">Grafik menunjukkan hubungan antara nilai tetap (sumbu-x) dan nilai benang putus (sumbu-y).</p>
     <ul style="color: #F0F2F6;">
         <li><strong style="color: #64CCC9;">Garis teal</strong> adalah kurva data abrasi benang.</li>
-        <li><strong style="color: #FFD700;">Bintang emas</strong> menandai titik ke-10 dan ke-20 dari dataset.</li>
-        <li><strong style="color: #FF6347;">Garis oranye/merah</strong> menghubungkan kedua titik tersebut dan diperpanjang ke x=50.</li>
-        <li><strong style="color: #FF6347;">Lingkaran kosong</strong> menunjukkan perpotongan garis dengan x=50.</li>
+        <li><strong style="color: #FF6347;">Garis oranye/merah</strong> adalah <strong style="color: #FF6347;">garis regresi linear</strong> (garis kecocokan terbaik) yang mewakili tren dari seluruh data, dan diperpanjang ke x=50.</li>
+        <li><strong style="color: #FF6347;">Lingkaran kosong</strong> menunjukkan perpotongan garis regresi dengan x=50.</li>
+        <li><strong style="color: #DC3545;">Lingkaran padat</strong> menunjukkan perpotongan kurva data asli dengan x=50.</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
@@ -679,8 +604,8 @@ with st.expander("Informasi Tambahan & Tips Interaksi"):
     <div style="padding: 10px;">
         <h4 style="color: #FFFFFF;">Poin Penting:</h4>
         <ul style="color: #F0F2F6;">
-            <li>Garis yang ditarik antara titik ke-10 dan ke-20 memberikan proyeksi linear ke x=50.</li>
-            <li>Nilai pada garis saat x=50 dianggap sebagai "hasil" resmi untuk analisis ini.</li>
+            <li>Garis oranye/merah kini mewakili <strong style="color: #FF6347;">garis regresi linear</strong> yang dihitung dari seluruh dataset, memberikan ekstrapolasi yang merepresentasikan tren keseluruhan data.</li>
+            <li>Ini adalah garis yang secara statistik paling "mendekati" atau "melewati" tren dari semua titik data.</li>
         </ul>
         
         <h4 style="color: #FFFFFF; margin-top: 20px;">Tips Interaksi:</h4>
