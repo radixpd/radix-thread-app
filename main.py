@@ -10,41 +10,47 @@ import io
 st.set_page_config(
     page_title="Thread Abrasion by Radix",
     page_icon="🧵",
-    layout="wide"
+    layout="wide" # Tetap wide untuk desktop, akan dihandle media query untuk mobile
 )
 
-# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Tambahan) ---
+# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Tambahan untuk Responsif) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
+    @import url('https://fonts.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
     /* Target elemen HTML dan body untuk memastikan background hitam total */
     html, body {
         background-color: #0A0A0A !important;
         color: #E0E0E0; /* Pastikan teks juga terang */
+        overflow-x: hidden; /* Mencegah scrolling horizontal yang tidak diinginkan */
     }
 
     /* Streamlit's main wrapper */
     .stApp {
         background-color: #0A0A0A !important; /* Background untuk seluruh aplikasi Streamlit */
-        max-width: 1300px; /* Sedikit lebih lebar */
+        max-width: 1300px; /* Lebar maksimal untuk desktop */
         margin: 0 auto;
         padding-top: 30px; /* Padding atas lebih besar */
         padding-bottom: 50px; /* Padding bawah untuk footer */
+        padding-left: 15px; /* Padding samping default */
+        padding-right: 15px; /* Padding samping default */
     }
+    
     /* Main content area within .stApp */
     .main {
         background-color: #0A0A0A; /* Lebih gelap dari #121212 */
         color: #E0E0E0;
         font-family: 'Montserrat', sans-serif; /* Font umum yang lebih modern */
     }
-    /* Kontainer utama untuk sidebar jika ada */
+    /* Kontainer utama untuk sidebar jika ada (biasanya di desktop, tapi bisa muncul di mobile) */
     .stSidebar {
         background-color: #0A0A0A !important; /* Jika ada sidebar, pastikan juga hitam */
         color: #E0E0E0;
     }
     .block-container {
         background-color: #0A0A0A !important; /* Kontainer blok utama Streamlit */
+        padding-top: 1rem; /* Kurangi padding atas untuk mobile */
+        padding-bottom: 1rem; /* Kurangi padding bawah untuk mobile */
     }
     
     /* Typography */
@@ -52,124 +58,130 @@ st.markdown("""
         color: #F8F8F8; /* Sedikit lebih putih dari #FFFFFF */
         font-family: 'Playfair Display', serif; /* Font serif untuk judul, kesan mewah */
         letter-spacing: 0.8px; /* Jarak huruf lebih lebar */
+        word-break: break-word; /* Memastikan teks panjang tidak meluber */
     }
     h1 {
         font-weight: 700;
-        font-size: 44px; /* Lebih besar */
-        padding-bottom: 15px; /* Lebih tebal */
-        border-bottom: 3px solid #8B4513; /* Warna aksen emas/tembaga gelap */
+        font-size: 44px; /* Ukuran desktop */
+        padding-bottom: 15px;
+        border-bottom: 3px solid #8B4513;
         text-align: center;
-        text-shadow: 0 4px 10px rgba(0,0,0,0.4); /* Bayangan teks lebih halus */
+        text-shadow: 0 4px 10px rgba(0,0,0,0.4);
     }
     h2 {
         font-weight: 600;
-        font-size: 32px; /* Lebih besar */
-        color: #DAA520; /* Emas gelap untuk subheader utama */
+        font-size: 32px; /* Ukuran desktop */
+        color: #DAA520;
         margin-bottom: 20px;
-        border-bottom: 1px solid #282828; /* Border lebih gelap */
+        border-bottom: 1px solid #282828;
         padding-bottom: 8px;
-        font-family: 'Montserrat', sans-serif; /* Kembali ke sans-serif untuk subheader */
+        font-family: 'Montserrat', sans-serif;
         letter-spacing: 0.5px;
     }
     h3 {
         font-weight: 600;
-        font-size: 24px;
+        font-size: 24px; /* Ukuran desktop */
         color: #F8F8F8;
         font-family: 'Montserrat', sans-serif;
-        margin-top: 25px; /* Margin atas untuk memisahkan konten */
+        margin-top: 25px;
         margin-bottom: 15px;
     }
-    p, li, span {
+    p, li, span, div {
         color: #E0E0E0;
         font-family: 'Montserrat', sans-serif;
-        line-height: 1.8; /* Jarak baris lebih lega */
-        font-size: 16px;
+        line-height: 1.8;
+        font-size: 16px; /* Ukuran desktop */
     }
     
     /* Buttons */
     .stButton>button {
-        background-color: #8B4513; /* Aksen emas/tembaga */
+        background-color: #8B4513;
         color: white;
-        border-radius: 10px; /* Lebih bulat */
+        border-radius: 10px;
         border: none;
-        font-weight: 600; /* Lebih tebal */
+        font-weight: 600;
         transition: all 0.3s ease;
-        padding: 12px 25px; /* Lebih besar */
-        font-size: 17px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3); /* Bayangan lebih kuat */
+        padding: 12px 25px; /* Ukuran desktop */
+        font-size: 17px; /* Ukuran desktop */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        white-space: normal; /* Memungkinkan teks tombol wrap */
+        word-break: break-word;
     }
     .stButton>button:hover {
-        background-color: #A0522D; /* Aksen emas/tembaga lebih terang saat hover */
-        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4); /* Bayangan aksen */
-        transform: translateY(-3px); /* Efek angkat lebih jelas */
+        background-color: #A0522D;
+        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        transform: translateY(-3px);
     }
     
     /* Tabs */
     .stTabs [data-baseweb="tab"] {
         font-family: 'Montserrat', sans-serif;
-        color: #B0B0B0; /* Sedikit lebih gelap */
-        font-weight: 600; /* Lebih tebal */
-        padding: 12px 20px; /* Lebih besar */
-        font-size: 17px;
+        color: #B0B0B0;
+        font-weight: 600;
+        padding: 12px 20px; /* Ukuran desktop */
+        font-size: 17px; /* Ukuran desktop */
     }
     .stTabs [data-baseweb="tab-list"] {
-        border-radius: 12px; /* Lebih bulat */
-        background-color: #1A1A1A; /* Lebih gelap dari #1E1E1E */
-        box-shadow: 0 6px 18px rgba(0,0,0,0.3); /* Bayangan lebih kuat */
+        border-radius: 12px;
+        background-color: #1A1A1A;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         margin-bottom: 25px;
-        border: 1px solid #282828; /* Border halus */
+        border: 1px solid #282828;
+        overflow-x: auto; /* Memungkinkan tab discroll horizontal jika banyak */
+        -webkit-overflow-scrolling: touch; /* Untuk scrolling yang mulus di iOS */
     }
     .stTabs [data-baseweb="tab-panel"] {
-        padding: 30px; /* Lebih besar */
+        padding: 30px; /* Ukuran desktop */
         border-radius: 12px;
         background-color: #1A1A1A;
         box-shadow: 0 6px 18px rgba(0,0,0,0.3);
     }
     .stTabs [data-baseweb="tab-highlight"] {
-        background-color: #DAA520; /* Emas gelap untuk highlight */
+        background-color: #DAA520;
         border-radius: 6px;
-        height: 4px; /* Garis highlight lebih tebal */
+        height: 4px;
     }
 
     /* Radio Buttons - Unified for Graph & Results */
     .stRadio > label {
-        color: #F8F8F8; /* Lebih terang */
-        font-size: 18px; /* Lebih besar */
-        font-weight: 600; /* Lebih tebal */
+        color: #F8F8F8;
+        font-size: 18px; /* Ukuran desktop */
+        font-weight: 600;
         margin-bottom: 15px;
     }
     .stRadio > div { /* Container for radio buttons */
-        background-color: #1A1A1A; /* Lebih gelap */
+        background-color: #1A1A1A;
         border-radius: 12px;
-        padding: 20px; /* Lebih besar */
+        padding: 20px; /* Ukuran desktop */
         box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         display: flex;
-        flex-wrap: wrap;
-        gap: 15px; /* Jarak antar item lebih besar */
+        flex-wrap: wrap; /* Memungkinkan item wrap ke baris baru */
+        gap: 15px;
+        justify-content: center; /* Pusatkan opsi radio */
     }
     .stRadio [data-baseweb="radio"] { /* Individual radio item */
-        background-color: #282828; /* Lebih gelap */
-        border-radius: 10px; /* Lebih bulat */
+        background-color: #282828;
+        border-radius: 10px;
         padding: 10px 20px;
         transition: background-color 0.3s ease, border 0.3s ease;
-        flex-grow: 1;
+        flex-grow: 1; /* Memungkinkan item tumbuh mengisi ruang */
         text-align: center;
         min-width: 150px; /* Minimal lebar untuk setiap opsi */
     }
     .stRadio [data-baseweb="radio"]:hover {
         background-color: #3A3A3A;
-        border: 1px solid #DAA520; /* Border aksen saat hover */
+        border: 1px solid #DAA520;
     }
     .stRadio [data-baseweb="radio"][aria-checked="true"] {
-        background-color: #DAA520 !important; /* Emas gelap saat terpilih */
+        background-color: #DAA520 !important;
         color: white;
         border: 1px solid #DAA520;
-        box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4); /* Bayangan aksen */
+        box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
     }
     .stRadio [data-baseweb="radio"] span:last-child { /* text of the radio button */
         color: #E0E0E0;
         font-weight: 600;
-        font-size: 17px;
+        font-size: 17px; /* Ukuran desktop */
     }
     .stRadio [data-baseweb="radio"][aria-checked="true"] span:last-child {
         color: white;
@@ -177,47 +189,47 @@ st.markdown("""
     
     /* Custom Cards */
     .dark-card {
-        background-color: #1A1A1A; /* Lebih gelap */
-        border-radius: 15px; /* Lebih bulat */
-        padding: 30px; /* Lebih besar */
-        box-shadow: 0 6px 25px rgba(0,0,0,0.3); /* Bayangan lebih kuat */
+        background-color: #1A1A1A;
+        border-radius: 15px;
+        padding: 30px; /* Ukuran desktop */
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3);
         margin-bottom: 30px;
-        border: 1px solid #282828; /* Border halus */
+        border: 1px solid #282828;
     }
 
     /* Radix Header (PULCRA Branding) */
     .app-header {
-        background: linear-gradient(145deg, #1A1A1A, #0A0A0A); /* Gradasi background */
-        padding: 40px; /* Lebih besar */
-        border-radius: 20px; /* Lebih bulat */
-        box-shadow: 0 8px 30px rgba(0,0,0,0.5); /* Bayangan lebih kuat */
+        background: linear-gradient(145deg, #1A1A1A, #0A0A0A);
+        padding: 40px; /* Ukuran desktop */
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
         margin-bottom: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        backdrop-filter: blur(8px); /* Blur lebih kuat */
+        backdrop-filter: blur(8px);
         border: 1px solid #282828;
     }
     .pulcra-logo {
-        font-family: 'Playfair Display', serif; /* Font serif untuk logo */
+        font-family: 'Playfair Display', serif;
         font-weight: 700;
-        font-size: 56px; /* Lebih besar */
-        color: #DAA520; /* Emas gelap untuk logo */
+        font-size: 56px; /* Ukuran desktop */
+        color: #DAA520;
         margin-bottom: 10px;
-        letter-spacing: 5px; /* Jarak huruf lebih lebar */
-        text-shadow: 0 5px 20px rgba(218, 165, 32, 0.5); /* Bayangan emas yang kuat */
-        text-transform: uppercase; /* Uppercase untuk logo */
+        letter-spacing: 5px;
+        text-shadow: 0 5px 20px rgba(218, 165, 32, 0.5);
+        text-transform: uppercase;
     }
     .app-header h1 {
-        font-size: 38px; /* Ukuran h1 di header */
-        border-bottom: none; /* Hilangkan border bottom di h1 header */
+        font-size: 38px; /* Ukuran desktop */
+        border-bottom: none;
         padding-bottom: 0;
         margin-bottom: 0;
-        text-shadow: none; /* Hilangkan text shadow di h1 header */
+        text-shadow: none;
         color: #F8F8F8;
     }
     .app-header p {
-        font-size: 18px;
+        font-size: 18px; /* Ukuran desktop */
         color: #B0B0B0;
         margin-top: 10px;
         letter-spacing: 0.5px;
@@ -226,21 +238,21 @@ st.markdown("""
     /* Footer */
     .radix-footer {
         text-align: center;
-        margin-top: 60px; /* Margin atas lebih besar */
-        padding: 25px; /* Padding lebih besar */
+        margin-top: 60px;
+        padding: 25px; /* Ukuran desktop */
         font-size: 15px;
         font-family: 'Montserrat', sans-serif;
         color: #A0A0A0;
         border-top: 1px solid #282828;
-        background-color: #1A1A1A; /* Senada dengan card/tabs */
-        border-radius: 0 0 15px 15px; /* Lebih bulat */
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.3); /* Bayangan ke atas */
+        background-color: #1A1A1A;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
     }
 
     /* Other elements */
     hr {
-        border-color: #282828 !important; /* Lebih gelap */
-        margin: 40px 0 !important; /* Margin lebih besar */
+        border-color: #282828 !important;
+        margin: 40px 0 !important;
     }
     footer { visibility: hidden; }
     #MainMenu { visibility: hidden; }
@@ -258,77 +270,79 @@ st.markdown("""
 
     /* For data editor and file uploader to blend better */
     [data-testid="stDataEditor"] {
-        border-radius: 10px; /* Lebih bulat */
-        overflow: hidden;
+        border-radius: 10px;
+        overflow: auto; /* Penting untuk scroll horizontal di mobile */
         border: 1px solid #282828;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Bayangan */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     [data-testid="stFileUploaderDropzone"] {
-        border: 2px dashed #DAA520; /* Border aksen emas */
+        border: 2px dashed #DAA520;
         border-radius: 12px;
-        padding: 25px; /* Lebih besar */
+        padding: 25px; /* Ukuran desktop */
         background-color: #1A1A1A;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     [data-testid="stFileUploaderDropzone"] p {
         color: #B0B0B0;
-        font-size: 17px;
+        font-size: 17px; /* Ukuran desktop */
     }
 
     /* For data preview tables */
     .stDataFrame {
         border-radius: 10px;
-        box-shadow: 0 5px 18px rgba(0,0,0,0.3); /* Bayangan lebih kuat */
+        box-shadow: 0 5px 18px rgba(0,0,0,0.3);
         background-color: #1A1A1A;
-        max-height: 350px; /* Sedikit lebih tinggi */
+        max-height: 350px;
         overflow-y: auto;
+        overflow-x: auto; /* Sangat penting untuk tabel di mobile */
         border: 1px solid #282828;
     }
     .stDataFrame [data-testid="stTable"] {
         border: none;
+        min-width: 600px; /* Pastikan tabel punya lebar minimum untuk scroll */
     }
     .stDataFrame th {
-        background-color: #282828 !important; /* Lebih gelap */
-        color: #DAA520 !important; /* Emas gelap untuk header tabel */
-        font-weight: 700; /* Lebih tebal */
+        background-color: #282828 !important;
+        color: #DAA520 !important;
+        font-weight: 700;
         position: sticky;
         top: 0;
         z-index: 1;
-        font-size: 16px;
+        font-size: 16px; /* Ukuran desktop */
     }
     .stDataFrame td {
         background-color: #1A1A1A !important;
         color: #E0E0E0 !important;
         border-bottom: 1px solid #282828 !important;
-        padding: 10px 15px; /* Padding sel */
+        padding: 10px 15px;
     }
     /* Scrollbar for dataframes */
     .stDataFrame::-webkit-scrollbar {
-        width: 10px; /* Lebih tebal */
-        height: 10px;
+        width: 10px;
+        height: 10px; /* Untuk scrollbar horizontal */
     }
     .stDataFrame::-webkit-scrollbar-track {
         background: #1A1A1A;
     }
     .stDataFrame::-webkit-scrollbar-thumb {
-        background: #DAA520; /* Emas gelap untuk scrollbar */
+        background: #DAA520;
         border-radius: 10px;
     }
     .stDataFrame::-webkit-scrollbar-thumb:hover {
-        background: #C49F3D; /* Emas sedikit lebih terang saat hover */
+        background: #C49F3D;
     }
 
     /* Plotly specifics for dark elegance */
     .js-plotly-plot .plotly .modebar {
-        background-color: #1A1A1A !important; /* Modebar senada dengan background */
+        background-color: #1A1A1A !important;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     .js-plotly-plot .plotly .modebar-btn {
-        color: #DAA520 !important; /* Ikon modebar warna emas */
+        color: #DAA520 !important;
     }
     .js-plotly-plot .plotly .modebar-btn:hover {
-        background-color: #282828 !important; /* Background hover untuk ikon */
+        background-color: #282828 !important;
     }
 
     /* Access Code styling */
@@ -338,28 +352,147 @@ st.markdown("""
         border-radius: 8px;
         color: #E0E0E0;
         padding: 10px 15px;
-        font-size: 18px;
+        font-size: 18px; /* Ukuran desktop */
         box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
     .stTextInput>label {
-        font-size: 18px;
+        font-size: 18px; /* Ukuran desktop */
         color: #F8F8F8;
         font-weight: 600;
         margin-bottom: 10px;
     }
     .st-emotion-cache-16txt4s { /* Ini adalah selector untuk error message Streamlit */
-        background-color: #4A0000; /* Darker red */
-        color: #FFCCCC; /* Lighter red text */
+        background-color: #4A0000;
+        color: #FFCCCC;
         border-radius: 8px;
         padding: 10px;
         border: 1px solid #8B0000;
     }
     .st-emotion-cache-zt5ig8 { /* Ini adalah selector untuk success message Streamlit */
-        background-color: #004A00; /* Darker green */
-        color: #CCFFCC; /* Lighter green text */
+        background-color: #004A00;
+        color: #CCFFCC;
         border-radius: 8px;
         padding: 10px;
         border: 1px solid #008B00;
+    }
+
+    /* --- MEDIA QUERIES FOR MOBILE RESPONSIVENESS --- */
+    @media (max-width: 768px) {
+        .stApp {
+            padding-left: 10px; /* Kurangi padding samping untuk layar kecil */
+            padding-right: 10px; /* Kurangi padding samping untuk layar kecil */
+            padding-top: 20px; /* Kurangi padding atas */
+            padding-bottom: 30px; /* Kurangi padding bawah */
+        }
+        h1 {
+            font-size: 32px; /* Perkecil ukuran h1 untuk mobile */
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 24px; /* Perkecil ukuran h2 untuk mobile */
+            margin-bottom: 15px;
+        }
+        h3 {
+            font-size: 20px; /* Perkecil ukuran h3 untuk mobile */
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        p, li, span, div {
+            font-size: 14px; /* Perkecil ukuran font teks biasa */
+            line-height: 1.6;
+        }
+        .stButton>button {
+            padding: 10px 20px; /* Perkecil padding tombol */
+            font-size: 15px; /* Perkecil font tombol */
+        }
+        .stTabs [data-baseweb="tab"] {
+            padding: 8px 15px; /* Perkecil padding tab */
+            font-size: 15px; /* Perkecil font tab */
+        }
+        .stTabs [data-baseweb="tab-panel"] {
+            padding: 20px; /* Perkecil padding panel tab */
+        }
+        .stRadio > label {
+            font-size: 16px; /* Perkecil font label radio */
+            margin-bottom: 10px;
+        }
+        .stRadio [data-baseweb="radio"] {
+            min-width: unset; /* Hapus min-width agar lebih fleksibel */
+            padding: 8px 15px; /* Perkecil padding item radio */
+            font-size: 15px; /* Perkecil font item radio */
+        }
+        .app-header {
+            padding: 30px; /* Perkecil padding header */
+            margin-bottom: 30px;
+        }
+        .pulcra-logo {
+            font-size: 40px; /* Perkecil logo */
+            letter-spacing: 3px;
+        }
+        .app-header h1 {
+            font-size: 28px; /* Perkecil h1 di header */
+        }
+        .app-header p {
+            font-size: 16px; /* Perkecil font di header */
+        }
+        .dark-card {
+            padding: 20px; /* Perkecil padding card */
+            margin-bottom: 20px;
+        }
+        .stDataFrame th, .stDataFrame td {
+            font-size: 14px; /* Perkecil font tabel */
+            padding: 8px 10px;
+        }
+        .stTextInput>div>div>input {
+            font-size: 16px; /* Perkecil font input teks */
+            padding: 8px 12px;
+        }
+        .stTextInput>label {
+            font-size: 16px; /* Perkecil font label input */
+        }
+        .radix-footer {
+            margin-top: 40px;
+            padding: 15px;
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 28px;
+        }
+        h2 {
+            font-size: 20px;
+        }
+        p, li, span, div {
+            font-size: 13px;
+        }
+        .stButton>button {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .stRadio > div {
+            flex-direction: column; /* Tumpuk radio button secara vertikal */
+            align-items: stretch; /* Regangkan item radio */
+        }
+        .stRadio [data-baseweb="radio"] {
+            width: 100%; /* Lebar penuh */
+        }
+        .pulcra-logo {
+            font-size: 32px;
+        }
+        .app-header h1 {
+            font-size: 24px;
+        }
+        .app-header p {
+            font-size: 14px;
+        }
+        .dark-card {
+            padding: 15px;
+        }
+        .stDataFrame th, .stDataFrame td {
+            font-size: 13px;
+        }
     }
 
 </style>
@@ -375,6 +508,8 @@ def check_password():
     if not st.session_state.password_entered:
         st.markdown("<h2 style='text-align: center;'>Akses Aplikasi</h2>", unsafe_allow_html=True)
         password_input = st.text_input("Masukkan Kode Akses Anda", type="password", key="password_input", help="Hubungi administrator untuk kode akses.")
+        
+        # Kolom untuk tombol "Masuk" agar berada di tengah dan responsif
         col_pw1, col_pw2, col_pw3 = st.columns([1,1,1])
         with col_pw2:
             if st.button("Masuk", key="login_button", use_container_width=True):
@@ -480,11 +615,8 @@ def calculate_lines_and_points(x_values, y_values):
             results['ransac_line_y'] = ransac.predict(results['ransac_line_x'].reshape(-1, 1))
             
         except Exception as e:
-            # st.warning(f"Error Regresi RANSAC: {e}. Pastikan data memiliki variasi.") # Suppress this warning if it's too frequent
             results['ransac_line_x'] = np.array([])
             results['ransac_line_y'] = np.array([])
-    # else:
-        # st.warning("Data tidak cukup untuk Regresi RANSAC (minimal 2 titik).") # Suppress this warning
 
     return results
 
@@ -514,6 +646,7 @@ with tabs[0]:
         key="data_editor",
     )
     
+    # Gunakan kolom untuk tombol agar responsif
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Terapkan Perubahan", key="apply_changes", use_container_width=True):
@@ -616,7 +749,7 @@ analysis_choice = st.radio(
     "Pilih jenis analisis yang ingin ditampilkan:",
     ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis Regresi RANSAC", "Tampilkan Semua"),
     key="analysis_choice",
-    horizontal=True
+    horizontal=True # Biarkan horizontal untuk desktop, akan dihandle media query untuk mobile
 )
 
 # Render Grafik 
@@ -716,12 +849,14 @@ fig.update_layout(
     ),
     margin=dict(l=20, r=20, t=60, b=20), height=600, template="plotly_dark", # Margin dan tinggi lebih besar
     plot_bgcolor="#1A1A1A", paper_bgcolor="#1A1A1A", font=dict(color="#E0E0E0", family="Montserrat, sans-serif"),
-    hoverlabel=dict(bgcolor="rgba(26,26,26,0.9)", font_size=14, font_family="Montserrat, sans-serif") # Hoverlabel lebih elegan
+    hoverlabel=dict(bgcolor="rgba(26,26,26,0.9)", font_size=14, font_family="Montserrat, sans-serif"),
+    # Tambahkan responsivitas untuk Plotly
+    autosize=True
 )
 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#282828', zeroline=True, zerolinewidth=1.5, zerolinecolor='#282828', tickfont=dict(color="#B0B0B0"))
 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#282828', zeroline=True, zerolinewidth=1.5, zerolinecolor='#282828', tickfont=dict(color="#B0B0B0"))
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True) # use_container_width sangat penting untuk responsivitas grafik
 
 st.markdown("---") # Garis pemisah untuk hasil 
 
@@ -782,6 +917,7 @@ elif analysis_choice == "Tampilkan Semua":
     val_10_20 = results['y_at_x_50_pt10_20_line']
     val_ransac = results['y_at_x_50_ransac_line']
 
+    # Gunakan flexbox untuk menumpuk di mobile
     st.markdown(f"""
     <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
         <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
@@ -806,6 +942,6 @@ st.markdown("</div>", unsafe_allow_html=True)
 # Footer
 st.markdown("""
 <div class="radix-footer">
-    Dikembangkan oleh Tim Radix (2025)
+    Dikembangkan oleh Radix (2025)
 </div>
 """, unsafe_allow_html=True)
