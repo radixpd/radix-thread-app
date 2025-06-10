@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from scipy import interpolate, stats # Import stats for linear regression
+from scipy import interpolate, stats
 import io
 
 # --- START OF ACCESS CODE IMPLEMENTATION ---
@@ -34,7 +34,7 @@ if not check_password():
 
 # Set page configuration
 st.set_page_config(
-    page_title="Radix Thread Abrasion Graph",
+    page_title="Abrasion Graph by Radix",
     page_icon="📊",
     layout="wide"
 )
@@ -154,7 +154,7 @@ st.markdown("""
         border-radius: 8px;
         background-color: #1C1F26;
         color: #F0F2F6;
-        border-left: 4_at_x_50_line solid #64CCC9; /* Teal border for info/general alerts */
+        border-left: 4px solid #64CCC9; /* Teal border for info/general alerts */
     }
     div[data-baseweb="notification"] { /* For success/error toasts */
         background-color: #1C1F26 !important;
@@ -558,8 +558,8 @@ with tabs[1]:
         imported_df = load_excel_data(uploaded_file) # Use cached function which now returns 1-based index
         if imported_df is not None:
             st.write("Pratinjau Data:")
-            # Display preview with 1-based index
-            st.dataframe(imported_df.head(), use_container_width=True, hide_index=False)
+            # Display entire imported_df with 1-based index and scroll capability
+            st.dataframe(imported_df, use_container_width=True, hide_index=False)
             
             if st.button("Gunakan Data Ini", key="use_imported"):
                 st.session_state.data = imported_df # This DataFrame already has 1-based index
