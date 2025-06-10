@@ -196,7 +196,7 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
     }
-    .radix-logo {
+    .pulcra-logo {
         font-family: 'Arial', sans-serif;
         font-weight: 700;
         font-size: 38px;
@@ -283,7 +283,7 @@ st.markdown("""
 # Header Aplikasi with Radix Logo
 st.markdown("""
 <div class="app-header">
-    <div class="radix-logo">RADIX</div>
+    <div class="pulcra-logo">PULCRA CHEMICALS</div>
     <h1 style="margin-top: 0; color: #FFFFFF; font-size: 36px;">Analisis Abrasi Benang</h1>
     <p style="color: #A0A0A0; font-size: 16px;">Alat profesional untuk memvisualisasikan data abrasi benang dan menghitung nilai persimpangan</p>
 </div>
