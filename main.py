@@ -21,7 +21,7 @@ def check_password():
         if st.button("Masuk", key="login_button"):
             if password_input == ACCESS_CODE:
                 st.session_state.password_entered = True
-                st.rerun() # Use st.rerun() instead of st.experimental_rerun()
+                st.rerun() # CORRECTED: Used st.rerun() instead of st.experimental_rerun()
             else:
                 st.error("Kode akses salah. Silakan coba lagi.")
         return False
@@ -34,7 +34,7 @@ if not check_password():
 
 
 # Set page configuration - CORRECTED FUNCTION NAME HERE!
-st.set_page_config(
+st.set_page_config( # CORRECTED: Changed st.set_set_page_config to st.set_page_config
     page_title="Radix Thread Abrasion Graph",
     page_icon="📊",
     layout="wide"
