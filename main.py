@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from scipy import interpolate
+from scipy.stats import linregress # Import linregress for linear regression
 import io
 
 # --- START OF ACCESS CODE IMPLEMENTATION ---
@@ -280,7 +281,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header Aplikasi with Radix Logo
+# Header Aplikasi with PULCRA Logo (updated from Radix)
 st.markdown("""
 <div class="app-header">
     <div class="pulcra-logo">PULCRA</div>
@@ -393,45 +394,23 @@ st.subheader("Grafik Abrasi Benang")
 # Plot graph
 if st.session_state.update_graph or not 'fig' in st.session_state:
     # Get data from session state
-    x_values = st.session_state.data['x_values']
-    y_values = st.session_state.data['y_values']
+    x_values = st.session_state.data['x_values'].values # Use .values for numpy array
+    y_values = st.session_state.data['y_values'].values # Use .values for numpy array
     
-    # Create interpolation function
-    f = interpolate.interp1d(x_values, y_values, kind='linear', fill_value='extrapolate')
-    
-    # Find indices for 10th and 20th points in the dataset
-    x_values_list = list(x_values)
-    
-    # Find 10th point (approximately the 10th value in the dataset)
-    point_10_index = min(9, len(x_values_list) - 1) # Ensure index is within bounds
-    specific_x1 = x_values_list[point_10_index]
-    specific_y1 = y_values[point_10_index]
-    
-    # Find 20th point (approximately the 20th value in the dataset)
-    point_20_index = min(19, len(x_values_list) - 1) # Ensure index is within bounds
-    specific_x2 = x_values_list[point_20_index]
-    specific_y2 = y_values[point_20_index]
-    
-    # Calculate slope and intercept of the line connecting these two points
-    if (specific_x2 - specific_x1) != 0: # Avoid division by zero
-        slope = (specific_y2 - specific_y1) / (specific_x2 - specific_x1)
-        intercept = specific_y1 - slope * specific_x1
-    else: # If x1 and x2 are the same, it's a vertical line or error case
-        slope = 0
-        intercept = specific_y1 # Treat as horizontal at y1 for plotting line projection
-        st.warning("Titik ke-10 dan ke-20 memiliki nilai X yang sama. Proyeksi garis mungkin tidak akurat.")
+    # Perform linear regression on all data points
+    # This finds the best-fit line through all available data
+    slope, intercept, r_value, p_value, std_err = linregress(x_values, y_values)
 
-    # Function to calculate y value using the line equation
-    def line_equation(x):
+    # Function to calculate y value using the regression line equation
+    def regression_line_equation(x):
         return slope * x + intercept
     
-    # Calculate y value at x=50 using the line equation
-    y_at_x_50_line = line_equation(50)
+    # Calculate y value at x=50 using the regression line
+    y_at_x_50_regression = regression_line_equation(50)
     
-    # Interpolate original curve at specific points
-    y_at_x_10 = float(f(10))
-    y_at_x_20 = float(f(20))
-    y_at_x_50 = float(f(50))
+    # Interpolate original curve at specific points (for plotting the original curve's value at x=50)
+    f_interp = interpolate.interp1d(x_values, y_values, kind='linear', fill_value='extrapolate')
+    y_at_x_50_original_curve = float(f_interp(50))
     
     # Create figure
     fig = go.Figure()
@@ -441,54 +420,38 @@ if st.session_state.update_graph or not 'fig' in st.session_state:
         x=x_values, 
         y=y_values,
         mode='lines+markers',
-        name='Data Abrasi',
+        name='Data Abrasi (Kurva Asli)',
         line=dict(color='#64CCC9', width=3), # Teal color for main line
         marker=dict(size=8, color='#64CCC9')
     ))
     
-    # Add specific points (10th and 20th points)
+    # Add the regression line
+    # Create x values for the regression line (from min x to max x, or slightly beyond for visual)
+    x_regression_line = np.array([min(x_values), max(x_values) * 1.1]) # Extend slightly past max x
+    y_regression_line = regression_line_equation(x_regression_line)
+    
     fig.add_trace(go.Scatter(
-        x=[specific_x1, specific_x2],
-        y=[specific_y1, specific_y2],
-        mode='markers',
-        name='Titik Referensi Terpilih',
-        marker=dict(size=12, color='#FFD700', symbol='star', line=dict(width=2, color='white')) # Gold star
+        x=x_regression_line,
+        y=y_regression_line,
+        mode='lines',
+        name='Garis Regresi Linear',
+        line=dict(color="#FF6347", width=3, dash="dash"), # Tomato red for regression line
     ))
     
-    # Add line connecting the two specific points and extending to x=50
-    fig.add_shape(
-        type="line",
-        x0=specific_x1,
-        y0=specific_y1,
-        x1=specific_x2,
-        y1=specific_y2,
-        line=dict(color="#FF6347", width=3), # Tomato red for the line
-    )
-    
-    # Extend line to x=50
-    fig.add_shape(
-        type="line",
-        x0=specific_x2,
-        y0=specific_y2,
-        x1=50,
-        y1=y_at_x_50_line,
-        line=dict(color="#FF6347", width=3, dash="dot"), # Dotted extension
-    )
-    
-    # Add point at the line's intersection with x=50
+    # Add point at the regression line's intersection with x=50
     fig.add_trace(go.Scatter(
         x=[50],
-        y=[y_at_x_50_line],
+        y=[y_at_x_50_regression],
         mode='markers',
-        name=f'Persimpangan Garis pada x=50, y={y_at_x_50_line:.2f}',
+        name=f'Perpotongan Garis Regresi pada x=50, y={y_at_x_50_regression:.2f}',
         marker=dict(size=14, color='#FF6347', symbol='circle-open', line=dict(width=3, color='#FF6347'))
     ))
     
     # Add label for linear extrapolation at x=50
     fig.add_annotation(
         x=50,
-        y=y_at_x_50_line + 50, # Offset to avoid overlap
-        text=f"Nilai Garis: {y_at_x_50_line:.2f}",
+        y=y_at_x_50_regression + 50, # Offset to avoid overlap
+        text=f"Nilai Garis Regresi: {y_at_x_50_regression:.2f}",
         showarrow=True,
         arrowhead=2,
         arrowsize=1,
@@ -496,30 +459,6 @@ if st.session_state.update_graph or not 'fig' in st.session_state:
         arrowcolor='#FF6347',
         font=dict(size=14, color='#FF6347', family="Arial, sans-serif"),
     )
-    
-    # Add vertical lines at x=17.7 (10th point) and x=40.4 (20th point)
-    for x_pos, y_val, color, name, index in [
-        (specific_x1, specific_y1, "#FFD700", f"Titik 10 ({specific_x1}, {specific_y1})", 10),
-        (specific_x2, specific_y2, "#FFD700", f"Titik 20 ({specific_x2}, {specific_y2})", 20),
-    ]:
-        # Add vertical dashed line
-        fig.add_shape(
-            type="line",
-            x0=x_pos,
-            y0=0,
-            x1=x_pos,
-            y1=max(y_values) * 1.1, # Extend beyond max y for visibility
-            line=dict(color=color, width=1.5, dash="dash"),
-        )
-        
-        # Add text label for vertical line
-        fig.add_annotation(
-            x=x_pos,
-            y=y_val - 50 if y_val > 50 else y_val + 50, # Offset below point, adjust if too low
-            text=f"Titik {index}",
-            showarrow=False,
-            font=dict(color=color, size=12, family="Arial, sans-serif", weight="bold")
-        )
     
     # Add vertical line at x=50
     fig.add_shape(
@@ -543,9 +482,9 @@ if st.session_state.update_graph or not 'fig' in st.session_state:
     # Add point at the intersection of the original curve with x=50
     fig.add_trace(go.Scatter(
         x=[50],
-        y=[y_at_x_50],
+        y=[y_at_x_50_original_curve],
         mode='markers',
-        name=f'Persimpangan pada x=50, y={y_at_x_50:.2f}',
+        name=f'Perpotongan Kurva Asli pada x=50, y={y_at_x_50_original_curve:.2f}',
         marker=dict(size=14, color='#DC3545', symbol='circle', line=dict(width=2, color='white')) # Solid red circle
     ))
     
@@ -603,47 +542,43 @@ if st.session_state.update_graph or not 'fig' in st.session_state:
     
     # Save in session state
     st.session_state.fig = fig
-    st.session_state.y_at_x_50 = y_at_x_50
+    st.session_state.y_at_x_50_regression = y_at_x_50_regression
     st.session_state.update_graph = False
 
 # Display the graph
 st.plotly_chart(st.session_state.fig, use_container_width=True)
 
-# Function to recalculate line values using session state data
-def recalculate_line_values():
-    x_values = st.session_state.data['x_values']
-    y_values = st.session_state.data['y_values']
+# Function to recalculate line values using session state data (now regression)
+def recalculate_line_values_regression():
+    x_values = st.session_state.data['x_values'].values
+    y_values = st.session_state.data['y_values'].values
     
-    x_values_list = list(x_values)
+    slope, intercept, r_value, p_value, std_err = linregress(x_values, y_values)
     
-    point_10_index = min(9, len(x_values_list) - 1)
-    specific_x1 = x_values_list[point_10_index]
-    specific_y1 = y_values[point_10_index]
+    # Calculate y at x=50 using the regression line
+    y_at_x_50_regression = slope * 50 + intercept
     
-    point_20_index = min(19, len(x_values_list) - 1)
-    specific_x2 = x_values_list[point_20_index]
-    specific_y2 = y_values[point_20_index]
+    # Optionally, get the start and end points of the regression line on the graph for display
+    # This will be the min and max x values in your dataset
+    start_x = min(x_values)
+    start_y = slope * start_x + intercept
+    end_x = max(x_values)
+    end_y = slope * end_x + intercept
     
-    if (specific_x2 - specific_x1) != 0:
-        slope = (specific_y2 - specific_y1) / (specific_x2 - specific_x1)
-        intercept = specific_y1 - slope * specific_x1
-    else:
-        slope = 0
-        intercept = specific_y1
-    
-    return slope * 50 + intercept, specific_x1, specific_y1, specific_x2, specific_y2
+    return y_at_x_50_regression, start_x, start_y, end_x, end_y
 
-# Calculate line intersection and get points
-y_line_intersection, p10_x, p10_y, p20_x, p20_y = recalculate_line_values()
+# Calculate line intersection and get points for display
+y_line_intersection, reg_start_x, reg_start_y, reg_end_x, reg_end_y = recalculate_line_values_regression()
 
 # Display results in a cleaner format
 st.markdown(f"""
 <div class="dark-card">
-    <h2 style="color: #FFFFFF; margin-bottom: 5px;">Hasil Analisis pada x=50</h2>
+    <h2 style="color: #FFFFFF; margin-bottom: 5px;">Hasil Analisis pada x=50 (Berdasarkan Regresi Linear)</h2>
     <h1 style="color: #64CCC9; font-size: 48px; margin: 10px 0;">{y_line_intersection:.2f}</h1>
-    <p style="color: #A0A0A0; font-size: 16px;">Nilai perpotongan garis pada x=50</p>
+    <p style="color: #A0A0A0; font-size: 16px;">Nilai perpotongan garis regresi pada x=50</p>
     <div style="margin-top: 15px; font-size: 14px; color: #A0A0A0;">
-        Berdasarkan garis antara titik 10 ({p10_x:.2f}, {p10_y:.2f}) dan titik 20 ({p20_x:.2f}, {p20_y:.2f})
+        Garis regresi dihitung berdasarkan semua titik data.
+        (Mulai dari ({reg_start_x:.2f}, {reg_start_y:.2f}) hingga ({reg_end_x:.2f}, {reg_end_y:.2f}))
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -665,10 +600,10 @@ st.markdown("""
     <h3 style="color: #FFFFFF;">Analisis Abrasi Benang</h3>
     <p style="color: #F0F2F6;">Grafik menunjukkan hubungan antara nilai tetap (sumbu-x) dan nilai benang putus (sumbu-y).</p>
     <ul style="color: #F0F2F6;">
-        <li><strong style="color: #64CCC9;">Garis teal</strong> adalah kurva data abrasi benang.</li>
-        <li><strong style="color: #FFD700;">Bintang emas</strong> menandai titik ke-10 dan ke-20 dari dataset.</li>
-        <li><strong style="color: #FF6347;">Garis oranye/merah</strong> menghubungkan kedua titik tersebut dan diperpanjang ke x=50.</li>
-        <li><strong style="color: #FF6347;">Lingkaran kosong</strong> menunjukkan perpotongan garis dengan x=50.</li>
+        <li><strong style="color: #64CCC9;">Garis teal</strong> adalah kurva data abrasi benang (data asli).</li>
+        <li><strong style="color: #FF6347;">Garis putus-putus oranye/merah</strong> adalah garis regresi linear yang paling sesuai dengan semua titik data.</li>
+        <li><strong style="color: #FF6347;">Lingkaran kosong</strong> menunjukkan perpotongan garis regresi dengan x=50.</li>
+        <li><strong style="color: #DC3545;">Lingkaran padat</strong> menunjukkan perpotongan kurva data asli dengan x=50.</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
@@ -679,8 +614,8 @@ with st.expander("Informasi Tambahan & Tips Interaksi"):
     <div style="padding: 10px;">
         <h4 style="color: #FFFFFF;">Poin Penting:</h4>
         <ul style="color: #F0F2F6;">
-            <li>Garis yang ditarik antara titik ke-10 dan ke-20 memberikan proyeksi linear ke x=50.</li>
-            <li>Nilai pada garis saat x=50 dianggap sebagai "hasil" resmi untuk analisis ini.</li>
+            <li>Garis regresi linear memberikan perkiraan tren umum data, yang mungkin lebih representatif daripada hanya menggunakan dua titik.</li>
+            <li>Nilai pada garis regresi saat x=50 adalah hasil proyeksi berdasarkan tren keseluruhan data.</li>
         </ul>
         
         <h4 style="color: #FFFFFF; margin-top: 20px;">Tips Interaksi:</h4>
@@ -693,10 +628,10 @@ with st.expander("Informasi Tambahan & Tips Interaksi"):
     </div>
     """, unsafe_allow_html=True)
 
-# Add Radix footer
+# Add PULCRA footer (updated from Radix)
 st.markdown("""
 <div style="text-align: center; margin-top: 40px; padding: 15px; font-size: 14px; font-family: 'Helvetica Neue', sans-serif; color: #A0A0A0; border-top: 1px solid #2C303A; background-color: #1C1F26; border-radius: 0 0 8px 8px;">
-    <p>Dikembangkan oleh <span style="font-weight: bold; color: #64CCC9;">RADIX</span> &copy; 2025</p>
+    <p>Dikembangkan oleh <span style="font-weight: bold; color: #64CCC9;">PULCRA</span> &copy; 2025</p>
     <p>Solusi Analisis Abrasi Benang Profesional</p>
 </div>
 """, unsafe_allow_html=True)
