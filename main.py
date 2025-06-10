@@ -8,7 +8,7 @@ import io
 
 # --- Konfigurasi Halaman (Paling Awal) ---
 st.set_page_config(
-    page_title="Radix Thread Abrasion",
+    page_title="Thread Abrasion by Radix",
     page_icon="🧵",
     layout="wide"
 )
@@ -163,7 +163,7 @@ st.markdown("""
         backdrop-filter: blur(5px);
         border: 1px solid #2E2E2E;
     }
-    .radix-logo {
+    .pulcra-logo {
         font-family: 'Arial', sans-serif;
         font-weight: 700;
         font-size: 42px;
@@ -294,7 +294,7 @@ if not check_password():
 # --- Header Aplikasi ---
 st.markdown("""
 <div class="app-header">
-    <div class="radix-logo">RADIX</div>
+    <div class="pulcra-logo">PULCRA</div>
     <h1 style="margin-top: 0; color: #FFFFFF; font-size: 30px; border-bottom: none; padding-bottom: 0;">Analisis Abrasi Benang</h1>
     <p style="color: #A0A0A0; font-size: 16px; text-align: center;">Alat profesional untuk visualisasi data dan perhitungan nilai perpotongan</p>
 </div>
