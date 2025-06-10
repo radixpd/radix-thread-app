@@ -7,10 +7,11 @@ import io
 from sklearn.linear_model import LinearRegression, RANSACRegressor # Import modul baru
 
 # --- START OF ACCESS CODE IMPLEMENTATION ---
-ACCESS_CODES = ["RADIX2025", "PULCRA2025", "ADMIN123", "GUEST456"]
+# Define your secret code
+ACCESS_CODE = "RADIX2025" # GANTI INI DENGAN KODE YANG ANDA INGINKAN!
 
 def check_password():
-    """Mengembalikan True jika pengguna memasukkan salah satu kode yang benar dari daftar, False jika tidak."""
+    """Returns True if the user enters the correct password, False otherwise."""
     if "password_entered" not in st.session_state:
         st.session_state.password_entered = False
 
@@ -18,24 +19,28 @@ def check_password():
         st.subheader("Masukkan Kode Akses")
         password_input = st.text_input("Kode Akses", type="password", key="password_input")
         if st.button("Masuk", key="login_button"):
-            if password_input in ACCESS_CODES:
+            if password_input == ACCESS_CODE:
                 st.session_state.password_entered = True
-                st.rerun() # PERBAIKAN: Menggunakan st.rerun()
+                st.rerun() # Rerun to hide the login screen
             else:
                 st.error("Kode akses salah. Silakan coba lagi.")
         return False
     return True
 
+# Call the password check function at the very beginning of your app
 if not check_password():
-    st.stop()
+    st.stop() # Stop execution if password is not entered or is incorrect
 # --- END OF ACCESS CODE IMPLEMENTATION ---
 
+
+# Set page configuration
 st.set_page_config(
     page_title="Radix Thread Abrasion Graph",
     page_icon="📊",
     layout="wide"
 )
 
+# Custom CSS to enforce dark mode and elegant styling
 st.markdown("""
 <style>
     /* Ensure the entire app has a dark background and consistent typography */
@@ -157,7 +162,7 @@ st.markdown("""
         color: #F0F2F6 !important;
     }
     .success {
-        border-left: 4x solid #28A745 !important; /* Green for success */
+        border-left: 4px solid #28A745 !important; /* Green for success */
     }
     .error {
         border-left: 4px solid #DC3545 !important; /* Red for error */
@@ -189,6 +194,7 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
     }
+    /* Mengubah .radix-logo menjadi .pulcra-logo agar cocok dengan HTML di bawah */
     .pulcra-logo {
         font-family: 'Arial', sans-serif;
         font-weight: 700;
@@ -350,7 +356,7 @@ if 'update_graph' not in st.session_state:
 @st.cache_data
 def get_initial_data_df():
     df = pd.DataFrame(INITIAL_DATA)
-    df.index = np.arange(1, len(df) + 1)
+    df.index = np.arange(1, len(df) + 1) # Set 1-based index
     return df
 
 @st.cache_data
@@ -360,7 +366,7 @@ def load_excel_data(uploaded_file):
             df = pd.read_excel(uploaded_file)
             if 'x_values' in df.columns and 'y_values' in df.columns:
                 df = df[['x_values', 'y_values']]
-                df.index = np.arange(1, len(df) + 1)
+                df.index = np.arange(1, len(df) + 1) # Set 1-based index for imported data
                 return df
             else:
                 st.error("File Excel harus berisi kolom 'x_values' dan 'y_values'.")
@@ -371,7 +377,7 @@ def load_excel_data(uploaded_file):
     return None
 
 @st.cache_data
-def generate_graph_data(x_values, y_values, poly_degree, linear_model_type): # Tambahkan linear_model_type
+def generate_graph_data(x_values, y_values, poly_degree): # Tambahkan poly_degree
     x_np = x_values.to_numpy().reshape(-1, 1) # Reshape untuk sklearn
     y_np = y_values.to_numpy()
 
@@ -387,8 +393,8 @@ def generate_graph_data(x_values, y_values, poly_degree, linear_model_type): # T
 
     if y_values.empty:
         st.warning("Data kosong. Tidak dapat melakukan analisis.")
-        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
-
+        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan # Sesuaikan return
+    
     # Regresi Linear Biasa (OLS)
     if x_values.nunique() >= 2:
         ols_reg = LinearRegression()
@@ -397,30 +403,48 @@ def generate_graph_data(x_values, y_values, poly_degree, linear_model_type): # T
         ols_intercept = ols_reg.intercept_
         y_at_x_50_ols = ols_slope * 50 + ols_intercept
     else:
-        st.warning("Tidak cukup variasi pada data X untuk melakukan regresi linear yang valid.")
+        st.warning("Tidak cukup variasi pada data X untuk melakukan regresi linear yang valid (OLS).")
         if len(x_values) >= 1:
             ols_intercept = y_values.mean() # Jika hanya 1 titik X, garis horizontal di rata-rata Y
 
     # Regresi Linear Robust (RANSAC)
-    if x_values.nunique() >= 2 and len(x_np) > 1: # RANSAC membutuhkan setidaknya 2 titik
+    # RANSAC memerlukan setidaknya 2 titik unik dan cukup inlier
+    if x_values.nunique() >= 2 and len(x_np) > 1: 
         try:
-            ransac = RANSACRegressor(LinearRegression(), min_samples=2, random_state=42)
+            # Gunakan min_samples yang lebih rendah atau disesuaikan
+            # max_trials bisa disesuaikan jika data sangat banyak noise
+            # stop_n_inliers bisa membantu jika Anda tahu berapa banyak inlier yang diharapkan
+            ransac = RANSACRegressor(LinearRegression(), min_samples=2, random_state=42, 
+                                     stop_score=0.99, # Hentikan jika 99% inlier cocok
+                                     stop_n_inliers=max(2, int(len(x_np) * 0.5))) # Hentikan jika setidaknya 50% data adalah inlier
             ransac.fit(x_np, y_np)
             ransac_slope = ransac.estimator_.coef_[0]
             ransac_intercept = ransac.estimator_.intercept_
             y_at_x_50_ransac = ransac_slope * 50 + ransac_intercept
         except ValueError as e:
-            st.warning(f"Tidak dapat melakukan Regresi RANSAC: {e}. Mungkin terlalu sedikit titik data atau titik data terlalu sedikit untuk inlier.")
+            st.warning(f"Tidak dapat melakukan Regresi RANSAC: {e}. Mungkin terlalu sedikit titik data unik atau terlalu sedikit inlier yang ditemukan.")
             ransac_slope = np.nan
             ransac_intercept = np.nan
             y_at_x_50_ransac = np.nan
-    
+        except Exception as e: # Tangani error umum lainnya dari RANSAC
+            st.warning(f"Error tak terduga saat melakukan Regresi RANSAC: {e}")
+            ransac_slope = np.nan
+            ransac_intercept = np.nan
+            y_at_x_50_ransac = np.nan
+    else:
+        st.warning("Tidak cukup variasi pada data X atau jumlah titik data untuk melakukan Regresi RANSAC yang valid.")
+
 
     # Hitung Regresi Polinomial
-    if len(x_np) > poly_degree:
-        poly_coeffs = np.polyfit(x_np.flatten(), y_np, poly_degree) # Gunakan flatten untuk np.polyfit
-        poly_model = np.poly1d(poly_coeffs)
-        y_at_x_50_poly = float(poly_model(50))
+    # Pastikan jumlah titik data cukup untuk derajat polinomial
+    if len(x_np) > poly_degree and poly_degree > 0:
+        try:
+            poly_coeffs = np.polyfit(x_np.flatten(), y_np, poly_degree) # Gunakan flatten untuk np.polyfit
+            poly_model = np.poly1d(poly_coeffs)
+            y_at_x_50_poly = float(poly_model(50))
+        except np.linalg.LinAlgError as e:
+            st.warning(f"Tidak dapat menghitung Regresi Polinomial derajat {poly_degree}: {e}. Mungkin titik data terlalu sedikit atau terlalu linear.")
+            y_at_x_50_poly = np.nan
     else:
         y_at_x_50_poly = np.nan
 
@@ -526,7 +550,7 @@ def generate_plotly_figure(x_values, y_values, ols_slope, ols_intercept, y_at_x_
 
 
     # Gambar Garis Regresi Polinomial (jika valid)
-    if not np.isnan(y_at_x_50_poly) and len(x_values) > poly_degree:
+    if not np.isnan(y_at_x_50_poly) and len(x_values) > poly_degree and poly_degree > 0:
         poly_coeffs = np.polyfit(x_values, y_values, poly_degree)
         poly_model = np.poly1d(poly_coeffs)
         
@@ -695,6 +719,22 @@ with tabs[1]:
 
 st.divider()
 
+# Display example Excel template for download
+if st.button("Unduh Template Excel Contoh"):
+    sample_df = pd.DataFrame(INITIAL_DATA)
+    sample_df.index = np.arange(1, len(sample_df) + 1) 
+    buffer = io.BytesIO()
+    sample_df.to_excel(buffer, index=False)
+    buffer.seek(0)
+    st.download_button(
+        label="Klik untuk Mengunduh",
+        data=buffer,
+        file_name="thread_abrasion_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+st.divider()
+
 # Kontrol untuk pilihan derajat polinomial dan jenis regresi linear
 st.subheader("Opsi Kurva Analisis")
 linear_model_type = st.radio(
@@ -705,15 +745,16 @@ linear_model_type = st.radio(
 
 poly_degree = st.slider(
     "Pilih Derajat Regresi Polinomial (untuk kurva kecocokan yang lebih dekat):",
-    min_value=1,
+    min_value=0, # Izinkan 0 untuk tidak menampilkan polinomial
     max_value=min(5, len(st.session_state.data['x_values']) - 1), # Max degree is data points - 1
-    value=1 if len(st.session_state.data['x_values']) < 2 else 2, # Default to 1 (linear) if few points, else 2
+    value=0, # Default to 0 (no polynomial)
     step=1,
-    help="Derajat 1 adalah regresi linear. Derajat yang lebih tinggi akan menghasilkan kurva yang lebih dekat dengan titik data, tetapi bisa 'overfit'."
+    help="Derajat 0 berarti tidak menampilkan kurva polinomial. Derajat 1 adalah regresi linear. Derajat yang lebih tinggi akan menghasilkan kurva yang lebih dekat dengan titik data, tetapi bisa 'overfit' pada data baru."
 )
-if poly_degree >= len(st.session_state.data['x_values']):
+if poly_degree >= len(st.session_state.data['x_values']) and poly_degree > 0:
     st.warning(f"Derajat polinomial ({poly_degree}) terlalu tinggi untuk jumlah titik data ({len(st.session_state.data['x_values'])}). Kurva polinomial mungkin tidak akurat atau tidak dapat dihitung.")
-
+elif poly_degree == 0:
+    st.info("Regresi Polinomial tidak ditampilkan (Derajat 0 dipilih).")
 
 st.subheader("Grafik Abrasi Benang")
 
@@ -722,7 +763,7 @@ y_values_current = st.session_state.data['y_values']
 
 ols_slope, ols_intercept, y_ols_intersection, \
 ransac_slope, ransac_intercept, y_ransac_intersection, \
-y_poly_intersection, y_at_x_50_curve = generate_graph_data(x_values_current, y_values_current, poly_degree, linear_model_type) # Teruskan parameter baru
+y_poly_intersection, y_at_x_50_curve = generate_graph_data(x_values_current, y_values_current, poly_degree) # Teruskan parameter baru
 
 fig = generate_plotly_figure(x_values_current, y_values_current, ols_slope, ols_intercept, y_ols_intersection, \
                              ransac_slope, ransac_intercept, y_ransac_intersection, \
@@ -741,7 +782,7 @@ if linear_model_type == "Regresi Linear Biasa (OLS)":
         st.markdown(f"""
         <p style="color: #F0F2F6; font-size: 16px; margin-bottom: 5px;">
             **Perpotongan Garis Regresi Linear (OLS):** <span style="font-weight: bold; color: #FF6347; font-size: 20px;">{y_ols_intersection:.2f}</span>
-            <br><span style="font-size: 14px; color: #A0A0A0;">(Berdasarkan garis lurus kecocokan terbaik dari seluruh data)</span>
+            <br><span style="font-size: 14px; color: #A0A0A0;">(Berdasarkan garis lurus kecocokan terbaik dari seluruh data, sensitif terhadap outlier)</span>
         </p>
         """, unsafe_allow_html=True)
     else:
@@ -756,7 +797,7 @@ elif linear_model_type == "Regresi Linear Robust (RANSAC)":
         st.markdown(f"""
         <p style="color: #F0F2F6; font-size: 16px; margin-bottom: 5px;">
             **Perpotongan Garis Regresi Linear Robust (RANSAC):** <span style="font-weight: bold; color: #FFFF00; font-size: 20px;">{y_ransac_intersection:.2f}</span>
-            <br><span style="font-size: 14px; color: #A0A0A0;">(Berdasarkan garis lurus yang kurang terpengaruh outlier)</span>
+            <br><span style="font-size: 14px; color: #A0A0A0;">(Berdasarkan garis lurus yang kurang terpengaruh outlier, fokus pada 'mayoritas' data)</span>
         </p>
         """, unsafe_allow_html=True)
     else:
@@ -768,20 +809,29 @@ elif linear_model_type == "Regresi Linear Robust (RANSAC)":
         """, unsafe_allow_html=True)
 
 
-if not np.isnan(y_poly_intersection):
-    st.markdown(f"""
-    <p style="color: #F0F2F6; font-size: 16px; margin-bottom: 5px;">
-        **Perpotongan Regresi Polinomial Derajat {poly_degree}:** <span style="font-weight: bold; color: #8A2BE2; font-size: 20px;">{y_poly_intersection:.2f}</span>
-        <br><span style="font-size: 14px; color: #A0A0A0;">(Berdasarkan kurva polinomial derajat {poly_degree} yang menyesuaikan data)</span>
-    </p>
-    """, unsafe_allow_html=True)
+if poly_degree > 0: # Hanya tampilkan jika derajat > 0
+    if not np.isnan(y_poly_intersection):
+        st.markdown(f"""
+        <p style="color: #F0F2F6; font-size: 16px; margin-bottom: 5px;">
+            **Perpotongan Regresi Polinomial Derajat {poly_degree}:** <span style="font-weight: bold; color: #8A2BE2; font-size: 20px;">{y_poly_intersection:.2f}</span>
+            <br><span style="font-size: 14px; color: #A0A0A0;">(Berdasarkan kurva polinomial derajat {poly_degree} yang menyesuaikan data)</span>
+        </p>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <p style="color: #F0F2F6; font-size: 16px; margin-bottom: 5px;">
+            **Perpotongan Regresi Polinomial Derajat {poly_degree}:** <span style="font-weight: bold; color: #8A2BE2; font-size: 20px;">Tidak dapat dihitung</span>
+            <br><span style="font-size: 14px; color: #A0A0A0;">(Perlu lebih dari {poly_degree} titik data unik untuk derajat ini)</span>
+        </p>
+        """, unsafe_allow_html=True)
 else:
-    st.markdown(f"""
+    st.markdown("""
     <p style="color: #F0F2F6; font-size: 16px; margin-bottom: 5px;">
-        **Perpotongan Regresi Polinomial Derajat {poly_degree}:** <span style="font-weight: bold; color: #8A2BE2; font-size: 20px;">Tidak dapat dihitung</span>
-        <br><span style="font-size: 14px; color: #A0A0A0;">(Perlu lebih dari {poly_degree} titik data unik untuk derajat ini)</span>
+        **Regresi Polinomial:** <span style="font-weight: bold; color: #8A2BE2; font-size: 20px;">Tidak ditampilkan</span>
+        <br><span style="font-size: 14px; color: #A0A0A0;">(Geser slider derajat ke > 0 untuk melihatnya)</span>
     </p>
     """, unsafe_allow_html=True)
+
 
 if not np.isnan(y_at_x_50_curve):
     st.markdown(f"""
