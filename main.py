@@ -13,15 +13,18 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Background) ---
+# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Tambahan) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
-    /* Pastikan background body dan stApp juga hitam, tidak mengikuti browser */
-    body {
-        background-color: #0A0A0A !important; 
+    /* Target elemen HTML dan body untuk memastikan background hitam total */
+    html, body {
+        background-color: #0A0A0A !important;
+        color: #E0E0E0; /* Pastikan teks juga terang */
     }
+
+    /* Streamlit's main wrapper */
     .stApp {
         background-color: #0A0A0A !important; /* Background untuk seluruh aplikasi Streamlit */
         max-width: 1300px; /* Sedikit lebih lebar */
@@ -29,11 +32,19 @@ st.markdown("""
         padding-top: 30px; /* Padding atas lebih besar */
         padding-bottom: 50px; /* Padding bawah untuk footer */
     }
-    /* General Styles */
+    /* Main content area within .stApp */
     .main {
         background-color: #0A0A0A; /* Lebih gelap dari #121212 */
         color: #E0E0E0;
         font-family: 'Montserrat', sans-serif; /* Font umum yang lebih modern */
+    }
+    /* Kontainer utama untuk sidebar jika ada */
+    .stSidebar {
+        background-color: #0A0A0A !important; /* Jika ada sidebar, pastikan juga hitam */
+        color: #E0E0E0;
+    }
+    .block-container {
+        background-color: #0A0A0A !important; /* Kontainer blok utama Streamlit */
     }
     
     /* Typography */
