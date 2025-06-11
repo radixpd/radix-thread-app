@@ -431,10 +431,26 @@ def calculate_lines_and_points(x_values, y_values):
         x_values = x_values.iloc[sorted_indices]
         y_values = y_values.iloc[sorted_indices]
 
-    f = interpolate.interp1d(x_values, y_values, kind='linear', fill_value='extrapolate')
-    results['y_at_x_16_original_curve'] = float(f(16))
-    results['y_at_x_50_original_curve'] = float(f(50))
-    results['y_at_x_84_original_curve'] = float(f(84))
+    # Handle potential duplicate x_values before interpolation
+    # If duplicates exist, take the mean of y_values for the same x_value or handle as needed
+    if x_values.duplicated().any():
+        st.warning("Nilai 'Siklus (x)' duplikat ditemukan. Interpolasi mungkin tidak akurat atau memerlukan penanganan khusus.", icon="⚠️")
+        # One way to handle: average y for duplicate x, then re-sort
+        df_temp = pd.DataFrame({'x': x_values, 'y': y_values}).groupby('x').mean().reset_index()
+        x_values_unique = df_temp['x']
+        y_values_unique = df_temp['y']
+    else:
+        x_values_unique = x_values
+        y_values_unique = y_values
+
+    if len(x_values_unique) >= 2:
+        f = interpolate.interp1d(x_values_unique, y_values_unique, kind='linear', fill_value='extrapolate')
+        results['y_at_x_16_original_curve'] = float(f(16))
+        results['y_at_x_50_original_curve'] = float(f(50))
+        results['y_at_x_84_original_curve'] = float(f(84))
+    else:
+        st.warning("Tidak cukup data unik untuk interpolasi kurva asli.", icon="⚠️")
+
 
     # Garis Antara Titik ke-10 & ke-20
     # Memastikan indeks valid dan x_values.iloc[19] tidak salah ketik (sebelumnya y_values.iloc[19])
@@ -507,10 +523,11 @@ def calculate_lines_and_points(x_values, y_values):
         st.warning("Tidak cukup data untuk menghitung Regresi RANSAC. Minimal 2 titik data diperlukan.", icon="⚠️")
     
     # Hitung SD dan CV berdasarkan RANSAC
-    if not np.isnan(results['y_at_x_84_ransac_line']) and not np.isnan(results['y_at_x_16_ransac_line']):
+    if not np.isnan(results.get('y_at_x_84_ransac_line', np.nan)) and \
+       not np.isnan(results.get('y_at_x_16_ransac_line', np.nan)):
         results['sd_result'] = (results['y_at_x_84_ransac_line'] - results['y_at_x_16_ransac_line']) / 2
         
-        if not np.isnan(results['y_at_x_50_ransac_line']) and results['y_at_x_50_ransac_line'] != 0:
+        if not np.isnan(results.get('y_at_x_50_ransac_line', np.nan)) and results['y_at_x_50_ransac_line'] != 0:
             results['cv_result'] = (results['sd_result'] * 100) / results['y_at_x_50_ransac_line']
     
     return results
@@ -623,17 +640,26 @@ if st.session_state.update_graph or not st.session_state.calculated_results:
     x_values = pd.Series(st.session_state.data['x_values'])
     y_values = pd.Series(st.session_state.data['y_values'])
     
+    # Clean NaN values that might arise from data editing or import
+    combined_df = pd.DataFrame({'x_values': x_values, 'y_values': y_values}).dropna()
+    x_values = combined_df['x_values']
+    y_values = combined_df['y_values']
+
     if len(x_values) < 2 or len(y_values) < 2:
         st.warning("Data tidak cukup untuk analisis. Masukkan minimal 2 pasang data (Siklus dan Benang Putus).", icon="⚠️")
         st.session_state.calculated_results = {}
-        # st.stop() # Jangan stop, biarkan elemen lain ditampilkan
     else:
         st.session_state.calculated_results = calculate_lines_and_points(x_values, y_values)
     st.session_state.update_graph = False
 
 results = st.session_state.calculated_results
-x_values = pd.Series(st.session_state.data['x_values'])
-y_values = pd.Series(st.session_state.data['y_values'])
+x_values = pd.Series(st.session_state.data['x_values']) # Re-fetch to ensure consistent access
+y_values = pd.Series(st.session_state.data['y_values']) # Re-fetch
+
+# Clean NaN values for plotting if they somehow remained
+# This is a precaution, the `calculate_lines_and_points` should have handled this.
+x_values_plot = x_values.dropna()
+y_values_plot = y_values.dropna()
 
 
 st.subheader("2. Lihat Visualisasi & Hasil Analisis")
@@ -652,14 +678,18 @@ st.write("#### Grafik Abrasi Benang")
 fig = go.Figure()
 
 # Tambahkan Kurva Data Abrasi (selalu)
-fig.add_trace(go.Scatter(
-    x=x_values,
-    y=y_values,
-    mode='lines+markers',
-    name='Data Asli',
-    line=dict(color='#8B4513', width=3),
-    marker=dict(size=8, color='#DAA520')
-))
+if not x_values_plot.empty and not y_values_plot.empty:
+    fig.add_trace(go.Scatter(
+        x=x_values_plot,
+        y=y_values_plot,
+        mode='lines+markers',
+        name='Data Asli',
+        line=dict(color='#8B4513', width=3),
+        marker=dict(size=8, color='#DAA520')
+    ))
+else:
+    st.warning("Tidak ada data valid untuk ditampilkan di grafik 'Data Asli'.", icon="⚠️")
+
 
 # Tambahkan Garis Vertikal di x=16, x=50, x=84
 vertical_lines_x = [16, 50, 84]
@@ -667,14 +697,19 @@ line_colors = {16: '#FF7F50', 50: '#FF4500', 84: '#FF6347'}
 line_names = {16: 'x=16', 50: 'x=50', 84: 'x=84'}
 
 # Pastikan y_values tidak kosong sebelum min/max
-y_min_for_plot = y_values.min() if not y_values.empty else 0
-y_max_for_plot = y_values.max() if not y_values.empty else 100
+y_min_for_plot = y_values_plot.min() if not y_values_plot.empty else 0
+y_max_for_plot = y_values_plot.max() if not y_values_plot.empty else 100
+
+# Set a safe default range if y_values_plot is empty
+if y_min_for_plot == y_max_for_plot: # Avoid division by zero or static line
+    y_min_for_plot = 0
+    y_max_for_plot = 100 # Default sensible range for plot if data is flat or empty
 
 for x_val in vertical_lines_x:
     fig.add_shape(
         type="line",
-        x0=x_val, y0=y_min_for_plot * 0.9 if y_min_for_plot < 0 else 0, # Adjust y0 for negative values
-        x1=x_val, y1=y_max_for_plot * 1.1 if y_max_for_plot > 0 else 100, # Adjust y1 for positive values
+        x0=x_val, y0=y_min_for_plot * 0.9 if y_min_for_plot < 0 else 0, 
+        x1=x_val, y1=y_max_for_plot * 1.1 if y_max_for_plot > 0 else 100, 
         line=dict(color=line_colors[x_val], width=2, dash="dash"),
     )
     # Menempatkan anotasi sedikit di atas y_max_for_plot
@@ -684,10 +719,12 @@ for x_val in vertical_lines_x:
     )
 
 # Titik perpotongan kurva asli dengan x=16, 50, 84
+# Perbaikan: gunakan .get() dan cek isnan
 if not np.isnan(results.get('y_at_x_16_original_curve', np.nan)):
     fig.add_trace(go.Scatter(
         x=[16], y=[results['y_at_x_16_original_curve']],
         mode='markers',
+        # Perbaikan f-string: gunakan kutipan ganda di luar jika ada kutipan tunggal di dalam
         name=f"Y di X=16 (Asli): {results['y_at_x_16_original_curve']:.2f}",
         marker=dict(size=14, color=line_colors[16], symbol='circle', line=dict(width=2, color='white'))
     ))
@@ -709,8 +746,8 @@ if not np.isnan(results.get('y_at_x_84_original_curve', np.nan)):
 # Kondisional untuk Garis Titik ke-10 & ke-20
 if analysis_choice in ["Garis Titik ke-10 & ke-20", "Tampilkan Semua"]:
     # Cek apakah line_x_range tidak kosong (artinya perhitungan berhasil)
-    if results['pt10_20_line_x_range'].size > 0:
-        if not np.isnan(results['specific_x1_pt10_20']) and not np.isnan(results['specific_x2_pt10_20']):
+    if results['pt10_20_line_x_range'].size > 0 and results['pt10_20_line_y'].size > 0:
+        if not np.isnan(results.get('specific_x1_pt10_20', np.nan)) and not np.isnan(results.get('specific_x2_pt10_20', np.nan)):
             fig.add_trace(go.Scatter(
                 x=[results['specific_x1_pt10_20'], results['specific_x2_pt10_20']],
                 y=[results['specific_y1_pt10_20'], results['specific_y2_pt10_20']],
@@ -752,7 +789,7 @@ if analysis_choice in ["Garis Titik ke-10 & ke-20", "Tampilkan Semua"]:
 # Kondisional untuk Garis Regresi RANSAC
 if analysis_choice in ["Garis RANSAC", "Tampilkan Semua"]:
     # Cek apakah ransac_line_x tidak kosong (artinya perhitungan berhasil)
-    if results['ransac_line_x'].size > 0:
+    if results['ransac_line_x'].size > 0 and results['ransac_line_y'].size > 0:
         fig.add_trace(go.Scatter(
             x=results['ransac_line_x'], y=results['ransac_line_y'],
             mode='lines', name='Garis RANSAC',
@@ -856,7 +893,7 @@ elif analysis_choice == "Garis Titik ke-10 & ke-20":
         <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Titik ke-10 & ke-20:</p>
         <h1 style="color: #B8860B; font-size: 60px; margin: 10px 0;">N/A</h1>
         <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">
-            Tidak cukup data untuk menghitung garis ini (minimal 20 titik diperlukan).
+            Tidak cukup data untuk menghitung garis ini (minimal 20 titik diperlukan, atau kurang dari 2 titik data).
         </div>
         """, unsafe_allow_html=True)
 
@@ -932,7 +969,7 @@ elif analysis_choice == "Tampilkan Semua":
         st.markdown(f"""
         <p style="color: #B0B0B0; font-size: 16px;">Hasil untuk **Garis Titik ke-10 & ke-20**:</p>
         <h3 style="color: #B8860B; font-size: 28px; margin: 10px 0;">N/A</h3>
-        <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 20px;">Tidak cukup data untuk menghitung garis ini (minimal 20 titik diperlukan).</p>
+        <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 20px;">Tidak cukup data untuk menghitung garis ini (minimal 20 titik diperlukan, atau kurang dari 2 titik data).</p>
         <hr style="border-color: #3A3A3A !important; margin: 15px 0 !important;">
         """, unsafe_allow_html=True)
     
@@ -971,7 +1008,11 @@ st.markdown("""
 <div class="dark-card">
 """, unsafe_allow_html=True)
 
-if not np.isnan(results.get('sd_result', np.nan)) and not np.isnan(results.get('cv_result', np.nan)):
+if not np.isnan(results.get('sd_result', np.nan)) and \
+   not np.isnan(results.get('cv_result', np.nan)) and \
+   not np.isnan(results.get('y_at_x_84_ransac_line', np.nan)) and \
+   not np.isnan(results.get('y_at_x_16_ransac_line', np.nan)) and \
+   not np.isnan(results.get('y_at_x_50_ransac_line', np.nan)):
     st.markdown(f"""
     <p style="font-size: 18px; color: #DAA520; font-weight: 600;">Standar Deviasi (SD):</p>
     <p style="font-size: 22px; color: #E0E0E0; font-weight: 700;">
@@ -992,7 +1033,7 @@ if not np.isnan(results.get('sd_result', np.nan)) and not np.isnan(results.get('
 else:
     st.markdown("""
     <p style="font-size: 18px; color: #B0B0B0;">
-        Untuk menghitung SD dan CV, kami membutuhkan hasil nilai 'Benang Putus (N)' di siklus X=16, X=50, dan X=84 dari **Garis Regresi RANSAC**. <br>
+        Untuk menghitung SD dan CV, kami membutuhkan hasil nilai 'Benang Putus (N)' di siklus X=16, X=50, dan X=84 dari **Garis Regresi RANSAC**.<br>
         Pastikan Anda memiliki data yang cukup dan analisis RANSAC berhasil dilakukan.
     </p>
     """, unsafe_allow_html=True)
@@ -1037,7 +1078,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Benang Abrasi - Dibuat oleh RADIX <br>
+    Aplikasi Analisis Benang Abrasi - Dibuat oleh PULCRA Chemicals <br>
     © 2025 Semua Hak Dilindungi.
 </div>
 """, unsafe_allow_html=True)
