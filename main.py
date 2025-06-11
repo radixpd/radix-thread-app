@@ -10,7 +10,7 @@ import io
 st.set_page_config(
     page_title="Thread Abrasion by Radix",
     page_icon="🧵",
-    layout="wide" # Tetap wide untuk desktop, akan dihandle media query untuk mobile
+    layout="wide"
 )
 
 # --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Tambahan untuk Responsif) ---
@@ -22,7 +22,7 @@ st.markdown("""
     html, body {
         background-color: #0A0A0A !important;
         color: #E0E0E0; /* Pastikan teks juga terang */
-        overflow-x: hidden; /* Mencegah scrolling horizontal yang tidak diinginkan */
+        /* overflow-x: hidden; --- Dihapus untuk fleksibilitas scroll horizontal jika dibutuhkan */
     }
 
     /* Streamlit's main wrapper */
@@ -90,7 +90,7 @@ st.markdown("""
         color: #E0E0E0;
         font-family: 'Montserrat', sans-serif;
         line-height: 1.8;
-        font-size: 16px; /* Ukuran desktop */
+        font-size: 17px; /* Ukuran desktop, sedikit lebih besar dari sebelumnya */
     }
     
     /* Buttons */
@@ -398,7 +398,7 @@ st.markdown("""
             margin-bottom: 10px;
         }
         p, li, span, div {
-            font-size: 14px; /* Perkecil ukuran font teks biasa */
+            font-size: 15px; /* Perkecil ukuran font teks biasa, disesuaikan */
             line-height: 1.6;
         }
         .stButton>button {
@@ -465,7 +465,7 @@ st.markdown("""
             font-size: 20px;
         }
         p, li, span, div {
-            font-size: 13px;
+            font-size: 14px; /* Penyesuaian lebih lanjut untuk mobile kecil */
         }
         .stButton>button {
             padding: 8px 15px;
@@ -499,28 +499,42 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Implementasi Kode Akses ---
-ACCESS_CODE = "RADIX2025" 
+ACCESS_CODE = "RADIX2025"
 
 def check_password():
-    if "password_entered" not in st.session_state:
-        st.session_state.password_entered = False
-
+    # Pindahkan inisialisasi password_entered ke blok session state utama
     if not st.session_state.password_entered:
         st.markdown("<h2 style='text-align: center;'>Akses Aplikasi</h2>", unsafe_allow_html=True)
         password_input = st.text_input("Masukkan Kode Akses Anda", type="password", key="password_input", help="Hubungi administrator untuk kode akses.")
         
-        # Kolom untuk tombol "Masuk" agar berada di tengah dan responsif
         col_pw1, col_pw2, col_pw3 = st.columns([1,1,1])
         with col_pw2:
             if st.button("Masuk", key="login_button", use_container_width=True):
                 if password_input == ACCESS_CODE:
                     st.session_state.password_entered = True
+                    st.success("Akses berhasil! Memuat aplikasi...") # Tambah feedback
                     st.rerun()
                 else:
                     st.error("Kode akses salah. Silakan coba lagi.")
         st.markdown("<br><br>", unsafe_allow_html=True)
         return False
     return True
+
+# --- Data Awal ---
+INITIAL_DATA = {
+    'x_values': [1.7, 3.3, 5.0, 6.7, 8.4, 10.2, 12.0, 13.9, 15.8, 17.7, 19.7, 21.7, 23.8, 26.0, 28.2, 30.4, 32.8, 35.3, 37.8, 40.4, 43.3, 46.1, 49.2, 52.5, 56.0, 59.9, 64.1, 68.9, 74.66, 82.1],
+    'y_values': [105, 143, 157, 185, 191, 191, 200, 250, 266, 292, 337, 343, 345, 397, 397, 404, 425, 457, 476, 476, 501, 535, 555, 623, 623, 635, 667, 770, 805, 974]
+}
+
+# --- Inisialisasi Session State (Dipusatkan) ---
+if 'data' not in st.session_state:
+    st.session_state.data = pd.DataFrame(INITIAL_DATA)
+if 'update_graph' not in st.session_state:
+    st.session_state.update_graph = False
+if 'calculated_results' not in st.session_state:
+    st.session_state.calculated_results = {}
+if 'password_entered' not in st.session_state:
+    st.session_state.password_entered = False
 
 # Panggil fungsi pengecekan password di awal aplikasi
 if not check_password():
@@ -535,23 +549,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- Data Awal ---
-INITIAL_DATA = {
-    'x_values': [1.7, 3.3, 5.0, 6.7, 8.4, 10.2, 12.0, 13.9, 15.8, 17.7, 19.7, 21.7, 23.8, 26.0, 28.2, 30.4, 32.8, 35.3, 37.8, 40.4, 43.3, 46.1, 49.2, 52.5, 56.0, 59.9, 64.1, 68.9, 74.66, 82.1],
-    'y_values': [105, 143, 157, 185, 191, 191, 200, 250, 266, 292, 337, 343, 345, 397, 397, 404, 425, 457, 476, 476, 501, 535, 555, 623, 623, 635, 667, 770, 805, 974]
-}
-
-# Inisialisasi session state
-if 'data' not in st.session_state:
-    st.session_state.data = pd.DataFrame(INITIAL_DATA)
-if 'update_graph' not in st.session_state:
-    st.session_state.update_graph = False
-if 'calculated_results' not in st.session_state:
-    st.session_state.calculated_results = {}
-
 # --- Fungsi untuk Menghitung Garis dan Titik (dengan Cache) ---
 @st.cache_data(show_spinner="Menghitung analisis data...")
-def calculate_lines_and_points(x_values, y_values):
+def calculate_lines_and_points(x_values_series, y_values_series):
     results = {
         'y_at_x_50_original_curve': np.nan,
         'specific_x1_pt10_20': np.nan, 'specific_y1_pt10_20': np.nan,
@@ -562,61 +562,81 @@ def calculate_lines_and_points(x_values, y_values):
         'ransac_line_x': np.array([]), 'ransac_line_y': np.array([])
     }
 
-    if len(x_values) < 2 or len(y_values) < 2:
+    # Konversi ke numpy array untuk interpolasi
+    x_np = x_values_series.values
+    y_np = y_values_series.values
+
+    if len(x_np) < 2 or len(y_np) < 2:
         return results
 
     # Original curve interpolation
-    f = interpolate.interp1d(x_values, y_values, kind='linear', fill_value='extrapolate')
-    results['y_at_x_50_original_curve'] = float(f(50))
+    try:
+        f = interpolate.interp1d(x_np, y_np, kind='linear', fill_value='extrapolate')
+        results['y_at_x_50_original_curve'] = float(f(50))
+    except ValueError:
+        st.warning("Tidak dapat melakukan interpolasi kurva asli. Periksa data X Anda (harus monoton meningkat).")
+        pass # Biarkan NaN jika gagal
 
     # Garis Antara Titik 10 & 20
-    if len(x_values) >= 20:
-        results['specific_x1_pt10_20'] = x_values.iloc[9]
-        results['specific_y1_pt10_20'] = y_values.iloc[9]
-        results['specific_x2_pt10_20'] = x_values.iloc[19]
-        results['specific_y2_pt10_20'] = y_values.iloc[19]
-    elif len(x_values) >= 2: # Fallback jika data kurang dari 20 
-        results['specific_x1_pt10_20'] = x_values.iloc[0]
-        results['specific_y1_pt10_20'] = y_values.iloc[0]
-        results['specific_x2_pt10_20'] = x_values.iloc[-1]
-        results['specific_y2_pt10_20'] = y_values.iloc[-1]
-        st.info("Dataset kurang dari 20 titik. Garis 'Titik 10 & 20' dihitung antara titik pertama dan terakhir.")
+    if len(x_np) >= 20:
+        results['specific_x1_pt10_20'] = x_np[9] # Indeks 9 adalah titik ke-10
+        results['specific_y1_pt10_20'] = y_np[9]
+        results['specific_x2_pt10_20'] = x_np[19] # Indeks 19 adalah titik ke-20
+        results['specific_y2_pt10_20'] = y_np[19]
+    elif len(x_np) >= 2:
+        # Fallback: gunakan titik pertama dan terakhir jika kurang dari 20
+        results['specific_x1_pt10_20'] = x_np[0]
+        results['specific_y1_pt10_20'] = y_np[0]
+        results['specific_x2_pt10_20'] = x_np[-1]
+        results['specific_y2_pt10_20'] = y_np[-1]
+        # st.info("Dataset kurang dari 20 titik. Garis 'Titik 10 & 20' dihitung antara titik pertama dan terakhir.")
+        # Pesan ini bisa mengganggu cache, biarkan info muncul hanya jika data tidak cukup
     
-    if not np.isnan(results['specific_x1_pt10_20']) and not np.isnan(results['specific_x2_pt10_20']) and results['specific_x1_pt10_20'] != results['specific_x2_pt10_20']:
-        slope_pt10_20 = (results['specific_y2_pt10_20'] - results['specific_y1_pt10_20']) / (results['specific_x2_pt10_20'] - results['specific_x1_pt10_20'])
-        intercept_pt10_20 = results['specific_y1_pt10_20'] - slope_pt10_20 * results['specific_x1_pt10_20']
-        results['y_at_x_50_pt10_20_line'] = slope_pt10_20 * 50 + intercept_pt10_20
+    if not np.isnan(results['specific_x1_pt10_20']) and not np.isnan(results['specific_x2_pt10_20']):
+        if results['specific_x1_pt10_20'] != results['specific_x2_pt10_20']:
+            slope_pt10_20 = (results['specific_y2_pt10_20'] - results['specific_y1_pt10_20']) / (results['specific_x2_pt10_20'] - results['specific_x1_pt10_20'])
+            intercept_pt10_20 = results['specific_y1_pt10_20'] - slope_pt10_20 * results['specific_x1_pt10_20']
+            results['y_at_x_50_pt10_20_line'] = slope_pt10_20 * 50 + intercept_pt10_20
 
-        x_min_plot = x_values.min() if not x_values.empty else 0
-        x_max_plot = x_values.max() if not x_values.empty else 100
-        results['pt10_20_line_x_range'] = np.linspace(min(x_min_plot, 50), max(x_max_plot, 50), 100)
-        results['pt10_20_line_y'] = slope_pt10_20 * results['pt10_20_line_x_range'] + intercept_pt10_20
+            x_min_plot = x_np.min() if x_np.size > 0 else 0
+            x_max_plot = x_np.max() if x_np.size > 0 else 100
+            results['pt10_20_line_x_range'] = np.linspace(min(x_min_plot, 50), max(x_max_plot, 50), 100)
+            results['pt10_20_line_y'] = slope_pt10_20 * results['pt10_20_line_x_range'] + intercept_pt10_20
+        else:
+            # Jika x1 dan x2 sama, garis vertikal atau titik tunggal, tidak dapat dihitung kemiringan
+            results['y_at_x_50_pt10_20_line'] = np.nan
+            results['pt10_20_line_x_range'] = np.array([])
+            results['pt10_20_line_y'] = np.array([])
 
     # Regresi Linear Robust (RANSAC)
-    if len(x_values) >= 2:
+    if len(x_np) >= 2:
         try:
-            X_reshaped = x_values.values.reshape(-1, 1)
-            y_reshaped = y_values.values
+            X_reshaped = x_np.reshape(-1, 1)
             
-            residual_threshold_val = np.std(y_reshaped) * 0.5 if len(y_reshaped) > 1 and np.std(y_reshaped) > 0 else 1.0
+            # Hitung residual_threshold secara dinamis, pastikan tidak nol
+            residual_threshold_val = np.std(y_np) * 0.5 
+            if len(y_np) <= 1 or np.std(y_np) == 0:
+                residual_threshold_val = 1.0 # Default fallback jika std dev nol atau tidak cukup data
 
             ransac = RANSACRegressor(LinearRegression(),
                                      min_samples=2,
                                      residual_threshold=residual_threshold_val,
                                      random_state=42,
                                      max_trials=1000)
-            ransac.fit(X_reshaped, y_reshaped)
+            ransac.fit(X_reshaped, y_np)
             results['y_at_x_50_ransac_line'] = ransac.predict(np.array([[50]]))[0]
 
-            x_min_plot = x_values.min() if not x_values.empty else 0
-            x_max_plot = x_values.max() if not x_values.empty else 100
+            x_min_plot = x_np.min() if x_np.size > 0 else 0
+            x_max_plot = x_np.max() if x_np.size > 0 else 100
             
             results['ransac_line_x'] = np.linspace(min(x_min_plot, 50), max(x_max_plot, 50), 100)
             results['ransac_line_y'] = ransac.predict(results['ransac_line_x'].reshape(-1, 1))
             
         except Exception as e:
+            # st.warning(f"Tidak dapat menghitung regresi RANSAC: {e}") # Debugging
             results['ransac_line_x'] = np.array([])
             results['ransac_line_y'] = np.array([])
+            results['y_at_x_50_ransac_line'] = np.nan
 
     return results
 
@@ -625,7 +645,7 @@ st.subheader("Input Data")
 tabs = st.tabs(["Input Manual", "Impor dari Excel"])
 
 with tabs[0]:
-    st.write("Ubah nilai Y (N atau nilai benang putus) dari data abrasi:")
+    st.write("Ubah nilai Y (N atau nilai benang putus) dari data abrasi. Nilai X tetap.")
     
     # Menampilkan index dari 1
     edited_data = pd.DataFrame({
@@ -640,22 +660,26 @@ with tabs[0]:
         hide_index=False, # Tampilkan indeks
         column_config={
             "x_value": st.column_config.NumberColumn("Nilai Tetap (x)", format="%.1f"),
-            "y_value": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f"),
+            "y_value": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f", help="Nilai benang putus atau gaya putus dalam Newton (N)"),
         },
         use_container_width=True,
         key="data_editor",
     )
     
-    # Gunakan kolom untuk tombol agar responsif
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Terapkan Perubahan", key="apply_changes", use_container_width=True):
             try:
                 # Ambil data tanpa index yang sudah dimodifikasi
-                st.session_state.data['y_values'] = edited_df['y_value'].astype(float).tolist()
-                st.session_state.update_graph = True 
-                calculate_lines_and_points.clear() # Clear cache
-                st.success("Data berhasil diperbarui!")
+                new_y_values = edited_df['y_value'].astype(float).tolist()
+                # Pastikan jumlah X dan Y tetap sama setelah editan
+                if len(new_y_values) == len(st.session_state.data['x_values']):
+                    st.session_state.data['y_values'] = new_y_values
+                    st.session_state.update_graph = True 
+                    calculate_lines_and_points.clear() # Clear cache
+                    st.success("Data berhasil diperbarui!")
+                else:
+                    st.error("Jumlah baris Y tidak boleh berubah. Silakan sesuaikan atau tambahkan baris jika diperlukan.")
             except ValueError:
                 st.error("Pastikan semua nilai Y adalah angka yang valid.")
     
@@ -667,8 +691,22 @@ with tabs[0]:
             st.success("Data berhasil direset ke nilai awal!")
 
 with tabs[1]:
-    st.write("Unggah file Excel dengan kolom 'x_values' dan 'y_values'.")
-    uploaded_file = st.file_uploader("Pilih File Excel", type=['xlsx', 'xls'])
+    st.write("Unggah file Excel dengan kolom **'x_values'** dan **'y_values'**.")
+    # Pindahkan tombol unduh template ke sini agar lebih relevan
+    if st.button("Unduh Template Excel", use_container_width=True, key="download_template_btn"):
+        sample_df = pd.DataFrame(INITIAL_DATA)
+        buffer = io.BytesIO()
+        sample_df.to_excel(buffer, index=False)
+        buffer.seek(0)
+        st.download_button(
+            label="Klik untuk Mengunduh Template",
+            data=buffer,
+            file_name="template_abrasi_benang.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="download_button_actual" # Unique key for the actual download button
+        )
+    
+    uploaded_file = st.file_uploader("Pilih File Excel Anda", type=['xlsx', 'xls'], key="file_uploader")
     
     if uploaded_file is not None:
         try:
@@ -685,263 +723,245 @@ with tabs[1]:
                     column_config={
                         "x_values": st.column_config.NumberColumn("Nilai Tetap (x)", format="%.1f"),
                         "y_values": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f"),
-                    }
+                    },
+                    key="uploaded_df_preview"
                 )
                 
-                if st.button("Gunakan Data Ini", key="use_imported", use_container_width=True):
-                    st.session_state.data['x_values'] = df_uploaded['x_values'].astype(float).dropna()
-                    st.session_state.data['y_values'] = df_uploaded['y_values'].astype(float).dropna()
-                    if len(st.session_state.data['x_values']) != len(st.session_state.data['y_values']):
-                        st.error("Jumlah nilai X dan Y harus sama. Periksa file Excel Anda.")
-                    elif st.session_state.data['x_values'].empty:
-                        st.warning("File Excel tidak memiliki data yang valid. Periksa formatnya.")
-                    else:
+                # Periksa apakah data valid sebelum tombol "Gunakan Data Ini"
+                x_check = df_uploaded['x_values'].astype(float).dropna()
+                y_check = df_uploaded['y_values'].astype(float).dropna()
+
+                if len(x_check) != len(y_check):
+                    st.error("Jumlah nilai X dan Y harus sama. Periksa file Excel Anda.")
+                elif x_check.empty:
+                    st.warning("File Excel tidak memiliki data yang valid setelah pembersihan. Periksa formatnya.")
+                else:
+                    if st.button("Gunakan Data Ini", key="use_imported", use_container_width=True):
+                        st.session_state.data['x_values'] = x_check.tolist()
+                        st.session_state.data['y_values'] = y_check.tolist()
                         st.session_state.update_graph = True
                         calculate_lines_and_points.clear() # Clear cache
                         st.success("Data impor berhasil diterapkan!")
             else:
-                st.error("File Excel harus mengandung kolom 'x_values' dan 'y_values'.")
+                st.error("File Excel harus mengandung kolom **'x_values'** dan **'y_values'**. Harap periksa nama kolom Anda.")
         except Exception as e:
-            st.error(f"Terjadi kesalahan saat membaca file Excel: {e}")
-
-st.markdown("---") # Garis pemisah
-
-# Download Sample Excel Template
-if st.button("Unduh Template Excel", use_container_width=True):
-    sample_df = pd.DataFrame(INITIAL_DATA)
-    buffer = io.BytesIO()
-    sample_df.to_excel(buffer, index=False)
-    buffer.seek(0)
-    st.download_button(
-        label="Klik untuk Mengunduh",
-        data=buffer,
-        file_name="template_abrasi_benang.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
+            st.error(f"Terjadi kesalahan saat membaca file Excel: {e}. Pastikan format file dan data benar.")
 
 st.markdown("---") # Garis pemisah
 
 # --- Bagian Grafik dan Hasil ---
 
+st.subheader("Visualisasi & Hasil Analisis")
+
 # Perbarui perhitungan jika data berubah
 if st.session_state.update_graph or not st.session_state.calculated_results:
-    x_values = pd.Series(st.session_state.data['x_values'])
-    y_values = pd.Series(st.session_state.data['y_values'])
+    x_values_current = pd.Series(st.session_state.data['x_values'])
+    y_values_current = pd.Series(st.session_state.data['y_values'])
     
-    if len(x_values) < 2 or len(y_values) < 2:
+    if len(x_values_current) < 2 or len(y_values_current) < 2:
         st.warning("Data tidak cukup untuk analisis. Masukkan minimal 2 pasangan X dan Y.")
         # Clear results if data is insufficient to avoid displaying stale results
         st.session_state.calculated_results = {}
-        st.stop()
-    
-    st.session_state.calculated_results = calculate_lines_and_points(x_values, y_values)
+        # st.stop() # Jangan stop jika hanya kurang data, biar pengguna bisa input lagi
+    else:
+        st.session_state.calculated_results = calculate_lines_and_points(x_values_current, y_values_current)
     st.session_state.update_graph = False
 
 results = st.session_state.calculated_results
 x_values = pd.Series(st.session_state.data['x_values'])
 y_values = pd.Series(st.session_state.data['y_values'])
 
-
-st.subheader("Visualisasi & Hasil Analisis")
-
 # UNIFIED RADIO BUTTON UNTUK GRAFIK DAN HASIL 
 analysis_choice = st.radio(
     "Pilih jenis analisis yang ingin ditampilkan:",
     ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis Regresi RANSAC", "Tampilkan Semua"),
     key="analysis_choice",
-    horizontal=True # Biarkan horizontal untuk desktop, akan dihandle media query untuk mobile
+    horizontal=True
 )
 
-# Render Grafik 
 st.markdown("---") 
 st.write("#### Grafik Abrasi Benang") 
 
 fig = go.Figure()
 
 # Tambahkan Kurva Data Abrasi (selalu) 
-fig.add_trace(go.Scatter(
-    x=x_values, 
-    y=y_values,
-    mode='lines+markers',
-    name='Data Abrasi',
-    line=dict(color='#8B4513', width=3), # Warna emas/tembaga untuk kurva asli
-    marker=dict(size=8, color='#DAA520') # Emas gelap untuk marker
-))
-
-# Tambahkan Garis Vertikal di x=50 (selalu) 
-fig.add_shape(
-    type="line",
-    x0=50, y0=y_values.min() * 0.9 if y_values.min() < 0 else 0,
-    x1=50, y1=y_values.max() * 1.1,
-    line=dict(color="#FF4500", width=2, dash="dash"), # Oranye kemerahan yang kuat
-)
-# Adjusted annotation position for better visibility if lines overlap 
-fig.add_annotation(
-    x=50, y=y_values.max() * 1.05, text="x=50", showarrow=False,
-    font=dict(color="#FF4500", size=14, family="Montserrat, sans-serif", weight="bold")
-)
-
-# Tambahkan titik perpotongan kurva asli dengan x=50 (selalu) 
-if not np.isnan(results['y_at_x_50_original_curve']):
+if not x_values.empty and not y_values.empty:
     fig.add_trace(go.Scatter(
-        x=[50], y=[results['y_at_x_50_original_curve']],
-        mode='markers',
-        name=f'Int. Kurva Asli di x=50, y={results["y_at_x_50_original_curve"]:.2f}',
-        marker=dict(size=14, color='#FF4500', symbol='circle', line=dict(width=2, color='white'))
+        x=x_values, 
+        y=y_values,
+        mode='lines+markers',
+        name='Data Abrasi',
+        line=dict(color='#8B4513', width=3), # Warna emas/tembaga untuk kurva asli
+        marker=dict(size=8, color='#DAA520') # Emas gelap untuk marker
     ))
+
+    # Tambahkan Garis Vertikal di x=50 (selalu) 
+    # Perbaiki y0 dan y1 agar tidak error jika y_values kosong atau sangat kecil
+    min_y_for_line = y_values.min() if not y_values.empty else 0
+    max_y_for_line = y_values.max() if not y_values.empty else 100
+    
+    fig.add_shape(
+        type="line",
+        x0=50, y0=min_y_for_line * 0.9 if min_y_for_line < 0 else 0,
+        x1=50, y1=max_y_for_line * 1.1,
+        line=dict(color="#FF4500", width=2, dash="dash"), # Oranye kemerahan yang kuat
+    )
+    fig.add_annotation(
+        x=50, y=max_y_for_line * 1.05, text="x=50", showarrow=False,
+        font=dict(color="#FF4500", size=14, family="Montserrat, sans-serif", weight="bold")
+    )
+
+    # Tambahkan titik perpotongan kurva asli dengan x=50 (selalu) 
+    if not np.isnan(results.get('y_at_x_50_original_curve', np.nan)):
+        fig.add_trace(go.Scatter(
+            x=[50], y=[results['y_at_x_50_original_curve']],
+            mode='markers',
+            name=f'Int. Kurva Asli di x=50, y={results["y_at_x_50_original_curve"]:.2f}',
+            marker=dict(size=14, color='#FF4500', symbol='circle', line=dict(width=2, color='white'))
+        ))
 
 # Kondisional untuk Garis Titik 10 & 20 
 if analysis_choice in ["Garis Titik 10 & 20", "Tampilkan Semua"]:
-    if not np.isnan(results['specific_x1_pt10_20']) and not np.isnan(results['specific_x2_pt10_20']):
-        fig.add_trace(go.Scatter(
-            x=[results['specific_x1_pt10_20'], results['specific_x2_pt10_20']],
-            y=[results['specific_y1_pt10_20'], results['specific_y2_pt10_20']],
-            mode='markers', name='Titik Referensi (10 & 20)',
-            marker=dict(size=12, color='#FFD700', symbol='star', line=dict(width=2, color='white')) # Emas terang
-        ))
-        fig.add_trace(go.Scatter(
-            x=results['pt10_20_line_x_range'], y=results['pt10_20_line_y'],
-            mode='lines', name='Garis Titik 10 & 20',
-            line=dict(color="#B8860B", width=3, dash="dot"), showlegend=True # Emas gelap
-        ))
-        if not np.isnan(results['y_at_x_50_pt10_20_line']):
-            fig.add_trace(go.Scatter(
-                x=[50], y=[results['y_at_x_50_pt10_20_line']],
-                mode='markers', name=f'Int. Garis 10-20 di x=50, y={results["y_at_x_50_pt10_20_line"]:.2f}',
-                marker=dict(size=14, color='#B8860B', symbol='circle-open', line=dict(width=3, color='#B8860B'))
+    if not np.isnan(results.get('specific_x1_pt10_20', np.nan)) and not np.isnan(results.get('specific_x2_pt10_20', np.nan)):
+        # Hanya tambahkan titik referensi jika data cukup untuk titik 10 dan 20 spesifik
+        if len(x_values) >= 20:
+             fig.add_trace(go.Scatter(
+                x=[results['specific_x1_pt10_20'], results['specific_x2_pt10_20']],
+                y=[results['specific_y1_pt10_20'], results['specific_y2_pt10_20']],
+                mode='markers', name='Titik Referensi (10 & 20)',
+                marker=dict(size=12, color='#FFD700', symbol='star', line=dict(width=2, color='white'))
             ))
-            y_pos_pt10_20_label = results['y_at_x_50_pt10_20_line'] + (y_values.max() * 0.05 if y_values.max() > 0 else 50)
-            fig.add_annotation(
-                x=50, y=y_pos_pt10_20_label, text=f"Garis 10-20: {results['y_at_x_50_pt10_20_line']:.2f}",
-                showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#B8860B',
-                font=dict(size=14, color='#B8860B', family="Montserrat, sans-serif"),
-                bordercolor="#B8860B", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
-            )
+        elif len(x_values) >= 2:
+            fig.add_trace(go.Scatter(
+                x=[results['specific_x1_pt10_20'], results['specific_x2_pt10_20']],
+                y=[results['specific_y1_pt10_20'], results['specific_y2_pt10_20']],
+                mode='markers', name='Titik Referensi (Pertama & Terakhir)', # Ubah nama legend
+                marker=dict(size=12, color='#FFD700', symbol='star', line=dict(width=2, color='white'))
+            ))
+            st.info("Catatan: Dataset Anda kurang dari 20 titik. Garis 'Titik 10 & 20' dihitung antara titik pertama dan terakhir data Anda saat ini.")
+
+        if results['pt10_20_line_x_range'].size > 0: # Pastikan ada data untuk garis
+            fig.add_trace(go.Scatter(
+                x=results['pt10_20_line_x_range'], y=results['pt10_20_line_y'],
+                mode='lines', name='Garis Titik 10 & 20',
+                line=dict(color="#B8860B", width=3, dash="dot"), showlegend=True
+            ))
+            if not np.isnan(results.get('y_at_x_50_pt10_20_line', np.nan)):
+                fig.add_trace(go.Scatter(
+                    x=[50], y=[results['y_at_x_50_pt10_20_line']],
+                    mode='markers', name=f'Int. Garis 10-20 di x=50, y={results["y_at_x_50_pt10_20_line"]:.2f}',
+                    marker=dict(size=14, color='#B8860B', symbol='circle-open', line=dict(width=3, color='#B8860B'))
+                ))
+                y_pos_pt10_20_label = results['y_at_x_50_pt10_20_line'] + (max_y_for_line * 0.05 if max_y_for_line > 0 else 50)
+                fig.add_annotation(
+                    x=50, y=y_pos_pt10_20_label, text=f"Garis 10-20: {results['y_at_x_50_pt10_20_line']:.2f}",
+                    showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#B8860B',
+                    font=dict(size=14, color='#B8860B', family="Montserrat, sans-serif"),
+                    bordercolor="#B8860B", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
+                )
 
 # Kondisional untuk Garis Regresi RANSAC 
 if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
-    if not np.isnan(results['y_at_x_50_ransac_line']) and len(results['ransac_line_x']) > 0:
+    if results['ransac_line_x'].size > 0 and not np.isnan(results.get('y_at_x_50_ransac_line', np.nan)):
         fig.add_trace(go.Scatter(
             x=results['ransac_line_x'], y=results['ransac_line_y'],
             mode='lines', name='Regresi RANSAC',
-            line=dict(color='#00CED1', width=3, dash='dash'), showlegend=True # Biru-Cyan yang elegan (mirip teal)
+            line=dict(color='#00CED1', width=3, dash='dash'), showlegend=True
         ))
         fig.add_trace(go.Scatter(
             x=[50], y=[results['y_at_x_50_ransac_line']],
             mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line"]:.2f}',
             marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
         ))
-        y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_values.max() * 0.05 if results['y_at_x_50_ransac_line'] > 0 else 50)
+        y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (max_y_for_line * 0.05 if max_y_for_line > 0 else 50) # Lebih baik menggunakan max_y_for_line
+        if y_pos_ransac_label < 0: # Pastikan label tidak di bawah 0 jika y_values positif semua
+            y_pos_ransac_label = 0 
+
         fig.add_annotation(
             x=50, y=y_pos_ransac_label, text=f"RANSAC: {results['y_at_x_50_ransac_line']:.2f}",
             showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#00CED1',
             font=dict(size=14, color='#00CED1', family="Montserrat, sans-serif"),
             bordercolor="#00CED1", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
         )
+    elif analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
+        if len(x_values) < 2:
+            st.warning("Tidak cukup data untuk menghitung Regresi RANSAC (minimal 2 titik).")
+        else:
+            st.warning("Regresi RANSAC tidak dapat dihitung dengan data yang diberikan. Coba periksa outlier atau distribusi data.")
 
-# Update layout for Plotly
+
+# Update layout Plotly
 fig.update_layout(
-    xaxis_title="Nilai Tetap (x)",
-    yaxis_title="Nilai Benang Putus (N)",
+    title_text='Grafik Abrasi Benang vs. Nilai Putus',
+    title_x=0.5,
+    xaxis_title='Nilai Tetap (x)',
+    yaxis_title='Nilai Benang Putus (N)',
+    plot_bgcolor='#1A1A1A', # Background plot
+    paper_bgcolor='#1A1A1A', # Background area figure
+    font=dict(color='#E0E0E0', family='Montserrat, sans-serif'),
+    xaxis=dict(gridcolor='#282828', zerolinecolor='#282828'),
+    yaxis=dict(gridcolor='#282828', zerolinecolor='#282828'),
+    hovermode='x unified',
+    margin=dict(l=50, r=50, t=80, b=50),
     legend=dict(
-        orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
-        font=dict(size=12, color="#E0E0E0"), bgcolor="rgba(26,26,26,0.7)", borderwidth=1, bordercolor="#3A3A3A"
-    ),
-    margin=dict(l=20, r=20, t=60, b=20), height=600, template="plotly_dark", # Margin dan tinggi lebih besar
-    plot_bgcolor="#1A1A1A", paper_bgcolor="#1A1A1A", font=dict(color="#E0E0E0", family="Montserrat, sans-serif"),
-    hoverlabel=dict(bgcolor="rgba(26,26,26,0.9)", font_size=14, font_family="Montserrat, sans-serif"),
-    # Tambahkan responsivitas untuk Plotly
-    autosize=True
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1,
+        bgcolor="rgba(26,26,26,0.8)",
+        bordercolor="#282828",
+        borderwidth=1,
+        font=dict(size=12)
+    )
 )
-fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#282828', zeroline=True, zerolinewidth=1.5, zerolinecolor='#282828', tickfont=dict(color="#B0B0B0"))
-fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#282828', zeroline=True, zerolinewidth=1.5, zerolinecolor='#282828', tickfont=dict(color="#B0B0B0"))
 
-st.plotly_chart(fig, use_container_width=True) # use_container_width sangat penting untuk responsivitas grafik
+st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True})
 
-st.markdown("---") # Garis pemisah untuk hasil 
 
-# Tampilkan Hasil Analisis (Sesuai dengan analysis_choice) 
-st.write("#### Hasil Nilai Perpotongan pada x=50") 
+st.markdown("---")
 
-st.markdown(f"""
-<div class="dark-card" style="text-align: center; padding: 25px; margin-bottom: 20px;">
-""", unsafe_allow_html=True)
+# Bagian Hasil Perhitungan
+st.write("#### Hasil Perhitungan Perpotongan di X=50")
 
-if analysis_choice == "Kurva Data Asli":
-    val = results['y_at_x_50_original_curve']
-    desc = "Nilai perpotongan kurva data abrasi asli pada x=50. Ini adalah interpolasi linear langsung dari data yang Anda masukkan."
-    st.markdown(f"""
-    <p style="color: #B0B0B0; font-size: 16px;">Hasil Kurva Data Asli:</p>
-    <h1 style="color: #FF4500; font-size: 60px; margin: 10px 0;">{val:.2f}</h1>
-    <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">{desc}</div>
-    """, unsafe_allow_html=True)
+# Gunakan card untuk menampilkan hasil
+col_res1, col_res2, col_res3 = st.columns(3)
 
-elif analysis_choice == "Garis Titik 10 & 20":
-    val = results['y_at_x_50_pt10_20_line']
-    if not np.isnan(val):
-        desc = f"Berdasarkan garis linear yang ditarik antara titik data ke-10 ({results['specific_x1_pt10_20']:.2f}, {results['specific_y1_pt10_20']:.2f}) dan titik data ke-20 ({results['specific_x2_pt10_20']:.2f}, {results['specific_y2_pt10_20']:.2f})."
+with col_res1:
+    with st.container(height=150): # Menggunakan container untuk ukuran yang konsisten
         st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Titik 10 & 20:</p>
-        <h1 style="color: #B8860B; font-size: 60px; margin: 10px 0;">{val:.2f}</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">{desc}</div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Titik 10 & 20:</p>
-        <h1 style="color: #B8860B; font-size: 60px; margin: 10px 0;">N/A</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">
-            Tidak cukup data untuk menghitung garis ini (membutuhkan setidaknya 20 titik).
+        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
+            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Kurva Data Asli</h3>
+            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
+            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
         </div>
         """, unsafe_allow_html=True)
 
-elif analysis_choice == "Garis Regresi RANSAC":
-    val = results['y_at_x_50_ransac_line']
-    if not np.isnan(val):
-        desc = "Berdasarkan model Regresi Linear Robust (RANSAC), yang secara cerdas menemukan garis terbaik dengan mengabaikan data *outlier* untuk menghasilkan prediksi yang lebih stabil."
+with col_res2:
+    with st.container(height=150):
         st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
-        <h1 style="color: #00CED1; font-size: 60px; margin: 10px 0;">{val:.2f}</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">{desc}</div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
-        <h1 style="color: #00CED1; font-size: 60px; margin: 10px 0;">N/A</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">
-            Data tidak cukup atau terlalu sedikit variasi untuk menghitung regresi RANSAC yang stabil.
+        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
+            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Garis Titik 10 & 20</h3>
+            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_pt10_20_line', np.nan):.2f}</p>
+            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
         </div>
         """, unsafe_allow_html=True)
 
-elif analysis_choice == "Tampilkan Semua":
-    val_original = results['y_at_x_50_original_curve']
-    val_10_20 = results['y_at_x_50_pt10_20_line']
-    val_ransac = results['y_at_x_50_ransac_line']
+with col_res3:
+    with st.container(height=150):
+        st.markdown(f"""
+        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
+            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis Regresi RANSAC</h3>
+            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
+            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Gunakan flexbox untuk menumpuk di mobile
-    st.markdown(f"""
-    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
-        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Kurva Data Asli:</p>
-            <h2 style="color: #FF4500; font-size: 48px; margin: 0; text-align: center;">{val_original:.2f}</h2>
-        </div>
-        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Garis Titik 10 & 20:</p>
-            <h2 style="color: #B8860B; font-size: 48px; margin: 0; text-align: center;">{val_10_20:.2f}</h2>
-        </div>
-        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Garis Regresi RANSAC:</p>
-            <h2 style="color: #00CED1; font-size: 48px; margin: 0; text-align: center;">{val_ransac:.2f}</h2>
-        </div>
-    </div>
-    <div style="margin-top: 25px; font-size: 15px; color: #B0B0B0; text-align: center;">
-        Ini adalah perbandingan nilai perpotongan dari berbagai metode pada x=50.
-    </div>
-    """, unsafe_allow_html=True)
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("---")
 
-# Footer
+# --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Dikembangkan oleh Radix Putra Darmawan (2025)
+    Aplikasi Analisis Abrasi Benang &copy; 2025 PULCRA by Radix.
 </div>
 """, unsafe_allow_html=True)
