@@ -103,7 +103,7 @@ st.markdown("""
         transition: all 0.3s ease;
         padding: 12px 25px; /* Ukuran desktop */
         font-size: 17px; /* Ukuran desktop */
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box_shadow: 0 4px 15px rgba(0,0,0,0.3);
         white-space: normal; /* Memungkinkan teks tombol wrap */
         word-break: break-word;
     }
@@ -430,25 +430,25 @@ st.markdown("""
             letter-spacing: 3px;
         }
         .app-header h1 {
-            font-size: 28px; /* Perkecil h1 di header */
+            font-size: 28px;
         }
         .app-header p {
-            font-size: 16px; /* Perkecil font di header */
+            font-size: 16px;
         }
         .dark-card {
-            padding: 20px; /* Perkecil padding card */
+            padding: 20px;
             margin-bottom: 20px;
         }
         .stDataFrame th, .stDataFrame td {
-            font-size: 14px; /* Perkecil font tabel */
+            font-size: 14px;
             padding: 8px 10px;
         }
         .stTextInput>div>div>input {
-            font-size: 16px; /* Perkecil font input teks */
+            font-size: 16px;
             padding: 8px 12px;
         }
         .stTextInput>label {
-            font-size: 16px; /* Perkecil font label input */
+            font-size: 16px;
         }
         .radix-footer {
             margin-top: 40px;
@@ -465,18 +465,18 @@ st.markdown("""
             font-size: 20px;
         }
         p, li, span, div {
-            font-size: 14px; /* Penyesuaian lebih lanjut untuk mobile kecil */
+            font-size: 14px;
         }
         .stButton>button {
             padding: 8px 15px;
             font-size: 14px;
         }
         .stRadio > div {
-            flex-direction: column; /* Tumpuk radio button secara vertikal */
-            align-items: stretch; /* Regangkan item radio */
+            flex-direction: column;
+            align-items: stretch;
         }
         .stRadio [data-baseweb="radio"] {
-            width: 100%; /* Lebar penuh */
+            width: 100%;
         }
         .pulcra-logo {
             font-size: 32px;
@@ -534,12 +534,6 @@ if 'calculated_results' not in st.session_state:
     st.session_state.calculated_results = {}
 if 'password_entered' not in st.session_state:
     st.session_state.password_entered = False
-if 'custom_line_params' not in st.session_state:
-    st.session_state.custom_line_params = {'x1': 0.0, 'y1': 0.0, 'x2': 100.0, 'y2': 1000.0} # Default values
-if 'custom_line_intersection' not in st.session_state:
-    st.session_state.custom_line_intersection = np.nan # Inisialisasi dengan NaN
-if 'custom_points_clicked' not in st.session_state:
-    st.session_state.custom_points_clicked = [] # List untuk menyimpan koordinat klik
 
 # Panggil fungsi pengecekan password di awal aplikasi
 if not check_password():
@@ -642,32 +636,6 @@ def calculate_lines_and_points(x_values_series, y_values_series):
 
     return results
 
-# --- Fungsi untuk Menghitung Perpotongan Garis Kustom dengan X=50 ---
-def calculate_custom_line_intersection(x1, y1, x2, y2):
-    # Cek jika x1, y1, x2, y2 adalah NaN atau None (jika belum diisi)
-    if any(np.isnan([x1, y1, x2, y2])) or x1 is None or y1 is None or x2 is None or y2 is None:
-        return np.nan
-
-    if x1 == x2: # Garis vertikal
-        if x1 == 50:
-            return y1 # Jika garis vertikal tepat di x=50, ambil y1 sebagai titik potong (atau y2, sama saja)
-        else:
-            return np.nan # Tidak berpotongan dengan x=50 jika bukan x=50
-    
-    # Hitung persamaan garis y = mx + c
-    m = (y2 - y1) / (x2 - x1)
-    c = y1 - m * x1
-    
-    # Perpotongan dengan x=50
-    y_intersect = m * 50 + c
-    
-    # Periksa apakah titik perpotongan berada dalam segmen garis (x1,x2)
-    # Menggunakan toleransi kecil untuk floating point comparison
-    tolerance = 1e-9
-    if not (min(x1, x2) - tolerance <= 50 <= max(x1, x2) + tolerance):
-        return np.nan # x=50 di luar segmen garis
-        
-    return y_intersect
 
 # --- Bagian Input Data ---
 st.subheader("Input Data")
@@ -802,7 +770,7 @@ y_values = pd.Series(st.session_state.data['y_values'])
 # UNIFIED RADIO BUTTON UNTUK GRAFIK DAN HASIL 
 analysis_choice = st.radio(
     "Pilih jenis analisis yang ingin ditampilkan:",
-    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis Regresi RANSAC", "Garis Kustom", "Tampilkan Semua"),
+    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis Regresi RANSAC", "Tampilkan Semua"), # Hapus "Garis Kustom"
     key="analysis_choice",
     horizontal=True
 )
@@ -934,91 +902,6 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
         else:
             st.warning("Regresi RANSAC tidak dapat dihitung dengan data yang diberikan. Coba periksa outlier atau distribusi data.")
 
-# --- Bagian Input Garis Kustom (Modifikasi untuk Klik Manual) ---
-if analysis_choice in ["Garis Kustom", "Tampilkan Semua"]:
-    st.markdown("#### Gambar Garis Kustom (Input Manual Koordinat)")
-    st.info("Untuk menggambar garis kustom, Anda dapat memasukkan dua titik (X1, Y1) dan (X2, Y2) secara manual. "
-            "Gunakan fitur _hover_ pada grafik di atas untuk melihat koordinat X dan Y yang ingin Anda gunakan.")
-
-    col_x1, col_y1, col_x2, col_y2 = st.columns(4)
-    with col_x1:
-        st.session_state.custom_line_params['x1'] = st.number_input("X1", value=float(st.session_state.custom_line_params['x1']), format="%.1f", key="custom_x1")
-    with col_y1:
-        st.session_state.custom_line_params['y1'] = st.number_input("Y1", value=float(st.session_state.custom_line_params['y1']), format="%.1f", key="custom_y1")
-    with col_x2:
-        st.session_state.custom_line_params['x2'] = st.number_input("X2", value=float(st.session_state.custom_line_params['x2']), format="%.1f", key="custom_x2")
-    with col_y2:
-        st.session_state.custom_line_params['y2'] = st.number_input("Y2", value=float(st.session_state.custom_line_params['y2']), format="%.1f", key="custom_y2")
-
-    # Tombol untuk mereset input garis kustom
-    if st.button("Reset Garis Kustom", key="reset_custom_line", use_container_width=True):
-        st.session_state.custom_line_params = {'x1': 0.0, 'y1': 0.0, 'x2': 100.0, 'y2': 1000.0}
-        st.session_state.custom_line_intersection = np.nan
-        st.rerun() # Rerun untuk membersihkan input dan grafik
-
-    # Hitung dan tampilkan garis kustom
-    x1, y1 = st.session_state.custom_line_params['x1'], st.session_state.custom_line_params['y1']
-    x2, y2 = st.session_state.custom_line_params['x2'], st.session_state.custom_line_params['y2']
-
-    # Update intersection calculation whenever custom line params change
-    st.session_state.custom_line_intersection = calculate_custom_line_intersection(x1, y1, x2, y2)
-
-    # Pastikan x1 dan x2 tidak sama untuk menghindari pembagian nol pada kemiringan
-    if x1 != x2:
-        
-        # Ekstrak rentang x dari data asli untuk menentukan panjang garis kustom
-        x_min_data = x_values.min() if not x_values.empty else 0
-        x_max_data = x_values.max() if not x_values.empty else 100
-
-        # Gunakan rentang yang lebih luas untuk memastikan garis kustom terlihat
-        x_range_line = np.linspace(min(x1, x2, x_min_data, 50), max(x1, x2, x_max_data, 50), 100)
-        
-        # Hitung y untuk rentang x tersebut
-        m_custom = (y2 - y1) / (x2 - x1)
-        c_custom = y1 - m_custom * x1
-        y_range_line = m_custom * x_range_line + c_custom
-
-        fig.add_trace(go.Scatter(
-            x=x_range_line, y=y_range_line,
-            mode='lines', name='Garis Kustom',
-            line=dict(color='#8A2BE2', width=3, dash='longdashdot'), # Warna ungu
-            showlegend=True
-        ))
-        
-        # Tambahkan marker untuk titik input kustom
-        fig.add_trace(go.Scatter(
-            x=[x1, x2], y=[y1, y2],
-            mode='markers', name='Titik Input Kustom',
-            marker=dict(size=12, color='#8A2BE2', symbol='cross', line=dict(width=2, color='white'))
-        ))
-
-        if not np.isnan(st.session_state.custom_line_intersection):
-            fig.add_trace(go.Scatter(
-                x=[50], y=[st.session_state.custom_line_intersection],
-                mode='markers', name=f'Int. Kustom di x=50, y={st.session_state.custom_line_intersection:.2f}',
-                marker=dict(size=14, color='#8A2BE2', symbol='square-open', line=dict(width=3, color='#8A2BE2'))
-            ))
-            # Posisi label agar tidak tumpang tindih
-            y_pos_custom_label = st.session_state.custom_line_intersection + (y_range_span * 0.05 if y_range_span > 0 else 50)
-            if y_pos_custom_label > y1_line: # Jangan sampai label keluar dari batas atas plot
-                y_pos_custom_label = y1_line * 0.98 # Sedikit di bawah batas atas
-            
-            fig.add_annotation(
-                x=50, y=y_pos_custom_label, text=f"Kustom: {st.session_state.custom_line_intersection:.2f}",
-                showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#8A2BE2',
-                font=dict(size=14, color='#8A2BE2', family="Montserrat, sans-serif"),
-                bordercolor="#8A2BE2", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
-            )
-        else:
-            st.warning("Garis kustom tidak berpotongan dengan x=50 dalam segmen yang ditentukan atau garis vertikal tepat di x=50.")
-    else:
-        # Tambahan penanganan jika x1 == x2 (garis vertikal)
-        if x1 == 50:
-            st.warning("Garis kustom adalah garis vertikal tepat di x=50. Titik potong Y akan diambil dari Y1.")
-        else:
-            st.warning("Garis kustom adalah garis vertikal (X1 sama dengan X2) dan tidak berpotongan dengan garis X=50 kecuali jika X1=50.")
-        st.session_state.custom_line_intersection = calculate_custom_line_intersection(x1, y1, x2, y2) # Recalculate to ensure NaN if not 50
-
 # Update layout Plotly
 fig.update_layout(
     title_text='Grafik Abrasi Benang vs. Nilai Putus',
@@ -1054,7 +937,7 @@ st.markdown("---")
 st.write("#### Hasil Perhitungan Perpotongan di X=50")
 
 # Gunakan card untuk menampilkan hasil
-col_res1, col_res2, col_res3, col_res4 = st.columns(4) # Menambah kolom untuk garis kustom
+col_res1, col_res2, col_res3 = st.columns(3) # Hanya 3 kolom sekarang
 
 with col_res1:
     with st.container(height=150): # Menggunakan container untuk ukuran yang konsisten
@@ -1082,22 +965,6 @@ with col_res3:
         <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
             <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis Regresi RANSAC</h3>
             <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
-            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-with col_res4:
-    with st.container(height=150):
-        # Perbaikan utama ada di sini: menggunakan f-string kondisional
-        display_custom_intersection = (
-            f"{st.session_state.custom_line_intersection:.2f}"
-            if not np.isnan(st.session_state.custom_line_intersection)
-            else "N/A"
-        )
-        st.markdown(f"""
-        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
-            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #8A2BE2;">Garis Kustom</h3>
-            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{display_custom_intersection}</p>
             <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
         </div>
         """, unsafe_allow_html=True)
