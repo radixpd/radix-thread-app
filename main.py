@@ -103,13 +103,13 @@ st.markdown("""
         transition: all 0.3s ease;
         padding: 12px 25px; /* Ukuran desktop */
         font-size: 17px; /* Ukuran desktop */
-        box_shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         white-space: normal; /* Memungkinkan teks tombol wrap */
         word-break: break-word;
     }
     .stButton>button:hover {
         background-color: #A0522D;
-        box_shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
         transform: translateY(-3px);
     }
     
@@ -204,7 +204,19 @@ st.markdown("""
         flex-direction: column;
         justify-content: center; /* Pusatkan konten vertikal */
         align-items: center; /* Pusatkan konten horizontal */
-        text-align: center;
+        text-align: center; /* Pusatkan teks */
+        padding: 25px; /* Sedikit kurangi padding agar lebih ringkas */
+    }
+    .dark-card.result-card h3 {
+        margin-bottom: 10px; /* Tambah sedikit jarak antara judul dan nilai */
+        text-align: center; /* Pastikan judul di tengah */
+    }
+    .dark-card.result-card p {
+        text-align: center; /* Pastikan paragraf juga di tengah */
+    }
+    .dark-card.result-card p:last-child {
+        margin-top: 10px; /* Tambah sedikit jarak antara nilai dan keterangan */
+        font-size: 13px; /* Sedikit perkecil font keterangan */
     }
 
 
@@ -284,7 +296,7 @@ st.markdown("""
         border-radius: 10px;
         overflow: auto; /* Penting untuk scroll horizontal di mobile */
         border: 1px solid #282828;
-        box_shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     [data-testid="stFileUploaderDropzone"] {
         border: 2px dashed #DAA520;
@@ -364,7 +376,7 @@ st.markdown("""
         color: #E0E0E0;
         padding: 10px 15px;
         font-size: 18px; /* Ukuran desktop */
-        box_shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
     .stTextInput>label {
         font-size: 18px; /* Ukuran desktop */
@@ -427,10 +439,16 @@ st.markdown("""
             font-size: 16px; /* Perkecil font label radio */
             margin-bottom: 10px;
         }
+        .stRadio > div {
+            flex-direction: column; /* Ubah ke kolom untuk mobile */
+            align-items: stretch; /* Regangkan item agar mengisi lebar */
+            padding: 15px; /* Kurangi padding radio group */
+        }
         .stRadio [data-baseweb="radio"] {
             min-width: unset; /* Hapus min-width agar lebih fleksibel */
             padding: 8px 15px; /* Perkecil padding item radio */
             font-size: 15px; /* Perkecil font item radio */
+            width: 100%; /* Pastikan setiap opsi radio mengisi lebar penuh */
         }
         .app-header {
             padding: 30px; /* Perkecil padding header */
@@ -481,13 +499,6 @@ st.markdown("""
         .stButton>button {
             padding: 8px 15px;
             font-size: 14px;
-        }
-        .stRadio > div {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .stRadio [data-baseweb="radio"] {
-            width: 100%;
         }
         .pulcra-logo {
             font-size: 32px;
