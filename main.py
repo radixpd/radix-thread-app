@@ -805,7 +805,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
         yaxis_title='Nilai Benang Putus (N)',
         plot_bgcolor='#1A1A1A', # Background plot
         paper_bgcolor='#1A1A1A', # Background di luar plot
-        font=dict(color='#E0E0E0', family='Montserrat, sans-serif'),
+        font=dict(color='#E0E0E0', family='Montserrat', sans-serif'),
         xaxis=dict(
             showgrid=True, gridcolor='#282828', zeroline=False,
             title_font=dict(size=18), tickfont=dict(size=14)
@@ -1031,6 +1031,6 @@ elif analysis_choice == "Tampilkan Semua":
 # --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh Radix
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
 </div>
 """, unsafe_allow_html=True)
