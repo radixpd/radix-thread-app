@@ -942,6 +942,6 @@ st.markdown("</div>", unsafe_allow_html=True)
 # Footer
 st.markdown("""
 <div class="radix-footer">
-    Dikembangkan oleh Radix (2025)
+    Dikembangkan oleh Radix Putra Darmawan (2025)
 </div>
 """, unsafe_allow_html=True)
