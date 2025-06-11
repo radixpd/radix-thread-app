@@ -535,6 +535,10 @@ if 'calculated_results' not in st.session_state:
     st.session_state.calculated_results = {}
 if 'password_entered' not in st.session_state:
     st.session_state.password_entered = False
+if 'custom_line_params' not in st.session_state:
+    st.session_state.custom_line_params = {'x1': 0.0, 'y1': 0.0, 'x2': 100.0, 'y2': 1000.0} # Default values
+if 'custom_line_intersection' not in st.session_state:
+    st.session_state.custom_line_intersection = np.nan
 
 # Panggil fungsi pengecekan password di awal aplikasi
 if not check_password():
@@ -589,8 +593,6 @@ def calculate_lines_and_points(x_values_series, y_values_series):
         results['specific_y1_pt10_20'] = y_np[0]
         results['specific_x2_pt10_20'] = x_np[-1]
         results['specific_y2_pt10_20'] = y_np[-1]
-        # st.info("Dataset kurang dari 20 titik. Garis 'Titik 10 & 20' dihitung antara titik pertama dan terakhir.")
-        # Pesan ini bisa mengganggu cache, biarkan info muncul hanya jika data tidak cukup
     
     if not np.isnan(results['specific_x1_pt10_20']) and not np.isnan(results['specific_x2_pt10_20']):
         if results['specific_x1_pt10_20'] != results['specific_x2_pt10_20']:
@@ -633,12 +635,33 @@ def calculate_lines_and_points(x_values_series, y_values_series):
             results['ransac_line_y'] = ransac.predict(results['ransac_line_x'].reshape(-1, 1))
             
         except Exception as e:
-            # st.warning(f"Tidak dapat menghitung regresi RANSAC: {e}") # Debugging
             results['ransac_line_x'] = np.array([])
             results['ransac_line_y'] = np.array([])
             results['y_at_x_50_ransac_line'] = np.nan
 
     return results
+
+# --- Fungsi untuk Menghitung Perpotongan Garis Kustom dengan X=50 ---
+def calculate_custom_line_intersection(x1, y1, x2, y2):
+    if x1 == x2: # Garis vertikal
+        if x1 == 50:
+            return y1 # Atau bisa juga mengembalikan rentang Y, tergantung definisi. Kita anggap titik awal.
+        else:
+            return np.nan # Tidak berpotongan dengan x=50 jika bukan x=50
+    
+    # Hitung persamaan garis y = mx + c
+    m = (y2 - y1) / (x2 - x1)
+    c = y1 - m * x1
+    
+    # Perpotongan dengan x=50
+    y_intersect = m * 50 + c
+    
+    # Periksa apakah titik perpotongan berada dalam segmen garis (x1,x2)
+    # Ini penting jika kita hanya ingin perpotongan dalam segmen yang digambar
+    if not (min(x1, x2) <= 50 <= max(x1, x2)):
+        return np.nan # x=50 di luar segmen garis
+        
+    return y_intersect
 
 # --- Bagian Input Data ---
 st.subheader("Input Data")
@@ -762,7 +785,6 @@ if st.session_state.update_graph or not st.session_state.calculated_results:
         st.warning("Data tidak cukup untuk analisis. Masukkan minimal 2 pasangan X dan Y.")
         # Clear results if data is insufficient to avoid displaying stale results
         st.session_state.calculated_results = {}
-        # st.stop() # Jangan stop jika hanya kurang data, biar pengguna bisa input lagi
     else:
         st.session_state.calculated_results = calculate_lines_and_points(x_values_current, y_values_current)
     st.session_state.update_graph = False
@@ -774,7 +796,7 @@ y_values = pd.Series(st.session_state.data['y_values'])
 # UNIFIED RADIO BUTTON UNTUK GRAFIK DAN HASIL 
 analysis_choice = st.radio(
     "Pilih jenis analisis yang ingin ditampilkan:",
-    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis Regresi RANSAC", "Tampilkan Semua"),
+    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis Regresi RANSAC", "Garis Kustom", "Tampilkan Semua"),
     key="analysis_choice",
     horizontal=True
 )
@@ -796,18 +818,17 @@ if not x_values.empty and not y_values.empty:
     ))
 
     # Tambahkan Garis Vertikal di x=50 (selalu) 
-    # Perbaiki y0 dan y1 agar tidak error jika y_values kosong atau sangat kecil
     min_y_for_line = y_values.min() if not y_values.empty else 0
     max_y_for_line = y_values.max() if not y_values.empty else 100
     
     fig.add_shape(
         type="line",
-        x0=50, y0=min_y_for_line * 0.9 if min_y_for_line < 0 else 0,
-        x1=50, y1=max_y_for_line * 1.1,
+        x0=50, y0=min_y_for_line * 0.9 if min_y_for_line < 0 else min(y_values) - (max(y_values)-min(y_values))*0.1, # Lebih robust
+        x1=50, y1=max_y_for_line * 1.1 + (max(y_values)-min(y_values))*0.1, # Lebih robust
         line=dict(color="#FF4500", width=2, dash="dash"), # Oranye kemerahan yang kuat
     )
     fig.add_annotation(
-        x=50, y=max_y_for_line * 1.05, text="x=50", showarrow=False,
+        x=50, y=max_y_for_line * 1.05 + (max(y_values)-min(y_values))*0.05, text="x=50", showarrow=False,
         font=dict(color="#FF4500", size=14, family="Montserrat, sans-serif", weight="bold")
     )
 
@@ -889,6 +910,66 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
         else:
             st.warning("Regresi RANSAC tidak dapat dihitung dengan data yang diberikan. Coba periksa outlier atau distribusi data.")
 
+# --- Bagian Input Garis Kustom ---
+if analysis_choice in ["Garis Kustom", "Tampilkan Semua"]:
+    st.markdown("#### Gambar Garis Kustom")
+    st.info("Masukkan dua titik (X1, Y1) dan (X2, Y2) untuk menggambar garis kustom Anda.")
+
+    col_x1, col_y1, col_x2, col_y2 = st.columns(4)
+    with col_x1:
+        st.session_state.custom_line_params['x1'] = st.number_input("X1", value=st.session_state.custom_line_params['x1'], format="%.1f", key="custom_x1")
+    with col_y1:
+        st.session_state.custom_line_params['y1'] = st.number_input("Y1", value=st.session_state.custom_line_params['y1'], format="%.1f", key="custom_y1")
+    with col_x2:
+        st.session_state.custom_line_params['x2'] = st.number_input("X2", value=st.session_state.custom_line_params['x2'], format="%.1f", key="custom_x2")
+    with col_y2:
+        st.session_state.custom_line_params['y2'] = st.number_input("Y2", value=st.session_state.custom_line_params['y2'], format="%.1f", key="custom_y2")
+
+    # Hitung dan tampilkan garis kustom
+    x1, y1 = st.session_state.custom_line_params['x1'], st.session_state.custom_line_params['y1']
+    x2, y2 = st.session_state.custom_line_params['x2'], st.session_state.custom_line_params['y2']
+
+    # Pastikan x1 dan x2 tidak sama untuk menghindari pembagian nol pada kemiringan
+    if x1 != x2:
+        st.session_state.custom_line_intersection = calculate_custom_line_intersection(x1, y1, x2, y2)
+        
+        # Ekstrak rentang x dari data asli untuk menentukan panjang garis kustom
+        x_min_data = x_values.min() if not x_values.empty else 0
+        x_max_data = x_values.max() if not x_values.empty else 100
+
+        # Gunakan rentang yang lebih luas untuk memastikan garis kustom terlihat
+        x_range_line = np.linspace(min(x1, x2, x_min_data, 50), max(x1, x2, x_max_data, 50), 100)
+        
+        # Hitung y untuk rentang x tersebut
+        m_custom = (y2 - y1) / (x2 - x1)
+        c_custom = y1 - m_custom * x1
+        y_range_line = m_custom * x_range_line + c_custom
+
+        fig.add_trace(go.Scatter(
+            x=x_range_line, y=y_range_line,
+            mode='lines', name='Garis Kustom',
+            line=dict(color='#8A2BE2', width=3, dash='longdashdot'), # Warna ungu
+            showlegend=True
+        ))
+        
+        if not np.isnan(st.session_state.custom_line_intersection):
+            fig.add_trace(go.Scatter(
+                x=[50], y=[st.session_state.custom_line_intersection],
+                mode='markers', name=f'Int. Kustom di x=50, y={st.session_state.custom_line_intersection:.2f}',
+                marker=dict(size=14, color='#8A2BE2', symbol='square-open', line=dict(width=3, color='#8A2BE2'))
+            ))
+            y_pos_custom_label = st.session_state.custom_line_intersection + (max_y_for_line * 0.05 if max_y_for_line > 0 else 50)
+            fig.add_annotation(
+                x=50, y=y_pos_custom_label, text=f"Kustom: {st.session_state.custom_line_intersection:.2f}",
+                showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#8A2BE2',
+                font=dict(size=14, color='#8A2BE2', family="Montserrat, sans-serif"),
+                bordercolor="#8A2BE2", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
+            )
+        else:
+            st.warning("Garis kustom tidak berpotongan dengan x=50 dalam segmen yang ditentukan.")
+    else:
+        st.warning("Garis kustom adalah garis vertikal (X1 sama dengan X2) dan tidak berpotongan dengan garis X=50 kecuali jika X1=50.")
+        st.session_state.custom_line_intersection = np.nan # Reset intersection if not valid
 
 # Update layout Plotly
 fig.update_layout(
@@ -925,7 +1006,7 @@ st.markdown("---")
 st.write("#### Hasil Perhitungan Perpotongan di X=50")
 
 # Gunakan card untuk menampilkan hasil
-col_res1, col_res2, col_res3 = st.columns(3)
+col_res1, col_res2, col_res3, col_res4 = st.columns(4) # Menambah kolom untuk garis kustom
 
 with col_res1:
     with st.container(height=150): # Menggunakan container untuk ukuran yang konsisten
@@ -953,6 +1034,16 @@ with col_res3:
         <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
             <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis Regresi RANSAC</h3>
             <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
+            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+with col_res4:
+    with st.container(height=150):
+        st.markdown(f"""
+        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
+            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #8A2BE2;">Garis Kustom</h3>
+            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{st.session_state.custom_line_intersection:.2f if not np.isnan(st.session_state.custom_line_intersection) else 'N/A'}</p>
             <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
         </div>
         """, unsafe_allow_html=True)
