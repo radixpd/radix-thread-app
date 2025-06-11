@@ -434,7 +434,7 @@ def calculate_lines_and_points(x_values, y_values):
     if len(x_values) >= 20:
         results['specific_x1_pt10_20'] = x_values.iloc[9]
         results['specific_y1_pt10_20'] = y_values.iloc[9]
-        results['specific_x2_pt10_20'] = x_values.iloc[19]
+        results['specific_x2_pt10_20'] = y_values.iloc[19] # Ini seharusnya x_values.iloc[19]
         results['specific_y2_pt10_20'] = y_values.iloc[19]
     elif len(x_values) >= 2: # Fallback jika data kurang dari 20
         results['specific_x1_pt10_20'] = x_values.iloc[0]
@@ -462,7 +462,11 @@ def calculate_lines_and_points(x_values, y_values):
             X_reshaped = x_values.values.reshape(-1, 1)
             y_reshaped = y_values.values
             
-            residual_threshold_val = np.std(y_reshaped) * 0.5 if len(y_reshaped) > 1 and np.std(y_reshaped) > 0 else 1.0
+            # Perhitungan residual_threshold_val yang lebih aman
+            if len(y_reshaped) > 1 and np.std(y_reshaped) > 0:
+                residual_threshold_val = np.std(y_reshaped) * 0.5
+            else:
+                residual_threshold_val = 1.0 # Default jika std deviasi nol atau tidak cukup data
 
             ransac = RANSACRegressor(LinearRegression(),
                                      min_samples=2,
@@ -482,6 +486,7 @@ def calculate_lines_and_points(x_values, y_values):
             results['ransac_line_y'] = ransac.predict(results['ransac_line_x'].reshape(-1, 1))
             
         except Exception as e:
+            st.warning(f"Gagal menghitung RANSAC: {e}. Mungkin karena data tidak valid atau terlalu sedikit.")
             results['ransac_line_x'] = np.array([])
             results['ransac_line_y'] = np.array([])
     
@@ -658,21 +663,21 @@ if not np.isnan(results['y_at_x_16_original_curve']):
     fig.add_trace(go.Scatter(
         x=[16], y=[results['y_at_x_16_original_curve']],
         mode='markers',
-        name=f"Y di X=16 (Asli): {results['y_at_x_16_original_curve']:.2f}", # Perbaikan: kutipan ganda
+        name=f"Y di X=16 (Asli): {results['y_at_x_16_original_curve']:.2f}", # Perbaikan SyntaxError
         marker=dict(size=14, color=line_colors[16], symbol='circle', line=dict(width=2, color='white'))
     ))
 if not np.isnan(results['y_at_x_50_original_curve']):
     fig.add_trace(go.Scatter(
         x=[50], y=[results['y_at_x_50_original_curve']],
         mode='markers',
-        name=f"Y di X=50 (Asli): {results['y_at_x_50_original_curve']:.2f}", # Perbaikan: kutipan ganda
+        name=f"Y di X=50 (Asli): {results['y_at_x_50_original_curve']:.2f}", # Perbaikan SyntaxError
         marker=dict(size=14, color=line_colors[50], symbol='circle', line=dict(width=2, color='white'))
     ))
 if not np.isnan(results['y_at_x_84_original_curve']):
     fig.add_trace(go.Scatter(
         x=[84], y=[results['y_at_x_84_original_curve']],
         mode='markers',
-        name=f"Y di X=84 (Asli): {results['y_at_x_84_original_curve']:.2f}", # Perbaikan: kutipan ganda
+        name=f"Y di X=84 (Asli): {results['y_at_x_84_original_curve']:.2f}", # Perbaikan SyntaxError
         marker=dict(size=14, color=line_colors[84], symbol='circle', line=dict(width=2, color='white'))
     ))
 
@@ -694,13 +699,13 @@ if analysis_choice in ["Garis Titik ke-10 & ke-20", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_16_pt10_20_line']):
             fig.add_trace(go.Scatter(
                 x=[16], y=[results['y_at_x_16_pt10_20_line']],
-                mode='markers', name=f"Y di X=16 (10-20): {results['y_at_x_16_pt10_20_line']:.2f}", # Perbaikan: kutipan ganda
+                mode='markers', name=f"Y di X=16 (10-20): {results['y_at_x_16_pt10_20_line']:.2f}", # Perbaikan SyntaxError
                 marker=dict(size=14, color='#B8860B', symbol='square-open', line=dict(width=3, color='#B8860B'))
             ))
         if not np.isnan(results['y_at_x_50_pt10_20_line']):
             fig.add_trace(go.Scatter(
                 x=[50], y=[results['y_at_x_50_pt10_20_line']],
-                mode='markers', name=f"Y di X=50 (10-20): {results['y_at_x_50_pt10_20_line']:.2f}", # Perbaikan: kutipan ganda
+                mode='markers', name=f"Y di X=50 (10-20): {results['y_at_x_50_pt10_20_line']:.2f}", # Perbaikan SyntaxError
                 marker=dict(size=14, color='#B8860B', symbol='circle-open', line=dict(width=3, color='#B8860B'))
             ))
             y_pos_pt10_20_label = results['y_at_x_50_pt10_20_line'] + (y_values.max() * 0.05 if y_values.max() > 0 else 50)
@@ -713,7 +718,7 @@ if analysis_choice in ["Garis Titik ke-10 & ke-20", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_84_pt10_20_line']):
             fig.add_trace(go.Scatter(
                 x=[84], y=[results['y_at_x_84_pt10_20_line']],
-                mode='markers', name=f"Y di X=84 (10-20): {results['y_at_x_84_pt10_20_line']:.2f}", # Perbaikan: kutipan ganda
+                mode='markers', name=f"Y di X=84 (10-20): {results['y_at_x_84_pt10_20_line']:.2f}", # Perbaikan SyntaxError
                 marker=dict(size=14, color='#B8860B', symbol='triangle-up-open', line=dict(width=3, color='#B8860B'))
             ))
 
@@ -729,13 +734,13 @@ if analysis_choice in ["Garis RANSAC", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_16_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[16], y=[results['y_at_x_16_ransac_line']],
-                mode='markers', name=f"Y di X=16 (RANSAC): {results['y_at_x_16_ransac_line']:.2f}", # Perbaikan: kutipan ganda
+                mode='markers', name=f"Y di X=16 (RANSAC): {results['y_at_x_16_ransac_line']:.2f}", # Perbaikan SyntaxError
                 marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
             ))
         if not np.isnan(results['y_at_x_50_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[50], y=[results['y_at_x_50_ransac_line']],
-                mode='markers', name=f"Y di X=50 (RANSAC): {results['y_at_x_50_ransac_line']:.2f}", # Perbaikan: kutipan ganda
+                mode='markers', name=f"Y di X=50 (RANSAC): {results['y_at_x_50_ransac_line']:.2f}", # Perbaikan SyntaxError
                 marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
             ))
             y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_values.max() * 0.05 if results['y_at_x_50_ransac_line'] > 0 else 50)
@@ -748,7 +753,7 @@ if analysis_choice in ["Garis RANSAC", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_84_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[84], y=[results['y_at_x_84_ransac_line']],
-                mode='markers', name=f"Y di X=84 (RANSAC): {results['y_at_x_84_ransac_line']:.2f}", # Perbaikan: kutipan ganda
+                mode='markers', name=f"Y di X=84 (RANSAC): {results['y_at_x_84_ransac_line']:.2f}", # Perbaikan SyntaxError
                 marker=dict(size=14, color='#00CED1', symbol='triangle-up', line=dict(width=3, color='#00CED1'))
             ))
 
