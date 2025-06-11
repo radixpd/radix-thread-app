@@ -195,7 +195,21 @@ st.markdown("""
         box-shadow: 0 6px 25px rgba(0,0,0,0.3);
         margin-bottom: 30px;
         border: 1px solid #282828;
+        /* Hapus properti height dan overflow jika ada di sini yang menyebabkan scrollbar */
+        /* height: 100%; <- Hapus ini dari sini */
+        /* overflow: auto; <- Hapus ini dari sini */
     }
+    /* Khusus untuk card hasil, pastikan tidak ada scrollbar */
+    .dark-card.result-card {
+        height: auto !important; /* Penting: Pastikan tinggi menyesuaikan konten */
+        overflow: visible !important; /* Penting: Pastikan tidak ada scrollbar */
+        display: flex; /* Gunakan flexbox untuk penataan konten internal */
+        flex-direction: column;
+        justify-content: center; /* Pusatkan konten vertikal */
+        align-items: center; /* Pusatkan konten horizontal */
+        text-align: center;
+    }
+
 
     /* Radix Header (PULCRA Branding) */
     .app-header {
@@ -859,6 +873,7 @@ if analysis_choice in ["Garis Titik 10 & 20", "Tampilkan Semua"]:
             ))
             if not np.isnan(results.get('y_at_x_50_pt10_20_line', np.nan)):
                 # Posisi label agar tidak tumpang tindih
+                y_range_span = y_values.max() - y_values.min() if not y_values.empty else 100
                 y_pos_pt10_20_label = results['y_at_x_50_pt10_20_line'] + (y_range_span * 0.05 if y_range_span > 0 else 50)
                 fig.add_trace(go.Scatter(
                     x=[50], y=[results['y_at_x_50_pt10_20_line']],
@@ -886,6 +901,7 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
             marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
         ))
         # Posisi label agar tidak tumpang tindih
+        y_range_span = y_values.max() - y_values.min() if not y_values.empty else 100
         y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_range_span * 0.05 if y_range_span > 0 else 50) 
         if y_pos_ransac_label < y0_line: # Pastikan label tidak keluar dari batas bawah plot
             y_pos_ransac_label = y0_line + (y_range_span * 0.02 if y_range_span > 0 else 5) # Sedikit di atas batas bawah
@@ -940,34 +956,34 @@ st.write("#### Hasil Perhitungan Perpotongan di X=50")
 col_res1, col_res2, col_res3 = st.columns(3) # Hanya 3 kolom sekarang
 
 with col_res1:
-    with st.container(height=150): # Menggunakan container untuk ukuran yang konsisten
-        st.markdown(f"""
-        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
-            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Kurva Data Asli</h3>
-            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
-            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Hapus st.container(height=150)
+    st.markdown(f"""
+    <div class="dark-card result-card">
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Kurva Data Asli</h3>
+        <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
+        <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col_res2:
-    with st.container(height=150):
-        st.markdown(f"""
-        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
-            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Garis Titik 10 & 20</h3>
-            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_pt10_20_line', np.nan):.2f}</p>
-            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Hapus st.container(height=150)
+    st.markdown(f"""
+    <div class="dark-card result-card">
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Garis Titik 10 & 20</h3>
+        <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_pt10_20_line', np.nan):.2f}</p>
+        <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col_res3:
-    with st.container(height=150):
-        st.markdown(f"""
-        <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
-            <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis Regresi RANSAC</h3>
-            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
-            <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Hapus st.container(height=150)
+    st.markdown(f"""
+    <div class="dark-card result-card">
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis Regresi RANSAC</h3>
+        <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
+        <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("---")
 
