@@ -195,9 +195,6 @@ st.markdown("""
         box-shadow: 0 6px 25px rgba(0,0,0,0.3);
         margin-bottom: 30px;
         border: 1px solid #282828;
-        /* Hapus properti height dan overflow jika ada di sini yang menyebabkan scrollbar */
-        /* height: 100%; <- Hapus ini dari sini */
-        /* overflow: auto; <- Hapus ini dari sini */
     }
     /* Khusus untuk card hasil, pastikan tidak ada scrollbar */
     .dark-card.result-card {
@@ -656,7 +653,8 @@ st.subheader("Input Data")
 tabs = st.tabs(["Input Manual", "Impor dari Excel"])
 
 with tabs[0]:
-    st.write("Ubah nilai Y (N atau nilai benang putus) dari data abrasi. Nilai X tetap.")
+    # --- Perubahan di sini: Kalimat instruksi ---
+    st.write("Masukan data abrasi ke tabel Nilai Benang Putus. Nilai X tetap.")
     
     # Menampilkan index dari 1
     edited_data = pd.DataFrame({
@@ -784,7 +782,7 @@ y_values = pd.Series(st.session_state.data['y_values'])
 # UNIFIED RADIO BUTTON UNTUK GRAFIK DAN HASIL 
 analysis_choice = st.radio(
     "Pilih jenis analisis yang ingin ditampilkan:",
-    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis Regresi RANSAC", "Tampilkan Semua"), # Hapus "Garis Kustom"
+    ("Kurva tanpa garis perpotongan", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"), # --- Perubahan di sini ---
     key="analysis_choice",
     horizontal=True
 )
@@ -800,7 +798,7 @@ if not x_values.empty and not y_values.empty:
         x=x_values, 
         y=y_values,
         mode='lines+markers',
-        name='Data Abrasi',
+        name='Data Abrasi', # Tetap 'Data Abrasi' karena ini adalah data mentah
         line=dict(color='#8B4513', width=3), # Warna emas/tembaga untuk kurva asli
         marker=dict(size=8, color='#DAA520') # Emas gelap untuk marker
     ))
@@ -841,7 +839,7 @@ if not x_values.empty and not y_values.empty:
         fig.add_trace(go.Scatter(
             x=[50], y=[results['y_at_x_50_original_curve']],
             mode='markers',
-            name=f'Int. Kurva Asli di x=50, y={results["y_at_x_50_original_curve"]:.2f}',
+            name=f'Int. Kurva di x=50, y={results["y_at_x_50_original_curve"]:.2f}', # --- Perubahan di sini ---
             marker=dict(size=14, color='#FF4500', symbol='circle', line=dict(width=2, color='white'))
         ))
 
@@ -888,16 +886,16 @@ if analysis_choice in ["Garis Titik 10 & 20", "Tampilkan Semua"]:
                 )
 
 # Kondisional untuk Garis Regresi RANSAC 
-if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
+if analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]: # --- Perubahan di sini ---
     if results['ransac_line_x'].size > 0 and not np.isnan(results.get('y_at_x_50_ransac_line', np.nan)):
         fig.add_trace(go.Scatter(
             x=results['ransac_line_x'], y=results['ransac_line_y'],
-            mode='lines', name='Regresi RANSAC',
+            mode='lines', name='Garis yang melewati banyak titik', # --- Perubahan di sini ---
             line=dict(color='#00CED1', width=3, dash='dash'), showlegend=True
         ))
         fig.add_trace(go.Scatter(
             x=[50], y=[results['y_at_x_50_ransac_line']],
-            mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line"]:.2f}',
+            mode='markers', name=f'Int. Garis Utama di x=50, y={results["y_at_x_50_ransac_line"]:.2f}', # --- Perubahan di sini ---
             marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
         ))
         # Posisi label agar tidak tumpang tindih
@@ -907,12 +905,12 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
             y_pos_ransac_label = y0_line + (y_range_span * 0.02 if y_range_span > 0 else 5) # Sedikit di atas batas bawah
             
         fig.add_annotation(
-            x=50, y=y_pos_ransac_label, text=f"RANSAC: {results['y_at_x_50_ransac_line']:.2f}",
+            x=50, y=y_pos_ransac_label, text=f"Garis Utama: {results['y_at_x_50_ransac_line']:.2f}", # --- Perubahan di sini ---
             showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#00CED1',
             font=dict(size=14, color='#00CED1', family="Montserrat, sans-serif"),
             bordercolor="#00CED1", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
         )
-    elif analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
+    elif analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]: # --- Perubahan di sini ---
         if len(x_values) < 2:
             st.warning("Tidak cukup data untuk menghitung Regresi RANSAC (minimal 2 titik).")
         else:
@@ -956,17 +954,14 @@ st.write("#### Hasil Perhitungan Perpotongan di X=50")
 col_res1, col_res2, col_res3 = st.columns(3) # Hanya 3 kolom sekarang
 
 with col_res1:
-    # Hapus st.container(height=150)
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Kurva Data Asli</h3>
-        <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Kurva tanpa garis perpotongan</h3> <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col_res2:
-    # Hapus st.container(height=150)
     st.markdown(f"""
     <div class="dark-card result-card">
         <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Garis Titik 10 & 20</h3>
@@ -976,11 +971,9 @@ with col_res2:
     """, unsafe_allow_html=True)
 
 with col_res3:
-    # Hapus st.container(height=150)
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis Regresi RANSAC</h3>
-        <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis yang melewati banyak titik</h3> <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
     """, unsafe_allow_html=True)
