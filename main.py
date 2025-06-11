@@ -109,7 +109,7 @@ st.markdown("""
     }
     .stButton>button:hover {
         background-color: #A0522D;
-        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        box_shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
         transform: translateY(-3px);
     }
     
@@ -502,8 +502,7 @@ st.markdown("""
 ACCESS_CODE = "RADIX2025"
 
 def check_password():
-    # Pindahkan inisialisasi password_entered ke blok session state utama
-    if not st.session_state.password_entered:
+    if not st.session_state.get('password_entered', False):
         st.markdown("<h2 style='text-align: center;'>Akses Aplikasi</h2>", unsafe_allow_html=True)
         password_input = st.text_input("Masukkan Kode Akses Anda", type="password", key="password_input", help="Hubungi administrator untuk kode akses.")
         
@@ -512,7 +511,7 @@ def check_password():
             if st.button("Masuk", key="login_button", use_container_width=True):
                 if password_input == ACCESS_CODE:
                     st.session_state.password_entered = True
-                    st.success("Akses berhasil! Memuat aplikasi...") # Tambah feedback
+                    st.success("Akses berhasil! Memuat aplikasi...")
                     st.rerun()
                 else:
                     st.error("Kode akses salah. Silakan coba lagi.")
@@ -539,6 +538,8 @@ if 'custom_line_params' not in st.session_state:
     st.session_state.custom_line_params = {'x1': 0.0, 'y1': 0.0, 'x2': 100.0, 'y2': 1000.0} # Default values
 if 'custom_line_intersection' not in st.session_state:
     st.session_state.custom_line_intersection = np.nan # Inisialisasi dengan NaN
+if 'custom_points_clicked' not in st.session_state:
+    st.session_state.custom_points_clicked = [] # List untuk menyimpan koordinat klik
 
 # Panggil fungsi pengecekan password di awal aplikasi
 if not check_password():
@@ -643,9 +644,13 @@ def calculate_lines_and_points(x_values_series, y_values_series):
 
 # --- Fungsi untuk Menghitung Perpotongan Garis Kustom dengan X=50 ---
 def calculate_custom_line_intersection(x1, y1, x2, y2):
+    # Cek jika x1, y1, x2, y2 adalah NaN atau None (jika belum diisi)
+    if any(np.isnan([x1, y1, x2, y2])) or x1 is None or y1 is None or x2 is None or y2 is None:
+        return np.nan
+
     if x1 == x2: # Garis vertikal
         if x1 == 50:
-            return y1 # Jika garis vertikal tepat di x=50, ambil y1 sebagai titik potong
+            return y1 # Jika garis vertikal tepat di x=50, ambil y1 sebagai titik potong (atau y2, sama saja)
         else:
             return np.nan # Tidak berpotongan dengan x=50 jika bukan x=50
     
@@ -657,7 +662,6 @@ def calculate_custom_line_intersection(x1, y1, x2, y2):
     y_intersect = m * 50 + c
     
     # Periksa apakah titik perpotongan berada dalam segmen garis (x1,x2)
-    # Ini penting jika kita hanya ingin perpotongan dalam segmen yang digambar
     # Menggunakan toleransi kecil untuk floating point comparison
     tolerance = 1e-9
     if not (min(x1, x2) - tolerance <= 50 <= max(x1, x2) + tolerance):
@@ -930,20 +934,27 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
         else:
             st.warning("Regresi RANSAC tidak dapat dihitung dengan data yang diberikan. Coba periksa outlier atau distribusi data.")
 
-# --- Bagian Input Garis Kustom ---
+# --- Bagian Input Garis Kustom (Modifikasi untuk Klik Manual) ---
 if analysis_choice in ["Garis Kustom", "Tampilkan Semua"]:
-    st.markdown("#### Gambar Garis Kustom")
-    st.info("Masukkan dua titik (X1, Y1) dan (X2, Y2) untuk menggambar garis kustom Anda.")
+    st.markdown("#### Gambar Garis Kustom (Input Manual Koordinat)")
+    st.info("Untuk menggambar garis kustom, Anda dapat memasukkan dua titik (X1, Y1) dan (X2, Y2) secara manual. "
+            "Gunakan fitur _hover_ pada grafik di atas untuk melihat koordinat X dan Y yang ingin Anda gunakan.")
 
     col_x1, col_y1, col_x2, col_y2 = st.columns(4)
     with col_x1:
-        st.session_state.custom_line_params['x1'] = st.number_input("X1", value=st.session_state.custom_line_params['x1'], format="%.1f", key="custom_x1")
+        st.session_state.custom_line_params['x1'] = st.number_input("X1", value=float(st.session_state.custom_line_params['x1']), format="%.1f", key="custom_x1")
     with col_y1:
-        st.session_state.custom_line_params['y1'] = st.number_input("Y1", value=st.session_state.custom_line_params['y1'], format="%.1f", key="custom_y1")
+        st.session_state.custom_line_params['y1'] = st.number_input("Y1", value=float(st.session_state.custom_line_params['y1']), format="%.1f", key="custom_y1")
     with col_x2:
-        st.session_state.custom_line_params['x2'] = st.number_input("X2", value=st.session_state.custom_line_params['x2'], format="%.1f", key="custom_x2")
+        st.session_state.custom_line_params['x2'] = st.number_input("X2", value=float(st.session_state.custom_line_params['x2']), format="%.1f", key="custom_x2")
     with col_y2:
-        st.session_state.custom_line_params['y2'] = st.number_input("Y2", value=st.session_state.custom_line_params['y2'], format="%.1f", key="custom_y2")
+        st.session_state.custom_line_params['y2'] = st.number_input("Y2", value=float(st.session_state.custom_line_params['y2']), format="%.1f", key="custom_y2")
+
+    # Tombol untuk mereset input garis kustom
+    if st.button("Reset Garis Kustom", key="reset_custom_line", use_container_width=True):
+        st.session_state.custom_line_params = {'x1': 0.0, 'y1': 0.0, 'x2': 100.0, 'y2': 1000.0}
+        st.session_state.custom_line_intersection = np.nan
+        st.rerun() # Rerun untuk membersihkan input dan grafik
 
     # Hitung dan tampilkan garis kustom
     x1, y1 = st.session_state.custom_line_params['x1'], st.session_state.custom_line_params['y1']
@@ -974,6 +985,13 @@ if analysis_choice in ["Garis Kustom", "Tampilkan Semua"]:
             showlegend=True
         ))
         
+        # Tambahkan marker untuk titik input kustom
+        fig.add_trace(go.Scatter(
+            x=[x1, x2], y=[y1, y2],
+            mode='markers', name='Titik Input Kustom',
+            marker=dict(size=12, color='#8A2BE2', symbol='cross', line=dict(width=2, color='white'))
+        ))
+
         if not np.isnan(st.session_state.custom_line_intersection):
             fig.add_trace(go.Scatter(
                 x=[50], y=[st.session_state.custom_line_intersection],
@@ -1012,7 +1030,7 @@ fig.update_layout(
     font=dict(color='#E0E0E0', family='Montserrat, sans-serif'),
     xaxis=dict(gridcolor='#282828', zerolinecolor='#282828'),
     yaxis=dict(gridcolor='#282828', zerolinecolor='#282828'),
-    hovermode='x unified',
+    hovermode='x unified', # Mode hover untuk menampilkan koordinat
     margin=dict(l=50, r=50, t=80, b=50),
     legend=dict(
         orientation="h",
