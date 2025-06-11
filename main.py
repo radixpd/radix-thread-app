@@ -958,7 +958,7 @@ st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True})
 st.markdown("---")
 
 # Bagian Hasil Perhitungan
-st.write("#### Hasil Perhitungan Perpotongan di X=50")
+st.write("#### Hasil Perhitungan Perpotongan di X=50") # Judul bagian tetap
 
 # Gunakan card untuk menampilkan hasil
 col_res1, col_res2, col_res3 = st.columns(3)
@@ -966,7 +966,7 @@ col_res1, col_res2, col_res3 = st.columns(3)
 with col_res1:
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Nilai Perpotongan Pada Kurva</h3>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Perpotongan Kurva</h3>
         <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
@@ -975,7 +975,7 @@ with col_res1:
 with col_res2:
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Nilai Perpotongan dengan Garis Titik 10 & 20</h3>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Perpotongan Garis Titik 10 & 20</h3>
         <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_pt10_20_line', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
@@ -984,7 +984,7 @@ with col_res2:
 with col_res3:
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Nilai Perpotongan dengan garis yang melewati banyak titik</h3>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Perpotongan Garis yg Melewati Banyak Titik</h3>
         <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
