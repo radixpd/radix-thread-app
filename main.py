@@ -3,10 +3,11 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from scipy import interpolate
-from sklearn.linear_model import RANSACRegressor, LinearRegression
+from sklearn.linear_model import RANSACRegressor, LinearRegression # Pastikan scikit-learn terinstal
 import io
 
 # --- Konfigurasi Halaman (Paling Awal) ---
+# PERBAIKAN 1: Mengubah st.set_set_page_config() menjadi st.set_page_config()
 st.set_page_config(
     page_title="Thread Abrasion by Radix",
     page_icon="🧵",
@@ -364,6 +365,7 @@ def check_password():
             if st.button("Masuk", key="login_button", use_container_width=True):
                 if password_input == ACCESS_CODE:
                     st.session_state.password_entered = True
+                    # PERBAIKAN 4: Mengubah st.experimental_rerun() menjadi st.rerun()
                     st.rerun()
                 else:
                     st.error("Kode akses salah. Silakan coba lagi.")
@@ -669,14 +671,14 @@ if not np.isnan(results['y_at_x_50_original_curve']):
     fig.add_trace(go.Scatter(
         x=[50], y=[results['y_at_x_50_original_curve']],
         mode='markers',
-        name=f'Int. Kurva Asli di x=50, y={results["y_at_x_50_original_curve"]:.2f}',
+        name=f'Int. Kurva Asli di x=50, y={results["y_at_x_50_original_curve']:.2f}',
         marker=dict(size=14, color=line_colors[50], symbol='circle', line=dict(width=2, color='white'))
     ))
 if not np.isnan(results['y_at_x_84_original_curve']):
     fig.add_trace(go.Scatter(
         x=[84], y=[results['y_at_x_84_original_curve']],
         mode='markers',
-        name=f'Int. Kurva Asli di x=84, y={results["y_at_x_84_original_curve"]:.2f}',
+        name=f'Int. Kurva Asli di x=84, y={results["y_at_x_84_original_curve']:.2f}',
         marker=dict(size=14, color=line_colors[84], symbol='circle', line=dict(width=2, color='white'))
     ))
 
@@ -739,7 +741,7 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_50_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[50], y=[results['y_at_x_50_ransac_line']],
-                mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line"]:.2f}',
+                mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line']:.2f}',
                 marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
             ))
             y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_values.max() * 0.05 if results['y_at_x_50_ransac_line'] > 0 else 50)
@@ -753,7 +755,8 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
             fig.add_trace(go.Scatter(
                 x=[84], y=[results['y_at_x_84_ransac_line']],
                 mode='markers', name=f'Int. RANSAC di x=84, y={results["y_at_x_84_ransac_line"]:.2f}',
-                marker=dict(size=14, color='#00CED1', symbol='diamond-up', line=dict(width=3, color='#00CED1'))
+                # PERBAIKAN 3: Mengubah 'diamond-up' menjadi 'triangle-up'
+                marker=dict(size=14, color='#00CED1', symbol='triangle-up', line=dict(width=3, color='#00CED1')) 
             ))
 
 # Update layout for Plotly
@@ -849,7 +852,7 @@ elif analysis_choice == "Garis Regresi RANSAC":
                 <h2 style="color: #00CED1; font-size: 38px; margin: 5px 0;">{results['y_at_x_84_ransac_line']:.2f}</h2>
             </div>
         </div>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">Berdasarkan model Regresi Linear Robust (RANSAC), yang secara cerdas menemukan garis terbaik dengan mengabaikan data outlier untuk menghasilkan prediksi yang lebih stabil.</div>
+        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">Berdasarkan model Regresi Linear Robust (RANSAC), yang secara cerdas menemukan garis terbaik dengan mengabaikan data outlier (pencilan) untuk menghasilkan prediksi yang lebih stabil.</div>
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
