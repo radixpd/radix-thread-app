@@ -831,7 +831,13 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
             mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line"]:.2f}',
             marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
         ))
+        # Adjust y position of RANSAC annotation to avoid overlap with 10-20 line annotation
         y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_values.max() * 0.05 if results['y_at_x_50_ransac_line'] > 0 else 50)
+        # If both are displayed, adjust RANSAC annotation further
+        if analysis_choice == "Tampilkan Semua" and not np.isnan(results['y_at_x_50_pt10_20_line']):
+             y_pos_ransac_label = min(results['y_at_x_50_ransac_line'], results['y_at_x_50_pt10_20_line']) - (y_values.max() * 0.07 if y_values.max() > 0 else 70)
+
+
         fig.add_annotation(
             x=50, y=y_pos_ransac_label, text=f"RANSAC: {results['y_at_x_50_ransac_line']:.2f}",
             showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#00CED1',
@@ -839,109 +845,86 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
             bordercolor="#00CED1", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
         )
 
-# Update layout for Plotly
+
+# Atur layout grafik untuk dark mode dan tampilan profesional
 fig.update_layout(
-    xaxis_title="Nilai Tetap (x)",
-    yaxis_title="Nilai Benang Putus (N)",
-    legend=dict(
-        orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
-        font=dict(size=12, color="#E0E0E0"), bgcolor="rgba(26,26,26,0.7)", borderwidth=1, bordercolor="#3A3A3A"
+    title_text='Grafik Abrasi Benang',
+    title_x=0.5, # Pusatkan judul
+    xaxis_title='Jumlah Siklus (x)',
+    yaxis_title='Nilai Benang Putus (N)',
+    plot_bgcolor='#1A1A1A', # Background plot
+    paper_bgcolor='#1A1A1A', # Background kertas
+    font=dict(color='#E0E0E0', family='Montserrat, sans-serif'), # Warna font default
+    xaxis=dict(
+        gridcolor='#282828', # Warna grid sumbu X
+        zerolinecolor='#505050',
+        linecolor='#505050',
+        showgrid=True,
+        tickfont=dict(color='#E0E0E0'),
+        title_font=dict(size=18, color='#F8F8F8', family='Montserrat, sans-serif', weight='bold')
     ),
-    margin=dict(l=20, r=20, t=60, b=20), height=600, template="plotly_dark", # Margin dan tinggi lebih besar
-    plot_bgcolor="#1A1A1A", paper_bgcolor="#1A1A1A", font=dict(color="#E0E0E0", family="Montserrat, sans-serif"),
-    hoverlabel=dict(bgcolor="rgba(26,26,26,0.9)", font_size=14, font_family="Montserrat, sans-serif"),
-    # Tambahkan responsivitas untuk Plotly
-    autosize=True
+    yaxis=dict(
+        gridcolor='#282828', # Warna grid sumbu Y
+        zerolinecolor='#505050',
+        linecolor='#505050',
+        showgrid=True,
+        tickfont=dict(color='#E0E0E0'),
+        title_font=dict(size=18, color='#F8F8F8', family='Montserrat, sans-serif', weight='bold')
+    ),
+    legend=dict(
+        x=0.01, y=0.99, # Posisi legend (kiri atas)
+        bgcolor='rgba(26,26,26,0.8)',
+        bordercolor='#282828',
+        borderwidth=1,
+        font=dict(color='#E0E0E0', size=13),
+        orientation='v' # Orientasi vertikal
+    ),
+    hovermode="x unified", # Hover mode untuk menampilkan info dari semua trace pada satu X
+    margin=dict(l=40, r=40, t=80, b=40), # Margin yang cukup
+    height=600 # Tinggi grafik
 )
-fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#282828', zeroline=True, zerolinewidth=1.5, zerolinecolor='#282828', tickfont=dict(color="#B0B0B0"))
-fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#282828', zeroline=True, zerolinewidth=1.5, zerolinecolor='#282828', tickfont=dict(color="#B0B0B0"))
 
-st.plotly_chart(fig, use_container_width=True) # use_container_width sangat penting untuk responsivitas grafik
+st.plotly_chart(fig, use_container_width=True)
 
-st.markdown("---") # Garis pemisah untuk hasil 
+st.markdown("---") 
 
-# Tampilkan Hasil Analisis (Sesuai dengan analysis_choice) 
-st.write("#### Hasil Nilai Perpotongan pada x=50") 
+# --- Bagian Hasil Perhitungan ---
+st.write("#### Hasil Perhitungan Perpotongan di x=50")
 
-st.markdown(f"""
-<div class="dark-card" style="text-align: center; padding: 25px; margin-bottom: 20px;">
-""", unsafe_allow_html=True)
+# Menggunakan kolom untuk tata letak hasil
+col_res1, col_res2, col_res3 = st.columns(3)
 
-if analysis_choice == "Kurva Data Asli":
-    val = results['y_at_x_50_original_curve']
-    desc = "Nilai perpotongan kurva data abrasi asli pada x=50. Ini adalah interpolasi linear langsung dari data yang Anda masukkan."
-    st.markdown(f"""
-    <p style="color: #B0B0B0; font-size: 16px;">Hasil Kurva Data Asli:</p>
-    <h1 style="color: #FF4500; font-size: 60px; margin: 10px 0;">{val:.2f}</h1>
-    <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">{desc}</div>
-    """, unsafe_allow_html=True)
+with col_res1:
+    st.markdown(
+        f"<div class='dark-card'>"
+        f"<h3>Kurva Data Asli</h3>"
+        f"<p>Nilai Y pada x=50: <b>{results['y_at_x_50_original_curve']:.2f}</b></p>"
+        f"</div>", unsafe_allow_html=True
+    )
 
-elif analysis_choice == "Garis Titik 10 & 20":
-    val = results['y_at_x_50_pt10_20_line']
-    if not np.isnan(val):
-        desc = f"Berdasarkan garis linear yang ditarik antara titik data ke-10 ({results['specific_x1_pt10_20']:.2f}, {results['specific_y1_pt10_20']:.2f}) dan titik data ke-20 ({results['specific_x2_pt10_20']:.2f}, {results['specific_y2_pt10_20']:.2f})."
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Titik 10 & 20:</p>
-        <h1 style="color: #B8860B; font-size: 60px; margin: 10px 0;">{val:.2f}</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">{desc}</div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Titik 10 & 20:</p>
-        <h1 style="color: #B8860B; font-size: 60px; margin: 10px 0;">N/A</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">
-            Tidak cukup data untuk menghitung garis ini (membutuhkan setidaknya 20 titik).
-        </div>
-        """, unsafe_allow_html=True)
+with col_res2:
+    st.markdown(
+        f"<div class='dark-card'>"
+        f"<h3>Garis Titik 10 & 20</h3>"
+        f"<p>Nilai Y pada x=50: <b>{results['y_at_x_50_pt10_20_line']:.2f}</b></p>"
+        f"<p>Titik 1: ({results['specific_x1_pt10_20']:.1f}, {results['specific_y1_pt10_20']:.2f})</p>"
+        f"<p>Titik 2: ({results['specific_x2_pt10_20']:.1f}, {results['specific_y2_pt10_20']:.2f})</p>"
+        f"</div>", unsafe_allow_html=True
+    )
 
-elif analysis_choice == "Garis Regresi RANSAC":
-    val = results['y_at_x_50_ransac_line']
-    if not np.isnan(val):
-        desc = "Berdasarkan model Regresi Linear Robust (RANSAC), yang secara cerdas menemukan garis terbaik dengan mengabaikan data *outlier* untuk menghasilkan prediksi yang lebih stabil."
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
-        <h1 style="color: #00CED1; font-size: 60px; margin: 10px 0;">{val:.2f}</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">{desc}</div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <p style="color: #B0B0B0; font-size: 16px;">Hasil Garis Regresi RANSAC:</p>
-        <h1 style="color: #00CED1; font-size: 60px; margin: 10px 0;">N/A</h1>
-        <div style="margin-top: 15px; font-size: 15px; color: #B0B0B0;">
-            Data tidak cukup atau terlalu sedikit variasi untuk menghitung regresi RANSAC yang stabil.
-        </div>
-        """, unsafe_allow_html=True)
+with col_res3:
+    st.markdown(
+        f"<div class='dark-card'>"
+        f"<h3>Regresi RANSAC</h3>"
+        f"<p>Nilai Y pada x=50: <b>{results['y_at_x_50_ransac_line']:.2f}</b></p>"
+        f"</div>", unsafe_allow_html=True
+    )
 
-elif analysis_choice == "Tampilkan Semua":
-    val_original = results['y_at_x_50_original_curve']
-    val_10_20 = results['y_at_x_50_pt10_20_line']
-    val_ransac = results['y_at_x_50_ransac_line']
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-    # Gunakan flexbox untuk menumpuk di mobile
-    st.markdown(f"""
-    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
-        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Kurva Data Asli:</p>
-            <h2 style="color: #FF4500; font-size: 48px; margin: 0; text-align: center;">{val_original:.2f}</h2>
-        </div>
-        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Garis Titik 10 & 20:</p>
-            <h2 style="color: #B8860B; font-size: 48px; margin: 0; text-align: center;">{val_10_20:.2f}</h2>
-        </div>
-        <div style="flex: 1; min-width: 250px; background-color: #0A0A0A; padding: 20px; border-radius: 10px; border: 1px solid #282828; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-            <p style="color: #B0B0B0; font-size: 15px; margin-bottom: 5px;">Garis Regresi RANSAC:</p>
-            <h2 style="color: #00CED1; font-size: 48px; margin: 0; text-align: center;">{val_ransac:.2f}</h2>
-        </div>
-    </div>
-    <div style="margin-top: 25px; font-size: 15px; color: #B0B0B0; text-align: center;">
-        Ini adalah perbandingan nilai perpotongan dari berbagai metode pada x=50.
-    </div>
-    """, unsafe_allow_html=True)
-st.markdown("</div>", unsafe_allow_html=True)
-
-# Footer
+# --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Dikembangkan oleh Radix Putra Darmawan (2025)
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh Radix untuk PULCRA © 2025
 </div>
 """, unsafe_allow_html=True)
