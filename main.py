@@ -284,7 +284,7 @@ st.markdown("""
         border-radius: 10px;
         overflow: auto; /* Penting untuk scroll horizontal di mobile */
         border: 1px solid #282828;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box_shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     [data-testid="stFileUploaderDropzone"] {
         border: 2px dashed #DAA520;
@@ -364,7 +364,7 @@ st.markdown("""
         color: #E0E0E0;
         padding: 10px 15px;
         font-size: 18px; /* Ukuran desktop */
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        box_shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
     .stTextInput>label {
         font-size: 18px; /* Ukuran desktop */
@@ -653,7 +653,6 @@ st.subheader("Input Data")
 tabs = st.tabs(["Input Manual", "Impor dari Excel"])
 
 with tabs[0]:
-    # --- Perubahan di sini: Kalimat instruksi ---
     st.write("Masukan data abrasi ke tabel Nilai Benang Putus. Nilai X tetap.")
     
     # Menampilkan index dari 1
@@ -782,7 +781,7 @@ y_values = pd.Series(st.session_state.data['y_values'])
 # UNIFIED RADIO BUTTON UNTUK GRAFIK DAN HASIL 
 analysis_choice = st.radio(
     "Pilih jenis analisis yang ingin ditampilkan:",
-    ("Kurva tanpa garis perpotongan", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"), # --- Perubahan di sini ---
+    ("Kurva tanpa garis perpotongan", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"),
     key="analysis_choice",
     horizontal=True
 )
@@ -798,7 +797,7 @@ if not x_values.empty and not y_values.empty:
         x=x_values, 
         y=y_values,
         mode='lines+markers',
-        name='Data Abrasi', # Tetap 'Data Abrasi' karena ini adalah data mentah
+        name='Data Abrasi',
         line=dict(color='#8B4513', width=3), # Warna emas/tembaga untuk kurva asli
         marker=dict(size=8, color='#DAA520') # Emas gelap untuk marker
     ))
@@ -839,7 +838,7 @@ if not x_values.empty and not y_values.empty:
         fig.add_trace(go.Scatter(
             x=[50], y=[results['y_at_x_50_original_curve']],
             mode='markers',
-            name=f'Int. Kurva di x=50, y={results["y_at_x_50_original_curve"]:.2f}', # --- Perubahan di sini ---
+            name=f'Int. Kurva di x=50, y={results["y_at_x_50_original_curve"]:.2f}',
             marker=dict(size=14, color='#FF4500', symbol='circle', line=dict(width=2, color='white'))
         ))
 
@@ -886,16 +885,16 @@ if analysis_choice in ["Garis Titik 10 & 20", "Tampilkan Semua"]:
                 )
 
 # Kondisional untuk Garis Regresi RANSAC 
-if analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]: # --- Perubahan di sini ---
+if analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]:
     if results['ransac_line_x'].size > 0 and not np.isnan(results.get('y_at_x_50_ransac_line', np.nan)):
         fig.add_trace(go.Scatter(
             x=results['ransac_line_x'], y=results['ransac_line_y'],
-            mode='lines', name='Garis yang melewati banyak titik', # --- Perubahan di sini ---
+            mode='lines', name='Garis yang melewati banyak titik',
             line=dict(color='#00CED1', width=3, dash='dash'), showlegend=True
         ))
         fig.add_trace(go.Scatter(
             x=[50], y=[results['y_at_x_50_ransac_line']],
-            mode='markers', name=f'Int. Garis Utama di x=50, y={results["y_at_x_50_ransac_line"]:.2f}', # --- Perubahan di sini ---
+            mode='markers', name=f'Int. Garis Utama di x=50, y={results["y_at_x_50_ransac_line"]:.2f}',
             marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
         ))
         # Posisi label agar tidak tumpang tindih
@@ -905,12 +904,12 @@ if analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]: #
             y_pos_ransac_label = y0_line + (y_range_span * 0.02 if y_range_span > 0 else 5) # Sedikit di atas batas bawah
             
         fig.add_annotation(
-            x=50, y=y_pos_ransac_label, text=f"Garis Utama: {results['y_at_x_50_ransac_line']:.2f}", # --- Perubahan di sini ---
+            x=50, y=y_pos_ransac_label, text=f"Garis Utama: {results['y_at_x_50_ransac_line']:.2f}",
             showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#00CED1',
             font=dict(size=14, color='#00CED1', family="Montserrat, sans-serif"),
             bordercolor="#00CED1", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
         )
-    elif analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]: # --- Perubahan di sini ---
+    elif analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]:
         if len(x_values) < 2:
             st.warning("Tidak cukup data untuk menghitung Regresi RANSAC (minimal 2 titik).")
         else:
@@ -951,12 +950,13 @@ st.markdown("---")
 st.write("#### Hasil Perhitungan Perpotongan di X=50")
 
 # Gunakan card untuk menampilkan hasil
-col_res1, col_res2, col_res3 = st.columns(3) # Hanya 3 kolom sekarang
+col_res1, col_res2, col_res3 = st.columns(3)
 
 with col_res1:
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Kurva tanpa garis perpotongan</h3> <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #DAA520;">Nilai Perpotongan Pada Kurva</h3>
+        <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
     """, unsafe_allow_html=True)
@@ -964,7 +964,7 @@ with col_res1:
 with col_res2:
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Garis Titik 10 & 20</h3>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #B8860B;">Nilai Perpotongan dengan Garis Titik 10 & 20</h3>
         <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_pt10_20_line', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
@@ -973,7 +973,8 @@ with col_res2:
 with col_res3:
     st.markdown(f"""
     <div class="dark-card result-card">
-        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Garis yang melewati banyak titik</h3> <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
+        <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #00CED1;">Nilai Perpotongan dengan garis yang melewati banyak titik</h3>
+        <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>
         <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
     </div>
     """, unsafe_allow_html=True)
