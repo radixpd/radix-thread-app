@@ -805,7 +805,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
         yaxis_title='Nilai Benang Putus (N)',
         plot_bgcolor='#1A1A1A', # Background plot
         paper_bgcolor='#1A1A1A', # Background di luar plot
-        font=dict(color='#E0E0E0', family='Montserrat', sans-serif'),
+        font=dict(color='#E0E0E0', family='Montserrat, sans-serif'), # FIX: combined font family
         xaxis=dict(
             showgrid=True, gridcolor='#282828', zeroline=False,
             title_font=dict(size=18), tickfont=dict(size=14)
@@ -922,8 +922,6 @@ with tabs[1]:
         except Exception as e:
             st.error(f"Terjadi kesalahan saat membaca file Excel: {e}. Pastikan format file benar dan kolom sesuai.")
 
----
-
 # --- Bagian Analisis & Visualisasi ---
 st.subheader("Analisis & Visualisasi")
 
@@ -953,8 +951,6 @@ st.plotly_chart(
     ),
     use_container_width=True
 )
-
----
 
 # --- Hasil Perhitungan (Dinamis Berdasarkan Pilihan Grafik) ---
 st.subheader("Hasil Perhitungan Titik Potong di X = 50")
@@ -1026,11 +1022,9 @@ elif analysis_choice == "Tampilkan Semua":
                 st.markdown("<p style='color: #B0B0B0;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
----
-
 # --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh Radix Indonesia
 </div>
 """, unsafe_allow_html=True)
