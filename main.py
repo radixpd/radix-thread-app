@@ -1031,6 +1031,6 @@ elif analysis_choice == "Tampilkan Semua":
 # --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh Radix Indonesia
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh Radix
 </div>
 """, unsafe_allow_html=True)
