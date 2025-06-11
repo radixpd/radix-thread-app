@@ -1009,7 +1009,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh PULCRA Chemicals <br>
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX <br>
     © 2025 Semua Hak Dilindungi.
 </div>
 """, unsafe_allow_html=True)
