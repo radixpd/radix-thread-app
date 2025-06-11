@@ -978,7 +978,7 @@ st.markdown("---")
 # --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Dikembangkan dengan ❤️ oleh RADIX <br>
+    Dikembangkan dengan ❤️ oleh RADIX PUTRA DARMAWAN <br>
     © 2025 Semua Hak Dilindungi.
 </div>
 """, unsafe_allow_html=True)
