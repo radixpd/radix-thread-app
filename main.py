@@ -3,10 +3,12 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from scipy import interpolate
+# Import yang benar untuk scikit-learn
 from sklearn.linear_model import RANSACRegressor, LinearRegression
 import io
 
 # --- Konfigurasi Halaman (Paling Awal) ---
+# Perbaikan: st.set_set_page_config menjadi st.set_page_config
 st.set_page_config(
     page_title="Analisis Benang Abrasi",
     page_icon="🧵",
@@ -656,21 +658,21 @@ if not np.isnan(results['y_at_x_16_original_curve']):
     fig.add_trace(go.Scatter(
         x=[16], y=[results['y_at_x_16_original_curve']],
         mode='markers',
-        name=f"Y di X=16 (Asli): {results['y_at_x_16_original_curve']:.2f}",
+        name=f"Y di X=16 (Asli): {results['y_at_x_16_original_curve']:.2f}", # Perbaikan: kutipan ganda
         marker=dict(size=14, color=line_colors[16], symbol='circle', line=dict(width=2, color='white'))
     ))
 if not np.isnan(results['y_at_x_50_original_curve']):
     fig.add_trace(go.Scatter(
         x=[50], y=[results['y_at_x_50_original_curve']],
         mode='markers',
-        name=f"Y di X=50 (Asli): {results['y_at_x_50_original_curve']:.2f}",
+        name=f"Y di X=50 (Asli): {results['y_at_x_50_original_curve']:.2f}", # Perbaikan: kutipan ganda
         marker=dict(size=14, color=line_colors[50], symbol='circle', line=dict(width=2, color='white'))
     ))
 if not np.isnan(results['y_at_x_84_original_curve']):
     fig.add_trace(go.Scatter(
         x=[84], y=[results['y_at_x_84_original_curve']],
         mode='markers',
-        name=f"Y di X=84 (Asli): {results['y_at_x_84_original_curve']:.2f}",
+        name=f"Y di X=84 (Asli): {results['y_at_x_84_original_curve']:.2f}", # Perbaikan: kutipan ganda
         marker=dict(size=14, color=line_colors[84], symbol='circle', line=dict(width=2, color='white'))
     ))
 
@@ -692,13 +694,13 @@ if analysis_choice in ["Garis Titik ke-10 & ke-20", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_16_pt10_20_line']):
             fig.add_trace(go.Scatter(
                 x=[16], y=[results['y_at_x_16_pt10_20_line']],
-                mode='markers', name=f'Y di X=16 (10-20): {results["y_at_x_16_pt10_20_line"]:.2f}',
+                mode='markers', name=f"Y di X=16 (10-20): {results['y_at_x_16_pt10_20_line']:.2f}", # Perbaikan: kutipan ganda
                 marker=dict(size=14, color='#B8860B', symbol='square-open', line=dict(width=3, color='#B8860B'))
             ))
         if not np.isnan(results['y_at_x_50_pt10_20_line']):
             fig.add_trace(go.Scatter(
                 x=[50], y=[results['y_at_x_50_pt10_20_line']],
-                mode='markers', name=f'Y di X=50 (10-20): {results["y_at_x_50_pt10_20_line"]:.2f}',
+                mode='markers', name=f"Y di X=50 (10-20): {results['y_at_x_50_pt10_20_line']:.2f}", # Perbaikan: kutipan ganda
                 marker=dict(size=14, color='#B8860B', symbol='circle-open', line=dict(width=3, color='#B8860B'))
             ))
             y_pos_pt10_20_label = results['y_at_x_50_pt10_20_line'] + (y_values.max() * 0.05 if y_values.max() > 0 else 50)
@@ -711,7 +713,7 @@ if analysis_choice in ["Garis Titik ke-10 & ke-20", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_84_pt10_20_line']):
             fig.add_trace(go.Scatter(
                 x=[84], y=[results['y_at_x_84_pt10_20_line']],
-                mode='markers', name=f'Y di X=84 (10-20): {results["y_at_x_84_pt10_20_line']:.2f}',
+                mode='markers', name=f"Y di X=84 (10-20): {results['y_at_x_84_pt10_20_line']:.2f}", # Perbaikan: kutipan ganda
                 marker=dict(size=14, color='#B8860B', symbol='triangle-up-open', line=dict(width=3, color='#B8860B'))
             ))
 
@@ -727,13 +729,13 @@ if analysis_choice in ["Garis RANSAC", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_16_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[16], y=[results['y_at_x_16_ransac_line']],
-                mode='markers', name=f'Y di X=16 (RANSAC): {results["y_at_x_16_ransac_line"]:.2f}',
+                mode='markers', name=f"Y di X=16 (RANSAC): {results['y_at_x_16_ransac_line']:.2f}", # Perbaikan: kutipan ganda
                 marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
             ))
         if not np.isnan(results['y_at_x_50_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[50], y=[results['y_at_x_50_ransac_line']],
-                mode='markers', name=f'Y di X=50 (RANSAC): {results["y_at_x_50_ransac_line"]:.2f}',
+                mode='markers', name=f"Y di X=50 (RANSAC): {results['y_at_x_50_ransac_line']:.2f}", # Perbaikan: kutipan ganda
                 marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
             ))
             y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_values.max() * 0.05 if results['y_at_x_50_ransac_line'] > 0 else 50)
@@ -746,7 +748,7 @@ if analysis_choice in ["Garis RANSAC", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_84_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[84], y=[results['y_at_x_84_ransac_line']],
-                mode='markers', name=f'Y di X=84 (RANSAC): {results["y_at_x_84_ransac_line']:.2f}',
+                mode='markers', name=f"Y di X=84 (RANSAC): {results['y_at_x_84_ransac_line']:.2f}", # Perbaikan: kutipan ganda
                 marker=dict(size=14, color='#00CED1', symbol='triangle-up', line=dict(width=3, color='#00CED1'))
             ))
 
@@ -987,7 +989,7 @@ st.markdown("""
     <ul>
         <li><strong style="color: #DAA520;">Kurva Asli:</strong> Menghubungkan titik data Anda secara langsung, menunjukkan tren dasar.</li>
         <li><strong style="color: #B8860B;">Garis Titik ke-10 & ke-20:</strong> Garis lurus yang ditarik antara titik ke-10 dan ke-20 dari data Anda. Metode ini kadang digunakan dalam standar tertentu.</li>
-        <li><strong style="color: #00CED1;">Garis RANSAC:</strong> Ini adalah garis tren yang pintar. RANSAC bisa mengabaikan titik-titik data yang "aneh" (outlier) untuk menemukan pola utama, sehingga hasilnya lebih andal jika ada data yang tidak biasa.</li>
+        <li><strong style="color: #00CED1;">Garis RANSAC:</strong> Ini adalah garis tren yang pintar. RANSAC bisa mengabaikan titik-titik data yang "aneh" (outlier) untuk menemukan pola utama, sehingga hasilnya lebih Andal jika ada data yang tidak biasa.</li>
     </ul>
     <p>Titik-titik di X=16, X=50, dan X=84 adalah titik penting yang menunjukkan nilai Benang Putus (N) pada siklus tersebut, sesuai dengan garis yang Anda pilih.</p>
     <h3>Memahami SD & CV</h3>
