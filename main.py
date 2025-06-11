@@ -698,8 +698,8 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             bgcolor="rgba(26,26,26,0.7)", bordercolor="#FF4500", borderwidth=1, borderpad=4
         )
 
-        # Add specific lines based on choice
-        if analysis_choice in ["Garis Titik 10 & 20", "Tampilkan Semua"]:
+        # Add specific lines based on exact choice
+        if analysis_choice == "Garis Titik 10 & 20":
             if results.get('pt10_20_line_x_range', []).size > 0:
                 fig.add_trace(go.Scatter(
                     x=results['pt10_20_line_x_range'],
@@ -725,19 +725,6 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                         name='Titik ke-20',
                         marker=dict(size=10, color='#ADD8E6', symbol='circle')
                     ))
-
-        if analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]:
-            if results.get('ransac_line_x', []).size > 0:
-                fig.add_trace(go.Scatter(
-                    x=results['ransac_line_x'],
-                    y=results['ransac_line_y'],
-                    mode='lines',
-                    name='Regresi RANSAC',
-                    line=dict(color='#90EE90', width=2, dash='dash') # Light green dashed
-                ))
-
-        # Add intersection points with x=50 line
-        if analysis_choice in ["Garis Titik 10 & 20", "Tampilkan Semua"]:
             if not np.isnan(results.get('y_at_x_50_pt10_20_line')):
                 fig.add_trace(go.Scatter(
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']],
@@ -747,7 +734,15 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
         
-        if analysis_choice in ["Garis yang melewati banyak titik", "Tampilkan Semua"]:
+        elif analysis_choice == "Garis yang melewati banyak titik":
+            if results.get('ransac_line_x', []).size > 0:
+                fig.add_trace(go.Scatter(
+                    x=results['ransac_line_x'],
+                    y=results['ransac_line_y'],
+                    mode='lines',
+                    name='Regresi RANSAC',
+                    line=dict(color='#90EE90', width=2, dash='dash') # Light green dashed
+                ))
             if not np.isnan(results.get('y_at_x_50_ransac_line')):
                 fig.add_trace(go.Scatter(
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']],
@@ -757,14 +752,46 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
 
-        if not np.isnan(results.get('y_at_x_50_original_curve')):
-             fig.add_trace(go.Scatter(
-                x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']],
-                mode='markers',
-                name='Potongan Kurva Asli di x=50',
-                marker=dict(size=12, color='#DAA520', symbol='star'),
-                hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
-            ))
+        elif analysis_choice == "Kurva Data Asli": # New choice for original curve
+            if not np.isnan(results.get('y_at_x_50_original_curve')):
+                 fig.add_trace(go.Scatter(
+                    x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']],
+                    mode='markers',
+                    name='Potongan Kurva Asli di x=50',
+                    marker=dict(size=12, color='#DAA520', symbol='star'),
+                    hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
+                ))
+        
+        elif analysis_choice == "Tampilkan Semua":
+            # Show all lines if "Tampilkan Semua" is selected
+            if results.get('pt10_20_line_x_range', []).size > 0:
+                fig.add_trace(go.Scatter(
+                    x=results['pt10_20_line_x_range'],
+                    y=results['pt10_20_line_y'],
+                    mode='lines',
+                    name='Garis Titik 10 & 20',
+                    line=dict(color='#ADD8E6', width=2, dash='dot')
+                ))
+                if not np.isnan(results['specific_x1_pt10_20']):
+                    fig.add_trace(go.Scatter(x=[results['specific_x1_pt10_20']], y=[results['specific_y1_pt10_20']], mode='markers', name='Titik ke-10', marker=dict(size=10, color='#ADD8E6', symbol='circle')))
+                if not np.isnan(results['specific_x2_pt10_20']):
+                    fig.add_trace(go.Scatter(x=[results['specific_x2_pt10_20']], y=[results['specific_y2_pt10_20']], mode='markers', name='Titik ke-20', marker=dict(size=10, color='#ADD8E6', symbol='circle')))
+                if not np.isnan(results.get('y_at_x_50_pt10_20_line')):
+                    fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']], mode='markers', name='Potongan Garis 10-20 di x=50', marker=dict(size=12, color='#ADD8E6', symbol='star'), hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+
+            if results.get('ransac_line_x', []).size > 0:
+                fig.add_trace(go.Scatter(
+                    x=results['ransac_line_x'],
+                    y=results['ransac_line_y'],
+                    mode='lines',
+                    name='Regresi RANSAC',
+                    line=dict(color='#90EE90', width=2, dash='dash')
+                ))
+            if not np.isnan(results.get('y_at_x_50_ransac_line')):
+                fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']], mode='markers', name='Potongan RANSAC di x=50', marker=dict(size=12, color='#90EE90', symbol='star'), hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+            
+            if not np.isnan(results.get('y_at_x_50_original_curve')):
+                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']], mode='markers', name='Potongan Kurva Asli di x=50', marker=dict(size=12, color='#DAA520', symbol='star'), hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
 
 
     # Update layout for dark mode
@@ -837,148 +864,173 @@ with tabs[0]:
                 if not np.all(np.diff(cleaned_edited_df['x_value'].values) > 0):
                     st.error("Nilai 'x_value' harus monoton meningkat. Harap perbaiki data Anda.")
                 elif cleaned_edited_df.empty:
-                    st.error("Data yang dimasukkan kosong. Harap masukkan nilai yang valid.")
+                    st.warning("Tabel data kosong. Harap masukkan data.")
                 else:
-                    st.session_state.data['x_values'] = cleaned_edited_df['x_value'].astype(float).tolist()
-                    st.session_state.data['y_values'] = cleaned_edited_df['y_value'].astype(float).tolist()
-                    st.session_state.data_needs_recalc = True # Set flag for recalculation
-                    calculate_lines_and_points.clear() # Clear cache
-                    st.success("Data berhasil diperbarui!")
-            except ValueError:
-                st.error("Pastikan semua nilai Y adalah angka yang valid.")
+                    # Make sure x_values from original_data are preserved if rows are added/deleted
+                    # We only allow editing of y_values, x_values are fixed based on INITIAL_DATA
+                    # If rows were added, they will have their x_values set to default 0.0, we need to handle that.
+                    # A more robust approach would be to enforce the x_values count or disable row additions for fixed x_values.
+                    
+                    if len(cleaned_edited_df) != len(INITIAL_DATA['x_values']):
+                        st.warning("Jumlah baris data telah berubah. Pastikan Anda hanya mengubah 'Nilai Benang Putus (N)' pada data yang sudah ada atau impor data dengan struktur yang sesuai.")
+                        # Reset to initial data or handle this case specifically
+                        st.session_state.data = pd.DataFrame(INITIAL_DATA)
+                        st.session_state.data_needs_recalc = True
+                    else:
+                        st.session_state.data = pd.DataFrame({
+                            'x_values': cleaned_edited_df['x_value'].values,
+                            'y_values': cleaned_edited_df['y_value'].values
+                        })
+                        st.session_state.data_needs_recalc = True
+                        st.success("Data berhasil diperbarui! Klik 'Hitung & Tampilkan Grafik' untuk melihat hasilnya.")
+
             except Exception as e:
-                st.error(f"Terjadi kesalahan saat menerapkan perubahan: {e}")
-    
+                st.error(f"Terjadi kesalahan saat menerapkan perubahan: {e}. Pastikan data Anda berformat angka.")
+
     with col2:
-        if st.button("Reset Data Awal", key="reset_values", use_container_width=True):
+        if st.button("Reset Data ke Awal", key="reset_data", use_container_width=True):
             st.session_state.data = pd.DataFrame(INITIAL_DATA)
-            st.session_state.data_needs_recalc = True # Set flag for recalculation
-            calculate_lines_and_points.clear() # Clear cache
-            st.success("Data berhasil direset ke nilai awal!")
+            st.session_state.data_needs_recalc = True
+            st.success("Data telah direset ke nilai awal.")
 
 with tabs[1]:
-    st.write("Unggah file Excel dengan dua kolom: **'x_values'** dan **'y_values'**. Pastikan nilai 'x_values' monoton meningkat.")
-    
-    # Directly provide the download button for the template
-    sample_df = pd.DataFrame(INITIAL_DATA)
-    buffer = io.BytesIO()
-    sample_df.to_excel(buffer, index=False)
-    buffer.seek(0)
-    st.download_button(
-        label="Unduh Template Excel",
-        data=buffer,
-        file_name="template_abrasi_benang.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
-        key="download_button_actual"
-    )
-            
-    uploaded_file = st.file_uploader("Pilih File Excel Anda", type=['xlsx', 'xls'], key="file_uploader")
-    
+    st.write("Unggah file Excel Anda (misalnya `.xlsx`, `.xls`). Pastikan kolom 'x_values' dan 'y_values' ada.")
+    uploaded_file = st.file_uploader("Pilih file Excel", type=["xlsx", "xls"], key="file_uploader")
+
     if uploaded_file is not None:
         try:
             df_uploaded = pd.read_excel(uploaded_file)
             if 'x_values' in df_uploaded.columns and 'y_values' in df_uploaded.columns:
-                # Clean data: drop rows where either x or y is NaN
-                df_cleaned = df_uploaded.dropna(subset=['x_values', 'y_values']).copy()
+                # Ensure data types are numeric
+                df_uploaded['x_values'] = pd.to_numeric(df_uploaded['x_values'], errors='coerce')
+                df_uploaded['y_values'] = pd.to_numeric(df_uploaded['y_values'], errors='coerce')
+                
+                # Drop rows with NaN in critical columns after conversion
+                df_uploaded.dropna(subset=['x_values', 'y_values'], inplace=True)
 
-                if df_cleaned.empty:
-                    st.error("File Excel tidak memiliki data yang valid setelah pembersihan. Harap periksa isinya.")
-                elif len(df_cleaned['x_values']) != len(df_cleaned['y_values']):
-                    st.error("Jumlah nilai X dan Y harus sama. Periksa file Excel Anda.")
-                elif not np.all(np.diff(df_cleaned['x_values'].values) > 0):
-                    st.error("Nilai 'x_values' harus monoton meningkat. Harap perbaiki data Excel Anda.")
+                if not np.all(np.diff(df_uploaded['x_values'].values) > 0):
+                    st.error("Nilai 'x_values' dari file Excel harus monoton meningkat. Harap perbaiki data Anda.")
+                elif df_uploaded.empty:
+                    st.warning("File Excel kosong atau tidak mengandung data yang valid setelah pembersihan.")
                 else:
-                    st.write("Pratinjau Data Impor:")
-                    df_uploaded_display = df_cleaned.copy()
-                    df_uploaded_display.index = df_uploaded_display.index + 1
-                    st.dataframe(
-                        df_uploaded_display,
-                        use_container_width=True,
-                        height=300,
-                        column_config={
-                            "x_values": st.column_config.NumberColumn("Nilai Tetap (x)", format="%.1f"),
-                            "y_values": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f"),
-                        },
-                        key="uploaded_df_preview"
-                    )
-                    
-                    if st.button("Gunakan Data Ini", key="use_imported", use_container_width=True):
-                        st.session_state.data['x_values'] = df_cleaned['x_values'].astype(float).tolist()
-                        st.session_state.data['y_values'] = df_cleaned['y_values'].astype(float).tolist()
-                        st.session_state.data_needs_recalc = True # Set flag
-                        calculate_lines_and_points.clear() # Clear cache
-                        st.success("Data impor berhasil diterapkan!")
+                    st.session_state.data = df_uploaded[['x_values', 'y_values']]
+                    st.session_state.data_needs_recalc = True
+                    st.success("Data dari Excel berhasil diimpor!")
+                    st.dataframe(st.session_state.data.head(), use_container_width=True) # Show preview
             else:
-                st.error("File Excel harus mengandung kolom **'x_values'** dan **'y_values'**. Harap periksa nama kolom Anda.")
+                st.error("File Excel harus mengandung kolom 'x_values' dan 'y_values'.")
         except Exception as e:
-            st.error(f"Terjadi kesalahan saat membaca file Excel: {e}. Pastikan format file dan data benar.")
+            st.error(f"Terjadi kesalahan saat membaca file Excel: {e}. Pastikan format file benar dan kolom sesuai.")
 
-st.markdown("---") # Garis pemisah
+---
 
-# --- Bagian Grafik dan Hasil ---
+# --- Bagian Analisis & Visualisasi ---
+st.subheader("Analisis & Visualisasi")
 
-st.subheader("Visualisasi & Hasil Analisis")
-
-# Perbarui perhitungan jika data berubah
+# Calculate if needed
 if st.session_state.data_needs_recalc:
-    x_values_current = pd.Series(st.session_state.data['x_values'])
-    y_values_current = pd.Series(st.session_state.data['y_values'])
-    
-    st.session_state.calculated_results = calculate_lines_and_points(x_values_current, y_values_current)
+    st.session_state.calculated_results = calculate_lines_and_points(
+        st.session_state.data['x_values'],
+        st.session_state.data['y_values']
+    )
     st.session_state.data_needs_recalc = False # Reset flag
 
-results = st.session_state.calculated_results
-x_values = pd.Series(st.session_state.data['x_values'])
-y_values = pd.Series(st.session_state.data['y_values'])
-
-# UNIFIED RADIO BUTTON UNTUK GRAFIK DAN HASIL 
+# Pilihan Grafik Analisis
+st.subheader("Pilihan Grafik Analisis")
 analysis_choice = st.radio(
-    "Pilih jenis analisis yang ingin ditampilkan:",
-    ("Kurva tanpa garis perpotongan", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"),
-    key="analysis_choice",
+    "Pilih jenis grafik yang ingin ditampilkan:",
+    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"),
+    key="analysis_choice_radio",
     horizontal=True
 )
 
-st.markdown("---") 
-st.write("#### Grafik Abrasi Benang") 
+st.plotly_chart(
+    create_abrasion_plot(
+        st.session_state.data['x_values'],
+        st.session_state.data['y_values'],
+        st.session_state.calculated_results,
+        analysis_choice
+    ),
+    use_container_width=True
+)
 
-if not x_values.empty and not y_values.empty:
-    fig = create_abrasion_plot(x_values, y_values, results, analysis_choice)
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True})
-else:
-    st.warning("Tidak ada data untuk ditampilkan di grafik. Harap masukkan data.")
+---
 
-st.markdown("---") 
-st.write("#### Hasil Perhitungan")
+# --- Hasil Perhitungan (Dinamis Berdasarkan Pilihan Grafik) ---
+st.subheader("Hasil Perhitungan Titik Potong di X = 50")
 
-# Display results in columns (or cards)
-col_orig, col_pt10_20, col_ransac = st.columns(3)
+# Tampilkan hanya satu kartu hasil berdasarkan pilihan analysis_choice
+if analysis_choice == "Kurva Data Asli":
+    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
+    st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
+    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
+        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #DAA520;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
+        st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
+    else:
+        st.markdown("<p style='color: #B0B0B0;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-with col_orig:
-    with st.container(border=True): # Use st.container with border for a card effect
-        st.markdown(f"<div class='dark-card result-card'><h3>Kurva Asli pada x={TARGET_X_VALUE}</h3>"
-                    f"<p style='font-size: 2.5em; font-weight: 700; color: #DAA520;'>{results.get('y_at_x_50_original_curve', np.nan):.2f}</p>"
-                    f"<p>Nilai Y yang diinterpolasi langsung dari kurva data asli pada X={TARGET_X_VALUE}.</p></div>", unsafe_allow_html=True)
-    
-with col_pt10_20:
-    with st.container(border=True):
-        st.markdown(f"<div class='dark-card result-card'><h3>Garis Titik 10 & 20 pada x={TARGET_X_VALUE}</h3>"
-                    f"<p style='font-size: 2.5em; font-weight: 700; color: #ADD8E6;'>{results.get('y_at_x_50_pt10_20_line', np.nan):.2f}</p>"
-                    f"<p>Nilai Y dari perpanjangan garis linear yang melewati titik ke-10 dan ke-20 pada X={TARGET_X_VALUE}.</p></div>", unsafe_allow_html=True)
+elif analysis_choice == "Garis Titik 10 & 20":
+    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
+    st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
+    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
+        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #ADD8E6;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
+        st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20 pada X=50.</i></p>", unsafe_allow_html=True)
+    else:
+        st.markdown("<p style='color: #B0B0B0;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-with col_ransac:
-    with st.container(border=True):
-        st.markdown(f"<div class='dark-card result-card'><h3>Regresi RANSAC pada x={TARGET_X_VALUE}</h3>"
-                    f"<p style='font-size: 2.5em; font-weight: 700; color: #90EE90;'>{results.get('y_at_x_50_ransac_line', np.nan):.2f}</p>"
-                    f"<p>Nilai Y dari garis regresi robust RANSAC pada X={TARGET_X_VALUE}, cocok untuk data dengan outlier.</p></div>", unsafe_allow_html=True)
+elif analysis_choice == "Garis yang melewati banyak titik":
+    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
+    st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
+    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
+        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #90EE90;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
+        st.markdown("<p><i>Regresi robust RANSAC pada X=50, cocok untuk data dengan outlier.</i></p>", unsafe_allow_html=True)
+    else:
+        st.markdown("<p style='color: #B0B0B0;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("---")
+elif analysis_choice == "Tampilkan Semua":
+    col_res1, col_res2, col_res3 = st.columns(3)
+
+    with col_res1:
+        with st.container(height=180):
+            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
+            st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
+            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
+                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #DAA520;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
+                st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
+            else:
+                st.markdown("<p style='color: #B0B0B0;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_res2:
+        with st.container(height=180):
+            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
+            st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
+            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
+                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #ADD8E6;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
+                st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20.</i></p>", unsafe_allow_html=True)
+            else:
+                st.markdown("<p style='color: #B0B0B0;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_res3:
+        with st.container(height=180):
+            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
+            st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
+            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
+                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #90EE90;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
+                st.markdown("<p><i>Regresi robust terhadap semua titik data.</i></p>", unsafe_allow_html=True)
+            else:
+                st.markdown("<p style='color: #B0B0B0;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+---
 
 # --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Dikembangkan dengan ❤️ oleh RADIX PUTRA DARMAWAN <br>
-    © 2025 Semua Hak Dilindungi.
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh Radix Indonesia
 </div>
 """, unsafe_allow_html=True)
