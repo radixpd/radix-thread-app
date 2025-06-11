@@ -538,7 +538,7 @@ if 'password_entered' not in st.session_state:
 if 'custom_line_params' not in st.session_state:
     st.session_state.custom_line_params = {'x1': 0.0, 'y1': 0.0, 'x2': 100.0, 'y2': 1000.0} # Default values
 if 'custom_line_intersection' not in st.session_state:
-    st.session_state.custom_line_intersection = np.nan
+    st.session_state.custom_line_intersection = np.nan # Inisialisasi dengan NaN
 
 # Panggil fungsi pengecekan password di awal aplikasi
 if not check_password():
@@ -645,7 +645,7 @@ def calculate_lines_and_points(x_values_series, y_values_series):
 def calculate_custom_line_intersection(x1, y1, x2, y2):
     if x1 == x2: # Garis vertikal
         if x1 == 50:
-            return y1 # Atau bisa juga mengembalikan rentang Y, tergantung definisi. Kita anggap titik awal.
+            return y1 # Jika garis vertikal tepat di x=50, ambil y1 sebagai titik potong
         else:
             return np.nan # Tidak berpotongan dengan x=50 jika bukan x=50
     
@@ -658,7 +658,9 @@ def calculate_custom_line_intersection(x1, y1, x2, y2):
     
     # Periksa apakah titik perpotongan berada dalam segmen garis (x1,x2)
     # Ini penting jika kita hanya ingin perpotongan dalam segmen yang digambar
-    if not (min(x1, x2) <= 50 <= max(x1, x2)):
+    # Menggunakan toleransi kecil untuk floating point comparison
+    tolerance = 1e-9
+    if not (min(x1, x2) - tolerance <= 50 <= max(x1, x2) + tolerance):
         return np.nan # x=50 di luar segmen garis
         
     return y_intersect
@@ -821,15 +823,31 @@ if not x_values.empty and not y_values.empty:
     min_y_for_line = y_values.min() if not y_values.empty else 0
     max_y_for_line = y_values.max() if not y_values.empty else 100
     
+    # Perbaiki rentang y0 dan y1 untuk garis vertikal agar tidak terlalu jauh atau terlalu dekat
+    # Sesuaikan rentang plot y agar garis vertikal selalu terlihat.
+    # Jika y_values ada, ambil min/max y, jika tidak, pakai default 0-1000
+    if not y_values.empty:
+        plot_y_min = y_values.min()
+        plot_y_max = y_values.max()
+        y_range_span = plot_y_max - plot_y_min
+        y0_line = plot_y_min - y_range_span * 0.1 # Sedikit di bawah min data
+        y1_line = plot_y_max + y_range_span * 0.1 # Sedikit di atas max data
+    else:
+        y0_line = 0
+        y1_line = 1000
+
     fig.add_shape(
         type="line",
-        x0=50, y0=min_y_for_line * 0.9 if min_y_for_line < 0 else min(y_values) - (max(y_values)-min(y_values))*0.1, # Lebih robust
-        x1=50, y1=max_y_for_line * 1.1 + (max(y_values)-min(y_values))*0.1, # Lebih robust
+        x0=50, y0=y0_line,
+        x1=50, y1=y1_line,
         line=dict(color="#FF4500", width=2, dash="dash"), # Oranye kemerahan yang kuat
     )
+    # Sesuaikan posisi anotasi x=50 agar tidak tumpang tindih
     fig.add_annotation(
-        x=50, y=max_y_for_line * 1.05 + (max(y_values)-min(y_values))*0.05, text="x=50", showarrow=False,
-        font=dict(color="#FF4500", size=14, family="Montserrat, sans-serif", weight="bold")
+        x=50, y=y1_line * 0.95, # Posisi di dekat puncak garis vertikal
+        text="x=50", showarrow=False,
+        font=dict(color="#FF4500", size=14, family="Montserrat, sans-serif", weight="bold"),
+        bgcolor="rgba(26,26,26,0.7)", bordercolor="#FF4500", borderwidth=1, borderpad=4
     )
 
     # Tambahkan titik perpotongan kurva asli dengan x=50 (selalu) 
@@ -868,12 +886,13 @@ if analysis_choice in ["Garis Titik 10 & 20", "Tampilkan Semua"]:
                 line=dict(color="#B8860B", width=3, dash="dot"), showlegend=True
             ))
             if not np.isnan(results.get('y_at_x_50_pt10_20_line', np.nan)):
+                # Posisi label agar tidak tumpang tindih
+                y_pos_pt10_20_label = results['y_at_x_50_pt10_20_line'] + (y_range_span * 0.05 if y_range_span > 0 else 50)
                 fig.add_trace(go.Scatter(
                     x=[50], y=[results['y_at_x_50_pt10_20_line']],
                     mode='markers', name=f'Int. Garis 10-20 di x=50, y={results["y_at_x_50_pt10_20_line"]:.2f}',
                     marker=dict(size=14, color='#B8860B', symbol='circle-open', line=dict(width=3, color='#B8860B'))
                 ))
-                y_pos_pt10_20_label = results['y_at_x_50_pt10_20_line'] + (max_y_for_line * 0.05 if max_y_for_line > 0 else 50)
                 fig.add_annotation(
                     x=50, y=y_pos_pt10_20_label, text=f"Garis 10-20: {results['y_at_x_50_pt10_20_line']:.2f}",
                     showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#B8860B',
@@ -894,10 +913,11 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
             mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line"]:.2f}',
             marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
         ))
-        y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (max_y_for_line * 0.05 if max_y_for_line > 0 else 50) # Lebih baik menggunakan max_y_for_line
-        if y_pos_ransac_label < 0: # Pastikan label tidak di bawah 0 jika y_values positif semua
-            y_pos_ransac_label = 0 
-
+        # Posisi label agar tidak tumpang tindih
+        y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_range_span * 0.05 if y_range_span > 0 else 50) 
+        if y_pos_ransac_label < y0_line: # Pastikan label tidak keluar dari batas bawah plot
+            y_pos_ransac_label = y0_line + (y_range_span * 0.02 if y_range_span > 0 else 5) # Sedikit di atas batas bawah
+            
         fig.add_annotation(
             x=50, y=y_pos_ransac_label, text=f"RANSAC: {results['y_at_x_50_ransac_line']:.2f}",
             showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#00CED1',
@@ -929,9 +949,11 @@ if analysis_choice in ["Garis Kustom", "Tampilkan Semua"]:
     x1, y1 = st.session_state.custom_line_params['x1'], st.session_state.custom_line_params['y1']
     x2, y2 = st.session_state.custom_line_params['x2'], st.session_state.custom_line_params['y2']
 
+    # Update intersection calculation whenever custom line params change
+    st.session_state.custom_line_intersection = calculate_custom_line_intersection(x1, y1, x2, y2)
+
     # Pastikan x1 dan x2 tidak sama untuk menghindari pembagian nol pada kemiringan
     if x1 != x2:
-        st.session_state.custom_line_intersection = calculate_custom_line_intersection(x1, y1, x2, y2)
         
         # Ekstrak rentang x dari data asli untuk menentukan panjang garis kustom
         x_min_data = x_values.min() if not x_values.empty else 0
@@ -958,7 +980,11 @@ if analysis_choice in ["Garis Kustom", "Tampilkan Semua"]:
                 mode='markers', name=f'Int. Kustom di x=50, y={st.session_state.custom_line_intersection:.2f}',
                 marker=dict(size=14, color='#8A2BE2', symbol='square-open', line=dict(width=3, color='#8A2BE2'))
             ))
-            y_pos_custom_label = st.session_state.custom_line_intersection + (max_y_for_line * 0.05 if max_y_for_line > 0 else 50)
+            # Posisi label agar tidak tumpang tindih
+            y_pos_custom_label = st.session_state.custom_line_intersection + (y_range_span * 0.05 if y_range_span > 0 else 50)
+            if y_pos_custom_label > y1_line: # Jangan sampai label keluar dari batas atas plot
+                y_pos_custom_label = y1_line * 0.98 # Sedikit di bawah batas atas
+            
             fig.add_annotation(
                 x=50, y=y_pos_custom_label, text=f"Kustom: {st.session_state.custom_line_intersection:.2f}",
                 showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='#8A2BE2',
@@ -966,10 +992,14 @@ if analysis_choice in ["Garis Kustom", "Tampilkan Semua"]:
                 bordercolor="#8A2BE2", borderwidth=1, borderpad=4, bgcolor="rgba(26,26,26,0.7)", opacity=0.9
             )
         else:
-            st.warning("Garis kustom tidak berpotongan dengan x=50 dalam segmen yang ditentukan.")
+            st.warning("Garis kustom tidak berpotongan dengan x=50 dalam segmen yang ditentukan atau garis vertikal tepat di x=50.")
     else:
-        st.warning("Garis kustom adalah garis vertikal (X1 sama dengan X2) dan tidak berpotongan dengan garis X=50 kecuali jika X1=50.")
-        st.session_state.custom_line_intersection = np.nan # Reset intersection if not valid
+        # Tambahan penanganan jika x1 == x2 (garis vertikal)
+        if x1 == 50:
+            st.warning("Garis kustom adalah garis vertikal tepat di x=50. Titik potong Y akan diambil dari Y1.")
+        else:
+            st.warning("Garis kustom adalah garis vertikal (X1 sama dengan X2) dan tidak berpotongan dengan garis X=50 kecuali jika X1=50.")
+        st.session_state.custom_line_intersection = calculate_custom_line_intersection(x1, y1, x2, y2) # Recalculate to ensure NaN if not 50
 
 # Update layout Plotly
 fig.update_layout(
@@ -1040,10 +1070,16 @@ with col_res3:
 
 with col_res4:
     with st.container(height=150):
+        # Perbaikan utama ada di sini: menggunakan f-string kondisional
+        display_custom_intersection = (
+            f"{st.session_state.custom_line_intersection:.2f}"
+            if not np.isnan(st.session_state.custom_line_intersection)
+            else "N/A"
+        )
         st.markdown(f"""
         <div class="dark-card" style="padding: 15px; text-align: center; height: 100%;">
             <h3 style="font-size: 18px; margin-top: 0; margin-bottom: 5px; color: #8A2BE2;">Garis Kustom</h3>
-            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{st.session_state.custom_line_intersection:.2f if not np.isnan(st.session_state.custom_line_intersection) else 'N/A'}</p>
+            <p style="font-size: 24px; font-weight: 700; color: #F8F8F8;">{display_custom_intersection}</p>
             <p style="font-size: 12px; color: #B0B0B0;">Nilai Y pada X=50</p>
         </div>
         """, unsafe_allow_html=True)
