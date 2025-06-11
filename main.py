@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from scipy import interpolate
-from sklearn.linear_model import RANSACRegressor, LinearRegression # Pastikan scikit-learn terinstal
+# PERBAIKAN 2: Pastikan scikit-learn terinstal jika belum
+from sklearn.linear_model import RANSACRegressor, LinearRegression 
 import io
 
 # --- Konfigurasi Halaman (Paling Awal) ---
@@ -17,7 +18,7 @@ st.set_page_config(
 # --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght=400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
     /* General Styles */
     .main {
@@ -365,7 +366,7 @@ def check_password():
             if st.button("Masuk", key="login_button", use_container_width=True):
                 if password_input == ACCESS_CODE:
                     st.session_state.password_entered = True
-                    # PERBAIKAN 4: Mengubah st.experimental_rerun() menjadi st.rerun()
+                    # PERBAIKAN 5: Mengubah st.experimental_rerun() menjadi st.rerun()
                     st.rerun()
                 else:
                     st.error("Kode akses salah. Silakan coba lagi.")
@@ -664,21 +665,24 @@ if not np.isnan(results['y_at_x_16_original_curve']):
     fig.add_trace(go.Scatter(
         x=[16], y=[results['y_at_x_16_original_curve']],
         mode='markers',
-        name=f'Int. Kurva Asli di x=16, y={results["y_at_x_16_original_curve"]:.2f}',
+        # PERBAIKAN 3: Mengubah pembatas f-string menjadi kutip ganda
+        name=f"Int. Kurva Asli di x=16, y={results['y_at_x_16_original_curve']:.2f}",
         marker=dict(size=14, color=line_colors[16], symbol='circle', line=dict(width=2, color='white'))
     ))
 if not np.isnan(results['y_at_x_50_original_curve']):
     fig.add_trace(go.Scatter(
         x=[50], y=[results['y_at_x_50_original_curve']],
         mode='markers',
-        name=f'Int. Kurva Asli di x=50, y={results["y_at_x_50_original_curve']:.2f}',
+        # PERBAIKAN 3: Mengubah pembatas f-string menjadi kutip ganda
+        name=f"Int. Kurva Asli di x=50, y={results['y_at_x_50_original_curve']:.2f}",
         marker=dict(size=14, color=line_colors[50], symbol='circle', line=dict(width=2, color='white'))
     ))
 if not np.isnan(results['y_at_x_84_original_curve']):
     fig.add_trace(go.Scatter(
         x=[84], y=[results['y_at_x_84_original_curve']],
         mode='markers',
-        name=f'Int. Kurva Asli di x=84, y={results["y_at_x_84_original_curve']:.2f}',
+        # PERBAIKAN 3: Mengubah pembatas f-string menjadi kutip ganda
+        name=f"Int. Kurva Asli di x=84, y={results['y_at_x_84_original_curve']:.2f}",
         marker=dict(size=14, color=line_colors[84], symbol='circle', line=dict(width=2, color='white'))
     ))
 
@@ -741,7 +745,7 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
         if not np.isnan(results['y_at_x_50_ransac_line']):
             fig.add_trace(go.Scatter(
                 x=[50], y=[results['y_at_x_50_ransac_line']],
-                mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line']:.2f}',
+                mode='markers', name=f'Int. RANSAC di x=50, y={results["y_at_x_50_ransac_line"]:.2f}',
                 marker=dict(size=14, color='#00CED1', symbol='diamond-open', line=dict(width=3, color='#00CED1'))
             ))
             y_pos_ransac_label = results['y_at_x_50_ransac_line'] - (y_values.max() * 0.05 if results['y_at_x_50_ransac_line'] > 0 else 50)
@@ -755,7 +759,7 @@ if analysis_choice in ["Garis Regresi RANSAC", "Tampilkan Semua"]:
             fig.add_trace(go.Scatter(
                 x=[84], y=[results['y_at_x_84_ransac_line']],
                 mode='markers', name=f'Int. RANSAC di x=84, y={results["y_at_x_84_ransac_line"]:.2f}',
-                # PERBAIKAN 3: Mengubah 'diamond-up' menjadi 'triangle-up'
+                # PERBAIKAN 4: Mengubah 'diamond-up' menjadi 'triangle-up'
                 marker=dict(size=14, color='#00CED1', symbol='triangle-up', line=dict(width=3, color='#00CED1')) 
             ))
 
@@ -1012,7 +1016,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX <br>
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh PULCRA Chemicals <br>
     © 2025 Semua Hak Dilindungi.
 </div>
 """, unsafe_allow_html=True)
