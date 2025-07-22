@@ -1093,3 +1093,98 @@ st.markdown("""
     Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
 </div>
 """, unsafe_allow_html=True)
+
+# Add download section before the footer
+st.markdown("---")
+st.subheader("Unduh Hasil Analisis")
+
+# Ask for filename
+filename = st.text_input("Nama file untuk dokumen Word (tanpa ekstensi .docx)", value="Hasil_Analisis_Abrasi")
+
+# Create download button
+if st.button("Unduh Dokumen Word"):
+    if not filename:
+        st.warning("Silakan masukkan nama file terlebih dahulu")
+    else:
+        # Create a Word document
+        doc = Document()
+        doc.add_heading('Hasil Analisis Abrasi Benang', level=1)
+        
+        # Add date and time
+        from datetime import datetime
+        doc.add_paragraph(f"Dibuat pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Section 1: Data
+        doc.add_heading('Data Abrasi', level=2)
+        doc.add_paragraph('Berikut adalah data abrasi yang digunakan dalam analisis:')
+        
+        # Create a table for the data
+        table = doc.add_table(rows=1, cols=2)
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Nilai X'
+        hdr_cells[1].text = 'Nilai Benang Putus (N)'
+        
+        for x, y in zip(st.session_state.data['x_values'], st.session_state.data['y_values']):
+            row_cells = table.add_row().cells
+            row_cells[0].text = str(x)
+            row_cells[1].text = str(y)
+        
+        # Section 2: Graph
+        doc.add_heading('Grafik Analisis', level=2)
+        doc.add_paragraph('Berikut adalah grafik hasil analisis:')
+        
+        # Save the plot to a temporary file
+        fig = create_abrasion_plot(
+            st.session_state.data['x_values'],
+            st.session_state.data['y_values'],
+            st.session_state.calculated_results,
+            analysis_choice
+        )
+        
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+            fig.write_image(tmpfile.name)
+            doc.add_picture(tmpfile.name, width=Inches(6))
+        
+        # Section 3: Results
+        doc.add_heading('Hasil Perhitungan', level=2)
+        doc.add_paragraph(f'Nilai perpotongan pada X = {TARGET_X_VALUE}:')
+        
+        if analysis_choice == "Kurva Data Asli" or analysis_choice == "Tampilkan Semua":
+            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
+                doc.add_paragraph(
+                    f"Kurva Data Asli: {st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N",
+                    style='List Bullet'
+                )
+        
+        if analysis_choice == "Garis Titik 10 & 20" or analysis_choice == "Tampilkan Semua":
+            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
+                doc.add_paragraph(
+                    f"Garis Titik 10 & 20: {st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N",
+                    style='List Bullet'
+                )
+        
+        if analysis_choice == "Garis yang melewati banyak titik" or analysis_choice == "Tampilkan Semua":
+            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
+                doc.add_paragraph(
+                    f"Garis RANSAC: {st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N",
+                    style='List Bullet'
+                )
+        
+        # Save the document to a temporary file
+        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_docx:
+            doc.save(tmp_docx.name)
+            
+            # Read the file and create download link
+            with open(tmp_docx.name, "rb") as f:
+                bytes_data = f.read()
+                b64 = base64.b64encode(bytes_data).decode()
+                href = f'<a href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{b64}" download="{filename}.docx">Klik di sini untuk mengunduh</a>'
+                st.markdown(href, unsafe_allow_html=True)
+        
+        st.success("Dokumen Word siap diunduh!")
+
+st.markdown("""
+<div class="radix-footer">
+    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
+</div>
+""", unsafe_allow_html=True)
