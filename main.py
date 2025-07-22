@@ -13,20 +13,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Kustom untuk Tampilan Light Mode Minimalis & Elegan ---
+# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Tambahan untuk Responsif) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
-    /* Target elemen HTML dan body untuk memastikan background putih */
+    /* Target elemen HTML dan body untuk memastikan background hitam total */
     html, body {
-        background-color: #FFFFFF !important;
-        color: #333333; /* Warna teks gelap */
+        background-color: #0A0A0A !important;
+        color: #FFFFFF !important; /* Teks lebih terang */
     }
 
     /* Streamlit's main wrapper */
     .stApp {
-        background-color: #FFFFFF !important;
+        background-color: #0A0A0A !important;
         max-width: 1300px;
         margin: 0 auto;
         padding-top: 30px;
@@ -35,52 +35,60 @@ st.markdown("""
         padding-right: 15px;
     }
     
-    /* Main content area */
+    /* Main content area within .stApp */
     .main {
-        background-color: #FFFFFF;
-        color: #333333;
+        background-color: #0A0A0A;
+        color: #FFFFFF;
         font-family: 'Montserrat', sans-serif;
     }
     
-    /* Sidebar */
+    /* Kontainer utama untuk sidebar jika ada */
     .stSidebar {
-        background-color: #F8F9FA !important;
-        color: #333333;
+        background-color: #0A0A0A !important;
+        color: #FFFFFF;
     }
     
-    /* Typography */
+    .block-container {
+        background-color: #0A0A0A !important;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    /* Typography - Improved contrast */
     h1, h2, h3, h4, h5, h6 {
-        color: #2C3E50;
+        color: #FFFFFF !important;
         font-family: 'Playfair Display', serif;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
         word-break: break-word;
     }
     h1 {
         font-weight: 700;
         font-size: 44px;
         padding-bottom: 15px;
-        border-bottom: 3px solid #3498DB;
+        border-bottom: 3px solid #8B4513;
         text-align: center;
+        text-shadow: 0 4px 10px rgba(0,0,0,0.4);
     }
     h2 {
         font-weight: 600;
         font-size: 32px;
-        color: #2980B9;
+        color: #FFD700 !important; /* Gold color for better visibility */
         margin-bottom: 20px;
-        border-bottom: 1px solid #E0E0E0;
+        border-bottom: 1px solid #444;
         padding-bottom: 8px;
         font-family: 'Montserrat', sans-serif;
+        letter-spacing: 0.5px;
     }
     h3 {
         font-weight: 600;
         font-size: 24px;
-        color: #2C3E50;
+        color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
         margin-top: 25px;
         margin-bottom: 15px;
     }
     p, li, span, div {
-        color: #333333;
+        color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
         line-height: 1.8;
         font-size: 17px;
@@ -88,105 +96,104 @@ st.markdown("""
     
     /* Buttons */
     .stButton>button {
-        background-color: #3498DB;
-        color: white;
-        border-radius: 8px;
+        background-color: #8B4513;
+        color: white !important;
+        border-radius: 10px;
         border: none;
         font-weight: 600;
         transition: all 0.3s ease;
         padding: 12px 25px;
         font-size: 17px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     .stButton>button:hover {
-        background-color: #2980B9;
-        box-shadow: 0 4px 8px rgba(41, 128, 185, 0.2);
-        transform: translateY(-2px);
+        background-color: #A0522D;
+        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        transform: translateY(-3px);
     }
     
     /* Tabs */
     .stTabs [data-baseweb="tab"] {
         font-family: 'Montserrat', sans-serif;
-        color: #7F8C8D;
+        color: #FFFFFF !important;
         font-weight: 600;
         padding: 12px 20px;
         font-size: 17px;
     }
     .stTabs [data-baseweb="tab-list"] {
-        border-radius: 8px;
-        background-color: #F8F9FA;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        background-color: #1A1A1A;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         margin-bottom: 25px;
-        border: 1px solid #E0E0E0;
+        border: 1px solid #444;
     }
     .stTabs [data-baseweb="tab-panel"] {
         padding: 30px;
-        border-radius: 8px;
-        background-color: #F8F9FA;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        background-color: #1A1A1A;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
     }
     .stTabs [data-baseweb="tab-highlight"] {
-        background-color: #3498DB;
-        border-radius: 4px;
-        height: 3px;
+        background-color: #FFD700;
+        border-radius: 6px;
+        height: 4px;
     }
 
     /* Radio Buttons */
     .stRadio > label {
-        color: #2C3E50;
+        color: #FFFFFF !important;
         font-size: 18px;
         font-weight: 600;
         margin-bottom: 15px;
     }
     .stRadio > div {
-        background-color: #F8F9FA;
-        border-radius: 8px;
+        background-color: #1A1A1A;
+        border-radius: 12px;
         padding: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
         justify-content: center;
     }
     .stRadio [data-baseweb="radio"] {
-        background-color: #FFFFFF;
-        border-radius: 8px;
+        background-color: #282828;
+        border-radius: 10px;
         padding: 10px 20px;
-        transition: all 0.3s ease;
+        transition: background-color 0.3s ease, border 0.3s ease;
         flex-grow: 1;
         text-align: center;
         min-width: 150px;
-        border: 1px solid #E0E0E0;
     }
     .stRadio [data-baseweb="radio"]:hover {
-        background-color: #EBF5FB;
-        border: 1px solid #3498DB;
+        background-color: #3A3A3A;
+        border: 1px solid #FFD700;
     }
     .stRadio [data-baseweb="radio"][aria-checked="true"] {
-        background-color: #3498DB !important;
-        color: white;
-        border: 1px solid #3498DB;
-        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        background-color: #FFD700 !important;
+        color: #000000 !important;
+        border: 1px solid #FFD700;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
     }
     .stRadio [data-baseweb="radio"] span:last-child {
-        color: #333333;
+        color: #FFFFFF !important;
         font-weight: 600;
         font-size: 17px;
     }
     .stRadio [data-baseweb="radio"][aria-checked="true"] span:last-child {
-        color: white;
+        color: #000000 !important;
     }
     
     /* Custom Cards */
-    .light-card {
-        background-color: #FFFFFF;
-        border-radius: 12px;
+    .dark-card {
+        background-color: #1A1A1A;
+        border-radius: 15px;
         padding: 30px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3);
         margin-bottom: 30px;
-        border: 1px solid #E0E0E0;
+        border: 1px solid #444;
     }
-    .light-card.result-card {
+    .dark-card.result-card {
         height: auto !important;
         overflow: visible !important;
         display: flex;
@@ -196,48 +203,52 @@ st.markdown("""
         text-align: center;
         padding: 25px;
     }
-    .light-card.result-card h3 {
+    .dark-card.result-card h3 {
         margin-bottom: 10px;
         text-align: center;
     }
-    .light-card.result-card p {
+    .dark-card.result-card p {
         text-align: center;
     }
-    .light-card.result-card p:last-child {
+    .dark-card.result-card p:last-child {
         margin-top: 10px;
         font-size: 13px;
     }
 
-    /* Header */
+    /* Radix Header */
     .app-header {
-        background: linear-gradient(145deg, #FFFFFF, #F8F9FA);
+        background: linear-gradient(145deg, #1A1A1A, #0A0A0A);
         padding: 40px;
-        border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
         margin-bottom: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        border: 1px solid #E0E0E0;
+        backdrop-filter: blur(8px);
+        border: 1px solid #444;
     }
     .pulcra-logo {
         font-family: 'Playfair Display', serif;
         font-weight: 700;
         font-size: 56px;
-        color: #3498DB;
+        color: #FFD700;
         margin-bottom: 10px;
         letter-spacing: 5px;
+        text-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+        text-transform: uppercase;
     }
     .app-header h1 {
         font-size: 38px;
         border-bottom: none;
         padding-bottom: 0;
         margin-bottom: 0;
-        color: #2C3E50;
+        text-shadow: none;
+        color: #FFFFFF;
     }
     .app-header p {
         font-size: 18px;
-        color: #7F8C8D;
+        color: #CCCCCC;
         margin-top: 10px;
         letter-spacing: 0.5px;
     }
@@ -249,15 +260,16 @@ st.markdown("""
         padding: 25px;
         font-size: 15px;
         font-family: 'Montserrat', sans-serif;
-        color: #7F8C8D;
-        border-top: 1px solid #E0E0E0;
-        background-color: #F8F9FA;
-        border-radius: 0 0 12px 12px;
+        color: #CCCCCC;
+        border-top: 1px solid #444;
+        background-color: #1A1A1A;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
     }
 
     /* Other elements */
     hr {
-        border-color: #E0E0E0 !important;
+        border-color: #444 !important;
         margin: 40px 0 !important;
     }
     footer { visibility: hidden; }
@@ -274,42 +286,42 @@ st.markdown("""
         height: auto !important;
     }
 
-    /* Data editor and file uploader */
+    /* For data editor and file uploader */
     [data-testid="stDataEditor"] {
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: auto;
-        border: 1px solid #E0E0E0;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border: 1px solid #444;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     [data-testid="stFileUploaderDropzone"] {
-        border: 2px dashed #3498DB;
+        border: 2px dashed #FFD700;
         border-radius: 12px;
         padding: 25px;
-        background-color: #F8F9FA;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background-color: #1A1A1A;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     [data-testid="stFileUploaderDropzone"] p {
-        color: #7F8C8D;
+        color: #CCCCCC;
         font-size: 17px;
     }
 
-    /* Data preview tables */
+    /* For data preview tables */
     .stDataFrame {
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        background-color: #FFFFFF;
+        border-radius: 10px;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.3);
+        background-color: #1A1A1A;
         max-height: 350px;
         overflow-y: auto;
         overflow-x: auto;
-        border: 1px solid #E0E0E0;
+        border: 1px solid #444;
     }
     .stDataFrame [data-testid="stTable"] {
         border: none;
         min-width: 600px;
     }
     .stDataFrame th {
-        background-color: #F8F9FA !important;
-        color: #3498DB !important;
+        background-color: #282828 !important;
+        color: #FFD700 !important;
         font-weight: 700;
         position: sticky;
         top: 0;
@@ -317,70 +329,69 @@ st.markdown("""
         font-size: 16px;
     }
     .stDataFrame td {
-        background-color: #FFFFFF !important;
-        color: #333333 !important;
-        border-bottom: 1px solid #E0E0E0 !important;
+        background-color: #1A1A1A !important;
+        color: #FFFFFF !important;
+        border-bottom: 1px solid #444 !important;
         padding: 10px 15px;
     }
     /* Scrollbar for dataframes */
     .stDataFrame::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 10px;
+        height: 10px;
     }
     .stDataFrame::-webkit-scrollbar-track {
-        background: #F8F9FA;
+        background: #1A1A1A;
     }
     .stDataFrame::-webkit-scrollbar-thumb {
-        background: #3498DB;
-        border-radius: 8px;
+        background: #FFD700;
+        border-radius: 10px;
     }
     .stDataFrame::-webkit-scrollbar-thumb:hover {
-        background: #2980B9;
+        background: #C49F3D;
     }
 
     /* Plotly specifics */
     .js-plotly-plot .plotly .modebar {
-        background-color: #FFFFFF !important;
+        background-color: #1A1A1A !important;
         border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        border: 1px solid #E0E0E0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     .js-plotly-plot .plotly .modebar-btn {
-        color: #3498DB !important;
+        color: #FFD700 !important;
     }
     .js-plotly-plot .plotly .modebar-btn:hover {
-        background-color: #F8F9FA !important;
+        background-color: #282828 !important;
     }
 
     /* Access Code styling */
     .stTextInput>div>div>input {
-        background-color: #FFFFFF;
-        border: 1px solid #E0E0E0;
+        background-color: #1A1A1A;
+        border: 1px solid #444;
         border-radius: 8px;
-        color: #333333;
+        color: #FFFFFF;
         padding: 10px 15px;
         font-size: 18px;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
     .stTextInput>label {
         font-size: 18px;
-        color: #2C3E50;
+        color: #FFFFFF !important;
         font-weight: 600;
         margin-bottom: 10px;
     }
-    .st-emotion-cache-16txt4s { /* Error message */
-        background-color: #FDEDEC;
-        color: #E74C3C;
+    .st-emotion-cache-16txt4s {
+        background-color: #4A0000;
+        color: #FFCCCC;
         border-radius: 8px;
         padding: 10px;
-        border: 1px solid #E74C3C;
+        border: 1px solid #8B0000;
     }
-    .st-emotion-cache-zt5ig8 { /* Success message */
-        background-color: #E8F8F5;
-        color: #27AE60;
+    .st-emotion-cache-zt5ig8 {
+        background-color: #004A00;
+        color: #CCFFCC;
         border-radius: 8px;
         padding: 10px;
-        border: 1px solid #27AE60;
+        border: 1px solid #008B00;
     }
 
     /* --- MEDIA QUERIES FOR MOBILE RESPONSIVENESS --- */
@@ -448,7 +459,7 @@ st.markdown("""
         .app-header p {
             font-size: 16px;
         }
-        .light-card {
+        .dark-card {
             padding: 20px;
             margin-bottom: 20px;
         }
@@ -493,7 +504,7 @@ st.markdown("""
         .app-header p {
             font-size: 14px;
         }
-        .light-card {
+        .dark-card {
             padding: 15px;
         }
         .stDataFrame th, .stDataFrame td {
@@ -539,7 +550,7 @@ if 'calculated_results' not in st.session_state:
     st.session_state.calculated_results = {}
 if 'password_entered' not in st.session_state:
     st.session_state.password_entered = False
-if 'data_needs_recalc' not in st.session_state: # New flag for recalculation
+if 'data_needs_recalc' not in st.session_state:
     st.session_state.data_needs_recalc = True
 
 # Panggil fungsi pengecekan password di awal aplikasi
@@ -647,7 +658,7 @@ def calculate_lines_and_points(x_values_series, y_values_series):
 
     return results
 
-# Function to generate the Plotly graph
+# Function to generate the Plotly graph with results in the top-left corner
 def create_abrasion_plot(x_values, y_values, results, analysis_choice):
     fig = go.Figure()
 
@@ -658,13 +669,13 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             y=y_values,
             mode='lines+markers',
             name='Data Abrasi',
-            line=dict(color='#3498DB', width=3),
-            marker=dict(size=8, color='#2980B9')
+            line=dict(color='#FFD700', width=3),  # Changed to gold for better visibility
+            marker=dict(size=8, color='#FFA500')  # Orange markers
         ))
 
         # Add Vertical Line at x=50 (always)
         plot_y_min = y_values.min() if not y_values.empty else 0
-        plot_y_max = y_values.max() if not y_values.empty else 1000 # Fallback for empty data
+        plot_y_max = y_values.max() if not y_values.empty else 1000
         y_range_span = plot_y_max - plot_y_min
         y0_line = plot_y_min - y_range_span * 0.1 if y_range_span > 0 else 0
         y1_line = plot_y_max + y_range_span * 0.1 if y_range_span > 0 else 1000
@@ -673,14 +684,14 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             type="line",
             x0=TARGET_X_VALUE, y0=y0_line,
             x1=TARGET_X_VALUE, y1=y1_line,
-            line=dict(color="#E74C3C", width=2, dash="dash"),
-            layer="below" # Ensure line is behind data points
+            line=dict(color="#FF6347", width=2, dash="dash"),  # Tomato color
+            layer="below"
         )
         fig.add_annotation(
             x=TARGET_X_VALUE, y=y1_line * 0.95,
             text=f"x={TARGET_X_VALUE}", showarrow=False,
-            font=dict(color="#E74C3C", size=14, family="Montserrat, sans-serif", weight="bold"),
-            bgcolor="rgba(255,255,255,0.7)", bordercolor="#E74C3C", borderwidth=1, borderpad=4
+            font=dict(color="#FF6347", size=14, family="Montserrat, sans-serif", weight="bold"),
+            bgcolor="rgba(26,26,26,0.7)", bordercolor="#FF6347", borderwidth=1, borderpad=4
         )
 
         # Add specific lines based on exact choice
@@ -691,7 +702,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['pt10_20_line_y'],
                     mode='lines',
                     name='Garis Titik 10 & 20',
-                    line=dict(color='#9B59B6', width=2, dash='dot') # Purple dotted
+                    line=dict(color='#00BFFF', width=2, dash='dot')  # Deep sky blue
                 ))
                 # Add points for 10th and 20th data point if they exist
                 if not np.isnan(results['specific_x1_pt10_20']):
@@ -700,7 +711,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                         y=[results['specific_y1_pt10_20']],
                         mode='markers',
                         name='Titik ke-10',
-                        marker=dict(size=10, color='#9B59B6', symbol='circle')
+                        marker=dict(size=10, color='#00BFFF', symbol='circle')
                     ))
                 if not np.isnan(results['specific_x2_pt10_20']):
                     fig.add_trace(go.Scatter(
@@ -708,14 +719,14 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                         y=[results['specific_y2_pt10_20']],
                         mode='markers',
                         name='Titik ke-20',
-                        marker=dict(size=10, color='#9B59B6', symbol='circle')
+                        marker=dict(size=10, color='#00BFFF', symbol='circle')
                     ))
             if not np.isnan(results.get('y_at_x_50_pt10_20_line')):
                 fig.add_trace(go.Scatter(
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']],
                     mode='markers',
                     name='Potongan Garis 10-20 di x=50',
-                    marker=dict(size=12, color='#9B59B6', symbol='star'),
+                    marker=dict(size=12, color='#00BFFF', symbol='star'),
                     hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
         
@@ -726,24 +737,24 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['ransac_line_y'],
                     mode='lines',
                     name='Regresi RANSAC',
-                    line=dict(color='#27AE60', width=2, dash='dash') # Green dashed
+                    line=dict(color='#32CD32', width=2, dash='dash')  # Lime green
                 ))
             if not np.isnan(results.get('y_at_x_50_ransac_line')):
                 fig.add_trace(go.Scatter(
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']],
                     mode='markers',
                     name='Potongan RANSAC di x=50',
-                    marker=dict(size=12, color='#27AE60', symbol='star'),
+                    marker=dict(size=12, color='#32CD32', symbol='star'),
                     hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
 
-        elif analysis_choice == "Kurva Data Asli": # New choice for original curve
+        elif analysis_choice == "Kurva Data Asli":
             if not np.isnan(results.get('y_at_x_50_original_curve')):
                  fig.add_trace(go.Scatter(
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']],
                     mode='markers',
                     name='Potongan Kurva Asli di x=50',
-                    marker=dict(size=12, color='#2980B9', symbol='star'),
+                    marker=dict(size=12, color='#FFD700', symbol='star'),
                     hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
         
@@ -755,14 +766,14 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['pt10_20_line_y'],
                     mode='lines',
                     name='Garis Titik 10 & 20',
-                    line=dict(color='#9B59B6', width=2, dash='dot')
+                    line=dict(color='#00BFFF', width=2, dash='dot')
                 ))
                 if not np.isnan(results['specific_x1_pt10_20']):
-                    fig.add_trace(go.Scatter(x=[results['specific_x1_pt10_20']], y=[results['specific_y1_pt10_20']], mode='markers', name='Titik ke-10', marker=dict(size=10, color='#9B59B6', symbol='circle')))
+                    fig.add_trace(go.Scatter(x=[results['specific_x1_pt10_20']], y=[results['specific_y1_pt10_20']], mode='markers', name='Titik ke-10', marker=dict(size=10, color='#00BFFF', symbol='circle')))
                 if not np.isnan(results['specific_x2_pt10_20']):
-                    fig.add_trace(go.Scatter(x=[results['specific_x2_pt10_20']], y=[results['specific_y2_pt10_20']], mode='markers', name='Titik ke-20', marker=dict(size=10, color='#9B59B6', symbol='circle')))
+                    fig.add_trace(go.Scatter(x=[results['specific_x2_pt10_20']], y=[results['specific_y2_pt10_20']], mode='markers', name='Titik ke-20', marker=dict(size=10, color='#00BFFF', symbol='circle')))
                 if not np.isnan(results.get('y_at_x_50_pt10_20_line')):
-                    fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']], mode='markers', name='Potongan Garis 10-20 di x=50', marker=dict(size=12, color='#9B59B6', symbol='star'), hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+                    fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']], mode='markers', name='Potongan Garis 10-20 di x=50', marker=dict(size=12, color='#00BFFF', symbol='star'), hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
 
             if results.get('ransac_line_x', []).size > 0:
                 fig.add_trace(go.Scatter(
@@ -770,45 +781,125 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['ransac_line_y'],
                     mode='lines',
                     name='Regresi RANSAC',
-                    line=dict(color='#27AE60', width=2, dash='dash')
+                    line=dict(color='#32CD32', width=2, dash='dash')
                 ))
             if not np.isnan(results.get('y_at_x_50_ransac_line')):
-                fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']], mode='markers', name='Potongan RANSAC di x=50', marker=dict(size=12, color='#27AE60', symbol='star'), hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+                fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']], mode='markers', name='Potongan RANSAC di x=50', marker=dict(size=12, color='#32CD32', symbol='star'), hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
             
             if not np.isnan(results.get('y_at_x_50_original_curve')):
-                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']], mode='markers', name='Potongan Kurva Asli di x=50', marker=dict(size=12, color='#2980B9', symbol='star'), hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']], mode='markers', name='Potongan Kurva Asli di x=50', marker=dict(size=12, color='#FFD700', symbol='star'), hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
 
-
-    # Update layout for light mode
+    # Update layout for dark mode with results in top-left corner
     fig.update_layout(
         title={
             'text': 'Grafik Abrasi Benang',
             'yref': 'paper', 'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top',
-            'font': dict(color='#2C3E50', size=24, family='Playfair Display, serif')
+            'font': dict(color='#FFFFFF', size=24, family='Playfair Display, serif')
         },
         xaxis_title='Nilai X',
         yaxis_title='Nilai Benang Putus (N)',
-        plot_bgcolor='#FFFFFF', # Background plot
-        paper_bgcolor='#FFFFFF', # Background di luar plot
-        font=dict(color='#333333', family='Montserrat, sans-serif'),
+        plot_bgcolor='#1A1A1A',
+        paper_bgcolor='#1A1A1A',
+        font=dict(color='#FFFFFF', family='Montserrat, sans-serif'),
         xaxis=dict(
-            showgrid=True, gridcolor='#E0E0E0', zeroline=False,
+            showgrid=True, gridcolor='#444', zeroline=False,
             title_font=dict(size=18), tickfont=dict(size=14)
         ),
         yaxis=dict(
-            showgrid=True, gridcolor='#E0E0E0', zeroline=False,
+            showgrid=True, gridcolor='#444', zeroline=False,
             title_font=dict(size=18), tickfont=dict(size=14)
         ),
         legend=dict(
             orientation="h",
             yanchor="bottom", y=1.02,
             xanchor="right", x=1,
-            bgcolor="rgba(255,255,255,0.7)", bordercolor="#E0E0E0", borderwidth=1,
+            bgcolor="rgba(26,26,26,0.7)", bordercolor="#444", borderwidth=1,
             font=dict(size=14)
         ),
-        hovermode="x unified", # Better hover experience
-        margin=dict(l=40, r=40, b=40, t=100) # Adjust margins for title
+        hovermode="x unified",
+        margin=dict(l=40, r=40, b=40, t=100)
     )
+    
+    # Add results annotations in top-left corner
+    if analysis_choice == "Kurva Data Asli" and not np.isnan(results.get('y_at_x_50_original_curve')):
+        fig.add_annotation(
+            x=0.05, y=0.95,
+            xref="paper", yref="paper",
+            text=f"<b>Kurva Asli:</b> {results['y_at_x_50_original_curve']:.2f} N",
+            showarrow=False,
+            font=dict(size=14, color="#FFD700"),
+            bgcolor="rgba(26,26,26,0.7)",
+            bordercolor="#FFD700",
+            borderwidth=1,
+            borderpad=4
+        )
+    elif analysis_choice == "Garis Titik 10 & 20" and not np.isnan(results.get('y_at_x_50_pt10_20_line')):
+        fig.add_annotation(
+            x=0.05, y=0.95,
+            xref="paper", yref="paper",
+            text=f"<b>Garis 10-20:</b> {results['y_at_x_50_pt10_20_line']:.2f} N",
+            showarrow=False,
+            font=dict(size=14, color="#00BFFF"),
+            bgcolor="rgba(26,26,26,0.7)",
+            bordercolor="#00BFFF",
+            borderwidth=1,
+            borderpad=4
+        )
+    elif analysis_choice == "Garis yang melewati banyak titik" and not np.isnan(results.get('y_at_x_50_ransac_line')):
+        fig.add_annotation(
+            x=0.05, y=0.95,
+            xref="paper", yref="paper",
+            text=f"<b>RANSAC:</b> {results['y_at_x_50_ransac_line']:.2f} N",
+            showarrow=False,
+            font=dict(size=14, color="#32CD32"),
+            bgcolor="rgba(26,26,26,0.7)",
+            bordercolor="#32CD32",
+            borderwidth=1,
+            borderpad=4
+        )
+    elif analysis_choice == "Tampilkan Semua":
+        y_pos = 0.95
+        if not np.isnan(results.get('y_at_x_50_original_curve')):
+            fig.add_annotation(
+                x=0.05, y=y_pos,
+                xref="paper", yref="paper",
+                text=f"<b>Kurva Asli:</b> {results['y_at_x_50_original_curve']:.2f} N",
+                showarrow=False,
+                font=dict(size=14, color="#FFD700"),
+                bgcolor="rgba(26,26,26,0.7)",
+                bordercolor="#FFD700",
+                borderwidth=1,
+                borderpad=4
+            )
+            y_pos -= 0.08
+        
+        if not np.isnan(results.get('y_at_x_50_pt10_20_line')):
+            fig.add_annotation(
+                x=0.05, y=y_pos,
+                xref="paper", yref="paper",
+                text=f"<b>Garis 10-20:</b> {results['y_at_x_50_pt10_20_line']:.2f} N",
+                showarrow=False,
+                font=dict(size=14, color="#00BFFF"),
+                bgcolor="rgba(26,26,26,0.7)",
+                bordercolor="#00BFFF",
+                borderwidth=1,
+                borderpad=4
+            )
+            y_pos -= 0.08
+        
+        if not np.isnan(results.get('y_at_x_50_ransac_line')):
+            fig.add_annotation(
+                x=0.05, y=y_pos,
+                xref="paper", yref="paper",
+                text=f"<b>RANSAC:</b> {results['y_at_x_50_ransac_line']:.2f} N",
+                showarrow=False,
+                font=dict(size=14, color="#32CD32"),
+                bgcolor="rgba(26,26,26,0.7)",
+                bordercolor="#32CD32",
+                borderwidth=1,
+                borderpad=4
+            )
+    
     return fig
 
 # --- Bagian Input Data ---
@@ -828,12 +919,12 @@ with tabs[0]:
     edited_df = st.data_editor(
         edited_data,
         disabled=["x_value"],
-        hide_index=False, # Tampilkan indeks
+        hide_index=False,
         column_config={
             "x_value": st.column_config.NumberColumn("Nilai Tetap (x)", format="%.1f", help="Nilai X ini adalah titik pengukuran standar dan tidak dapat diubah."),
             "y_value": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f", help="Nilai benang putus atau gaya putus dalam Newton (N)"),
         },
-        num_rows="dynamic", # Allow adding/deleting rows
+        num_rows="dynamic",
         use_container_width=True,
         key="data_editor",
     )
@@ -842,8 +933,6 @@ with tabs[0]:
     with col1:
         if st.button("Terapkan Perubahan", key="apply_changes", use_container_width=True):
             try:
-                # Get data, handle potential empty rows from dynamic editor
-                # Filter out rows where both x and y are NaN if dynamic rows are added
                 cleaned_edited_df = edited_df.dropna(subset=['x_value', 'y_value'])
 
                 if not np.all(np.diff(cleaned_edited_df['x_value'].values) > 0):
@@ -851,14 +940,8 @@ with tabs[0]:
                 elif cleaned_edited_df.empty:
                     st.warning("Tabel data kosong. Harap masukkan data.")
                 else:
-                    # Make sure x_values from original_data are preserved if rows are added/deleted
-                    # We only allow editing of y_values, x_values are fixed based on INITIAL_DATA
-                    # If rows were added, they will have their x_values set to default 0.0, we need to handle that.
-                    # A more robust approach would be to enforce the x_values count or disable row additions for fixed x_values.
-                    
                     if len(cleaned_edited_df) != len(INITIAL_DATA['x_values']):
                         st.warning("Jumlah baris data telah berubah. Pastikan Anda hanya mengubah 'Nilai Benang Putus (N)' pada data yang sudah ada atau impor data dengan struktur yang sesuai.")
-                        # Reset to initial data or handle this case specifically
                         st.session_state.data = pd.DataFrame(INITIAL_DATA)
                         st.session_state.data_needs_recalc = True
                     else:
@@ -886,11 +969,9 @@ with tabs[1]:
         try:
             df_uploaded = pd.read_excel(uploaded_file)
             if 'x_values' in df_uploaded.columns and 'y_values' in df_uploaded.columns:
-                # Ensure data types are numeric
                 df_uploaded['x_values'] = pd.to_numeric(df_uploaded['x_values'], errors='coerce')
                 df_uploaded['y_values'] = pd.to_numeric(df_uploaded['y_values'], errors='coerce')
                 
-                # Drop rows with NaN in critical columns after conversion
                 df_uploaded.dropna(subset=['x_values', 'y_values'], inplace=True)
 
                 if not np.all(np.diff(df_uploaded['x_values'].values) > 0):
@@ -901,7 +982,7 @@ with tabs[1]:
                     st.session_state.data = df_uploaded[['x_values', 'y_values']]
                     st.session_state.data_needs_recalc = True
                     st.success("Data dari Excel berhasil diimpor!")
-                    st.dataframe(st.session_state.data.head(), use_container_width=True) # Show preview
+                    st.dataframe(st.session_state.data.head(), use_container_width=True)
             else:
                 st.error("File Excel harus mengandung kolom 'x_values' dan 'y_values'.")
         except Exception as e:
@@ -916,7 +997,7 @@ if st.session_state.data_needs_recalc:
         st.session_state.data['x_values'],
         st.session_state.data['y_values']
     )
-    st.session_state.data_needs_recalc = False # Reset flag
+    st.session_state.data_needs_recalc = False
 
 # Pilihan Grafik Analisis
 st.subheader("Pilihan Grafik Analisis")
@@ -940,35 +1021,34 @@ st.plotly_chart(
 # --- Hasil Perhitungan (Dinamis Berdasarkan Pilihan Grafik) ---
 st.subheader("Hasil Perhitungan Titik Potong di X = 50")
 
-# Tampilkan hanya satu kartu hasil berdasarkan pilihan analysis_choice
 if analysis_choice == "Kurva Data Asli":
-    st.markdown("<div class='light-card result-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
     st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
     if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #2980B9;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #FFD700;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
         st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
     else:
-        st.markdown("<p style='color: #7F8C8D;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif analysis_choice == "Garis Titik 10 & 20":
-    st.markdown("<div class='light-card result-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
     st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
     if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #9B59B6;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #00BFFF;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
         st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20 pada X=50.</i></p>", unsafe_allow_html=True)
     else:
-        st.markdown("<p style='color: #7F8C8D;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif analysis_choice == "Garis yang melewati banyak titik":
-    st.markdown("<div class='light-card result-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
     st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
     if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #27AE60;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #32CD32;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
         st.markdown("<p><i>Regresi robust RANSAC pada X=50, cocok untuk data dengan outlier.</i></p>", unsafe_allow_html=True)
     else:
-        st.markdown("<p style='color: #7F8C8D;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif analysis_choice == "Tampilkan Semua":
@@ -976,35 +1056,35 @@ elif analysis_choice == "Tampilkan Semua":
 
     with col_res1:
         with st.container(height=180):
-            st.markdown("<div class='light-card result-card'>", unsafe_allow_html=True)
+            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
             st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
             if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #2980B9;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #FFD700;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
                 st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
             else:
-                st.markdown("<p style='color: #7F8C8D;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
     with col_res2:
         with st.container(height=180):
-            st.markdown("<div class='light-card result-card'>", unsafe_allow_html=True)
+            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
             st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
             if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #9B59B6;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #00BFFF;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
                 st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20.</i></p>", unsafe_allow_html=True)
             else:
-                st.markdown("<p style='color: #7F8C8D;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
     with col_res3:
         with st.container(height=180):
-            st.markdown("<div class='light-card result-card'>", unsafe_allow_html=True)
+            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
             st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
             if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #27AE60;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #32CD32;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
                 st.markdown("<p><i>Regresi robust terhadap semua titik data.</i></p>", unsafe_allow_html=True)
             else:
-                st.markdown("<p style='color: #7F8C8D;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Footer ---
