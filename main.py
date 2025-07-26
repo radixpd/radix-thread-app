@@ -5,10 +5,6 @@ import plotly.graph_objects as go
 from scipy import interpolate
 from sklearn.linear_model import RANSACRegressor, LinearRegression
 import io
-from docx import Document
-from docx.shared import Inches
-import base64
-import tempfile
 
 # --- Konfigurasi Halaman (Paling Awal) ---
 st.set_page_config(
