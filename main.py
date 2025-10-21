@@ -791,34 +791,34 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
 
     # Update layout for dark mode with results in top-left corner
     fig.update_layout(
-        title={
-            'text': 'Grafik Abrasi Benang',
-            'yref': 'paper', 'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top',
-            'font': dict(color='#FFFFFF', size=24, family='Playfair Display, serif')
-        },
-        xaxis_title='Nilai X',
-        yaxis_title='Nilai Benang Putus (N)',
-        plot_bgcolor='#1A1A1A',
-        paper_bgcolor='#1A1A1A',
-        font=dict(color='#FFFFFF', family='Montserrat, sans-serif'),
-        xaxis=dict(
-            showgrid=True, gridcolor='#444', zeroline=False,
-            title_font=dict(size=18), tickfont=dict(size=14)
-        ),
-        yaxis=dict(
-            showgrid=True, gridcolor='#444', zeroline=False,
-            title_font=dict(size=18), tickfont=dict(size=14)
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom", y=1.02,
-            xanchor="right", x=1,
-            bgcolor="rgba(26,26,26,0.7)", bordercolor="#444", borderwidth=1,
-            font=dict(size=14)
-        ),
-        hovermode="x unified",
-        margin=dict(l=40, r=40, b=40, t=100)
-    )
+        title={
+            'text': 'Grafik Abrasi Benang',
+            'yref': 'paper', 'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top',
+            'font': dict(color='#333333', size=24, family='Playfair Display, serif') # Ubah warna teks judul menjadi gelap
+        },
+        xaxis_title='Nilai X',
+        yaxis_title='Nilai Benang Putus (N)',
+        plot_bgcolor='#FFFFFF', # 💡 UBAH KE PUTIH
+        paper_bgcolor='#FFFFFF', # 💡 UBAH KE PUTIH
+        font=dict(color='#333333', family='Montserrat, sans-serif'), # 💡 UBAH FONT UMUM MENJADI GELAP
+        xaxis=dict(
+            showgrid=True, gridcolor='#DDDDDD', zeroline=False, # Ubah warna grid ke abu-abu terang
+            title_font=dict(size=18), tickfont=dict(size=14)
+        ),
+        yaxis=dict(
+            showgrid=True, gridcolor='#DDDDDD', zeroline=False, # Ubah warna grid ke abu-abu terang
+            title_font=dict(size=18), tickfont=dict(size=14)
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom", y=1.02,
+            xanchor="right", x=1,
+            bgcolor="rgba(255,255,255,0.8)", bordercolor="#DDDDDD", borderwidth=1, # Ubah latar belakang legend menjadi terang
+            font=dict(size=14, color='#333333') # Ubah font legend menjadi gelap
+        ),
+        hovermode="x unified",
+        margin=dict(l=40, r=40, b=40, t=100)
+    )
     
     # Add results annotations in top-left corner
     if analysis_choice == "Kurva Data Asli" and not np.isnan(results.get('y_at_x_50_original_curve')):
