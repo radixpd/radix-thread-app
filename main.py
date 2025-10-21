@@ -18,10 +18,10 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
-    /* Target elemen HTML dan body untuk memastikan background hitam total */
+    /* Target elemen HTML dan body untuk memastikan background hitam total (Tema utama tetap gelap) */
     html, body {
         background-color: #0A0A0A !important;
-        color: #FFFFFF !important; /* Teks lebih terang */
+        color: #FFFFFF !important; 
     }
 
     /* Streamlit's main wrapper */
@@ -350,9 +350,9 @@ st.markdown("""
         background: #C49F3D;
     }
 
-    /* Plotly specifics */
+    /* Plotly specifics - Latar belakang plot harus diatur dalam fungsi Plotly Python */
     .js-plotly-plot .plotly .modebar {
-        background-color: #1A1A1A !important;
+        background-color: #1A1A1A !important; /* Modebar tetap gelap */
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
@@ -362,6 +362,13 @@ st.markdown("""
     .js-plotly-plot .plotly .modebar-btn:hover {
         background-color: #282828 !important;
     }
+    /* Khusus untuk Streamlit Plotly container */
+    [data-testid="stPlotlyChart"] {
+        border-radius: 15px;
+        overflow: hidden; /* Mengamankan sudut Plotly */
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+    }
+
 
     /* Access Code styling */
     .stTextInput>div>div>input {
@@ -669,8 +676,8 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             y=y_values,
             mode='lines+markers',
             name='Data Abrasi',
-            line=dict(color='#FFD700', width=3),  # Changed to gold for better visibility
-            marker=dict(size=8, color='#FFA500')  # Orange markers
+            line=dict(color='#8B4513', width=3),  # Brown/SaddleBrown
+            marker=dict(size=8, color='#A0522D') # Sienna/Dark Orange
         ))
 
         # Add Vertical Line at x=50 (always)
@@ -687,11 +694,12 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             line=dict(color="#FF6347", width=2, dash="dash"),  # Tomato color
             layer="below"
         )
+        # ANOTASI X=50
         fig.add_annotation(
             x=TARGET_X_VALUE, y=y1_line * 0.95,
             text=f"x={TARGET_X_VALUE}", showarrow=False,
             font=dict(color="#FF6347", size=14, family="Montserrat, sans-serif", weight="bold"),
-            bgcolor="rgba(26,26,26,0.7)", bordercolor="#FF6347", borderwidth=1, borderpad=4
+            bgcolor="rgba(255,255,255,0.7)", bordercolor="#FF6347", borderwidth=1, borderpad=4
         )
 
         # Add specific lines based on exact choice
@@ -754,7 +762,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']],
                     mode='markers',
                     name='Potongan Kurva Asli di x=50',
-                    marker=dict(size=12, color='#FFD700', symbol='star'),
+                    marker=dict(size=12, color='#8B4513', symbol='star'), # Warna marker asli
                     hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
         
@@ -787,49 +795,49 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']], mode='markers', name='Potongan RANSAC di x=50', marker=dict(size=12, color='#32CD32', symbol='star'), hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
             
             if not np.isnan(results.get('y_at_x_50_original_curve')):
-                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']], mode='markers', name='Potongan Kurva Asli di x=50', marker=dict(size=12, color='#FFD700', symbol='star'), hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']], mode='markers', name='Potongan Kurva Asli di x=50', marker=dict(size=12, color='#8B4513', symbol='star'), hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
 
-    # Update layout for dark mode with results in top-left corner
+    # Update layout for LIGHT MODE (White Background) for the plot area
     fig.update_layout(
         title={
             'text': 'Grafik Abrasi Benang',
             'yref': 'paper', 'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top',
-            'font': dict(color='#FFFFFF', size=24, family='Playfair Display, serif')
+            'font': dict(color='#000000', size=24, family='Playfair Display, serif') # Hitam untuk kontras
         },
         xaxis_title='Nilai X',
         yaxis_title='Nilai Benang Putus (N)',
-        plot_bgcolor='#1A1A1A',
-        paper_bgcolor='#1A1A1A',
-        font=dict(color='#FFFFFF', family='Montserrat, sans-serif'),
+        plot_bgcolor='#FFFFFF',  # Ubah menjadi PUTIH
+        paper_bgcolor='#FFFFFF', # Ubah menjadi PUTIH
+        font=dict(color='#000000', family='Montserrat, sans-serif'), # Font grafik menjadi HITAM
         xaxis=dict(
-            showgrid=True, gridcolor='#444', zeroline=False,
+            showgrid=True, gridcolor='#DDDDDD', zeroline=True, zerolinecolor='#666666', # Grid dan zero line lebih terang
             title_font=dict(size=18), tickfont=dict(size=14)
         ),
         yaxis=dict(
-            showgrid=True, gridcolor='#444', zeroline=False,
+            showgrid=True, gridcolor='#DDDDDD', zeroline=True, zerolinecolor='#666666',
             title_font=dict(size=18), tickfont=dict(size=14)
         ),
         legend=dict(
             orientation="h",
             yanchor="bottom", y=1.02,
             xanchor="right", x=1,
-            bgcolor="rgba(26,26,26,0.7)", bordercolor="#444", borderwidth=1,
-            font=dict(size=14)
+            bgcolor="rgba(255,255,255,0.7)", bordercolor="#BBBBBB", borderwidth=1, # Legenda latar belakang terang
+            font=dict(size=14, color='#000000') # Font legenda HITAM
         ),
         hovermode="x unified",
         margin=dict(l=40, r=40, b=40, t=100)
     )
     
-    # Add results annotations in top-left corner
+    # Add results annotations in top-left corner (disesuaikan untuk latar belakang putih)
     if analysis_choice == "Kurva Data Asli" and not np.isnan(results.get('y_at_x_50_original_curve')):
         fig.add_annotation(
             x=0.05, y=0.95,
             xref="paper", yref="paper",
             text=f"<b>Kurva Asli:</b> {results['y_at_x_50_original_curve']:.2f} N",
             showarrow=False,
-            font=dict(size=14, color="#FFD700"),
-            bgcolor="rgba(26,26,26,0.7)",
-            bordercolor="#FFD700",
+            font=dict(size=14, color="#8B4513"),
+            bgcolor="rgba(255,255,255,0.7)",
+            bordercolor="#8B4513",
             borderwidth=1,
             borderpad=4
         )
@@ -840,7 +848,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             text=f"<b>Garis 10-20:</b> {results['y_at_x_50_pt10_20_line']:.2f} N",
             showarrow=False,
             font=dict(size=14, color="#00BFFF"),
-            bgcolor="rgba(26,26,26,0.7)",
+            bgcolor="rgba(255,255,255,0.7)",
             bordercolor="#00BFFF",
             borderwidth=1,
             borderpad=4
@@ -852,7 +860,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             text=f"<b>RANSAC:</b> {results['y_at_x_50_ransac_line']:.2f} N",
             showarrow=False,
             font=dict(size=14, color="#32CD32"),
-            bgcolor="rgba(26,26,26,0.7)",
+            bgcolor="rgba(255,255,255,0.7)",
             bordercolor="#32CD32",
             borderwidth=1,
             borderpad=4
@@ -865,9 +873,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                 xref="paper", yref="paper",
                 text=f"<b>Kurva Asli:</b> {results['y_at_x_50_original_curve']:.2f} N",
                 showarrow=False,
-                font=dict(size=14, color="#FFD700"),
-                bgcolor="rgba(26,26,26,0.7)",
-                bordercolor="#FFD700",
+                font=dict(size=14, color="#8B4513"),
+                bgcolor="rgba(255,255,255,0.7)",
+                bordercolor="#8B4513",
                 borderwidth=1,
                 borderpad=4
             )
@@ -880,7 +888,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                 text=f"<b>Garis 10-20:</b> {results['y_at_x_50_pt10_20_line']:.2f} N",
                 showarrow=False,
                 font=dict(size=14, color="#00BFFF"),
-                bgcolor="rgba(26,26,26,0.7)",
+                bgcolor="rgba(255,255,255,0.7)",
                 bordercolor="#00BFFF",
                 borderwidth=1,
                 borderpad=4
@@ -894,297 +902,157 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                 text=f"<b>RANSAC:</b> {results['y_at_x_50_ransac_line']:.2f} N",
                 showarrow=False,
                 font=dict(size=14, color="#32CD32"),
-                bgcolor="rgba(26,26,26,0.7)",
+                bgcolor="rgba(255,255,255,0.7)",
                 bordercolor="#32CD32",
                 borderwidth=1,
                 borderpad=4
             )
-    
+            y_pos -= 0.08
+
     return fig
 
-# --- Bagian Input Data ---
-st.subheader("Input Data")
-tabs = st.tabs(["Input Manual", "Impor dari Excel"])
+# --- Main Logic / Tampilan Aplikasi ---
+# Pengecekan data untuk memicu perhitungan ulang
+if st.session_state.data_needs_recalc and not st.session_state.data.empty:
+    try:
+        results = calculate_lines_and_points(st.session_state.data['x_values'], st.session_state.data['y_values'])
+        st.session_state.calculated_results = results
+        st.session_state.data_needs_recalc = False
+    except KeyError:
+        st.error("Pastikan kolom 'x_values' dan 'y_values' ada dalam data Anda.")
+        st.session_state.data_needs_recalc = False
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat perhitungan: {e}")
+        st.session_state.data_needs_recalc = False
 
-with tabs[0]:
-    st.write("Masukkan data abrasi ke tabel Nilai Benang Putus. **Nilai X tetap** dan tidak dapat diubah.")
+with st.container(border=True):
+    st.markdown("<div class='dark-card'>", unsafe_allow_html=True)
+    st.markdown("<h2>Pilihan Analisis & Hasil</h2>", unsafe_allow_html=True)
     
-    # Menampilkan index dari 1
-    edited_data = pd.DataFrame({
-        'x_value': st.session_state.data['x_values'],
-        'y_value': st.session_state.data['y_values']
-    })
-    edited_data.index = edited_data.index + 1 # Ubah indeks menjadi dari 1
+    col_choice, col_summary = st.columns([2, 1])
+
+    with col_choice:
+        analysis_choice = st.radio(
+            "Pilih Garis untuk Ditampilkan di Grafik",
+            options=["Kurva Data Asli", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"],
+            index=0,
+            horizontal=False
+        )
     
-    edited_df = st.data_editor(
-        edited_data,
-        disabled=["x_value"],
-        hide_index=False,
-        column_config={
-            "x_value": st.column_config.NumberColumn("Nilai Tetap (x)", format="%.1f", help="Nilai X ini adalah titik pengukuran standar dan tidak dapat diubah."),
-            "y_value": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f", help="Nilai benang putus atau gaya putus dalam Newton (N)"),
-        },
-        num_rows="dynamic",
-        use_container_width=True,
-        key="data_editor",
-    )
+    results = st.session_state.get('calculated_results', {})
     
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Terapkan Perubahan", key="apply_changes", use_container_width=True):
-            try:
-                cleaned_edited_df = edited_df.dropna(subset=['x_value', 'y_value'])
+    with col_summary:
+        st.markdown("<h3>Ringkasan Hasil di X=50</h3>", unsafe_allow_html=True)
+        
+        def format_result(value, prefix, color):
+            val = f"{value:.2f}" if not np.isnan(value) else "N/A"
+            return f"<div style='background-color:#1A1A1A; border-radius:10px; padding:10px; margin-bottom:10px; border: 1px solid {color};'><span style='color:{color}; font-weight:700;'>{prefix}:</span> <span style='color:#FFFFFF; font-weight:600;'>{val} N</span></div>"
 
-                if not np.all(np.diff(cleaned_edited_df['x_value'].values) > 0):
-                    st.error("Nilai 'x_value' harus monoton meningkat. Harap perbaiki data Anda.")
-                elif cleaned_edited_df.empty:
-                    st.warning("Tabel data kosong. Harap masukkan data.")
-                else:
-                    if len(cleaned_edited_df) != len(INITIAL_DATA['x_values']):
-                        st.warning("Jumlah baris data telah berubah. Pastikan Anda hanya mengubah 'Nilai Benang Putus (N)' pada data yang sudah ada atau impor data dengan struktur yang sesuai.")
-                        st.session_state.data = pd.DataFrame(INITIAL_DATA)
-                        st.session_state.data_needs_recalc = True
-                    else:
-                        st.session_state.data = pd.DataFrame({
-                            'x_values': cleaned_edited_df['x_value'].values,
-                            'y_values': cleaned_edited_df['y_value'].values
-                        })
-                        st.session_state.data_needs_recalc = True
-                        st.success("Data berhasil diperbarui! Klik 'Hitung & Tampilkan Grafik' untuk melihat hasilnya.")
+        st.markdown(format_result(results.get('y_at_x_50_original_curve', np.nan), "Kurva Asli", "#8B4513"), unsafe_allow_html=True)
+        st.markdown(format_result(results.get('y_at_x_50_pt10_20_line', np.nan), "Garis 10-20", "#00BFFF"), unsafe_allow_html=True)
+        st.markdown(format_result(results.get('y_at_x_50_ransac_line', np.nan), "RANSAC", "#32CD32"), unsafe_allow_html=True)
 
-            except Exception as e:
-                st.error(f"Terjadi kesalahan saat menerapkan perubahan: {e}. Pastikan data Anda berformat angka.")
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # --- Grafik ---
+    if not st.session_state.data.empty and 'x_values' in st.session_state.data.columns and 'y_values' in st.session_state.data.columns:
+        fig = create_abrasion_plot(
+            st.session_state.data['x_values'], 
+            st.session_state.data['y_values'], 
+            results, 
+            analysis_choice
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("Data belum dimuat atau tidak lengkap. Harap periksa tab 'Input Data'.")
 
-    with col2:
-        if st.button("Reset Data ke Awal", key="reset_data", use_container_width=True):
-            st.session_state.data = pd.DataFrame(INITIAL_DATA)
-            st.session_state.data_needs_recalc = True
-            st.success("Data telah direset ke nilai awal.")
+# --- Tab Section ---
+tab1, tab2 = st.tabs(["⚙️ Input Data", "ℹ️ Informasi"])
 
-with tabs[1]:
-    st.write("Unggah file Excel Anda (misalnya `.xlsx`, `.xls`). Pastikan kolom 'x_values' dan 'y_values' ada.")
-    uploaded_file = st.file_uploader("Pilih file Excel", type=["xlsx", "xls"], key="file_uploader")
-
+with tab1:
+    st.markdown("---")
+    st.markdown("<h2>1. Unggah atau Edit Data</h2>", unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"], help="Pastikan file CSV Anda memiliki kolom 'x_values' dan 'y_values'.")
+    
     if uploaded_file is not None:
         try:
-            df_uploaded = pd.read_excel(uploaded_file)
-            if 'x_values' in df_uploaded.columns and 'y_values' in df_uploaded.columns:
-                df_uploaded['x_values'] = pd.to_numeric(df_uploaded['x_values'], errors='coerce')
-                df_uploaded['y_values'] = pd.to_numeric(df_uploaded['y_values'], errors='coerce')
-                
-                df_uploaded.dropna(subset=['x_values', 'y_values'], inplace=True)
-
-                if not np.all(np.diff(df_uploaded['x_values'].values) > 0):
-                    st.error("Nilai 'x_values' dari file Excel harus monoton meningkat. Harap perbaiki data Anda.")
-                elif df_uploaded.empty:
-                    st.warning("File Excel kosong atau tidak mengandung data yang valid setelah pembersihan.")
-                else:
-                    st.session_state.data = df_uploaded[['x_values', 'y_values']]
-                    st.session_state.data_needs_recalc = True
-                    st.success("Data dari Excel berhasil diimpor!")
-                    st.dataframe(st.session_state.data.head(), use_container_width=True)
+            df_uploaded = pd.read_csv(uploaded_file)
+            if 'x_values' not in df_uploaded.columns or 'y_values' not in df_uploaded.columns:
+                st.error("File CSV harus mengandung kolom 'x_values' dan 'y_values'.")
+                df_to_edit = st.session_state.data
             else:
-                st.error("File Excel harus mengandung kolom 'x_values' dan 'y_values'.")
+                df_to_edit = df_uploaded[['x_values', 'y_values']].copy()
         except Exception as e:
-            st.error(f"Terjadi kesalahan saat membaca file Excel: {e}. Pastikan format file benar dan kolom sesuai.")
+            st.error(f"Terjadi kesalahan saat memproses file: {e}")
+            df_to_edit = st.session_state.data
+    else:
+        df_to_edit = st.session_state.data.copy()
 
-# --- Bagian Analisis & Visualisasi ---
-st.subheader("Analisis & Visualisasi")
-
-# Calculate if needed
-if st.session_state.data_needs_recalc:
-    st.session_state.calculated_results = calculate_lines_and_points(
-        st.session_state.data['x_values'],
-        st.session_state.data['y_values']
+    # Data Editor
+    st.markdown("<h3>Edit Data Anda</h3>", unsafe_allow_html=True)
+    edited_df = st.data_editor(
+        df_to_edit,
+        num_rows="dynamic",
+        use_container_width=True,
+        column_config={
+            "x_values": st.column_config.NumberColumn("Nilai X", help="Nilai Abrasi (%)", format="%0.4f"),
+            "y_values": st.column_config.NumberColumn("Nilai Y", help="Nilai Benang Putus (N)", format="%d")
+        },
+        key="data_editor"
     )
-    st.session_state.data_needs_recalc = False
 
-# Pilihan Grafik Analisis
-st.subheader("Pilihan Grafik Analisis")
-analysis_choice = st.radio(
-    "Pilih jenis grafik yang ingin ditampilkan:",
-    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"),
-    key="analysis_choice_radio",
-    horizontal=True
-)
+    if edited_df is not None:
+        if st.button("Simpan Data & Hitung Ulang", key="save_button", type="primary"):
+            try:
+                # Memastikan kolom tetap float dan int, meskipun Streamlit mengkonversi di data_editor
+                edited_df['x_values'] = pd.to_numeric(edited_df['x_values'], errors='coerce')
+                edited_df['y_values'] = pd.to_numeric(edited_df['y_values'], errors='coerce', downcast='integer')
+                
+                # Hapus baris dengan nilai NaN setelah konversi
+                edited_df = edited_df.dropna(subset=['x_values', 'y_values']).reset_index(drop=True)
+                
+                # Validasi minimal 2 baris data
+                if len(edited_df) < 2:
+                    st.error("Minimal harus ada 2 baris data yang valid untuk perhitungan.")
+                else:
+                    st.session_state.data = edited_df
+                    st.session_state.data_needs_recalc = True
+                    st.success("Data berhasil disimpan dan perhitungan ulang akan segera dilakukan.")
+                    st.rerun() # Rerun untuk menjalankan perhitungan baru
+            except Exception as e:
+                st.error(f"Gagal menyimpan data: {e}. Pastikan semua input numerik valid.")
 
-st.plotly_chart(
-    create_abrasion_plot(
-        st.session_state.data['x_values'],
-        st.session_state.data['y_values'],
-        st.session_state.calculated_results,
-        analysis_choice
-    ),
-    use_container_width=True
-)
+    st.markdown("---")
+    st.markdown("<h2>2. Pratinjau Data yang Sedang Digunakan</h2>", unsafe_allow_html=True)
+    st.dataframe(st.session_state.data, use_container_width=True)
 
-# --- Hasil Perhitungan (Dinamis Berdasarkan Pilihan Grafik) ---
-st.subheader("Hasil Perhitungan Titik Potong di X = 50")
 
-if analysis_choice == "Kurva Data Asli":
-    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-    st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
-    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #FFD700;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
-        st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
-    else:
-        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+with tab2:
+    st.markdown("---")
+    st.markdown("<h2>Metodologi Analisis</h2>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div class='dark-card'>
+    Alat ini menyediakan visualisasi data abrasi benang (Nilai X vs Nilai Y) dan menghitung Nilai Y pada titik abrasi **X = {TARGET_X_VALUE}** menggunakan tiga metode garis potong yang berbeda:
 
-elif analysis_choice == "Garis Titik 10 & 20":
-    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-    st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
-    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #00BFFF;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
-        st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20 pada X=50.</i></p>", unsafe_allow_html=True)
-    else:
-        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    <h3>Kurva Data Asli</h3>
+    <p>Menggunakan <strong>Interpolasi Linier</strong> pada data asli. Nilai Y pada X={TARGET_X_VALUE} dihitung dengan mencari garis lurus yang menghubungkan dua titik data terdekat yang mengapit X={TARGET_X_VALUE} pada kurva data asli.</p>
 
-elif analysis_choice == "Garis yang melewati banyak titik":
-    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-    st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
-    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #32CD32;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
-        st.markdown("<p><i>Regresi robust RANSAC pada X=50, cocok untuk data dengan outlier.</i></p>", unsafe_allow_html=True)
-    else:
-        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    <h3>Garis Titik 10 & 20</h3>
+    <p>Metode perhitungan yang umum. Nilai Y pada X={TARGET_X_VALUE} dihitung menggunakan <strong>persamaan garis lurus</strong> yang melewati titik data ke-10 dan titik data ke-20.</p>
+    <ul>
+        <li>Jika data kurang dari 20 titik, garis akan dihitung antara titik pertama dan titik terakhir.</li>
+    </ul>
 
-elif analysis_choice == "Tampilkan Semua":
-    col_res1, col_res2, col_res3 = st.columns(3)
-
-    with col_res1:
-        with st.container(height=180):
-            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-            st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #FFD700;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
-                st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
-            else:
-                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_res2:
-        with st.container(height=180):
-            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-            st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #00BFFF;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
-                st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20.</i></p>", unsafe_allow_html=True)
-            else:
-                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_res3:
-        with st.container(height=180):
-            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-            st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #32CD32;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
-                st.markdown("<p><i>Regresi robust terhadap semua titik data.</i></p>", unsafe_allow_html=True)
-            else:
-                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+    <h3>Garis yang Melewati Banyak Titik (Regresi RANSAC)</h3>
+    <p>Menggunakan <strong>Regresi Linear RANSAC (RANdom SAmple Consensus)</strong> untuk menyesuaikan garis lurus terbaik yang secara robust mewakili tren data. Metode ini ideal untuk data yang mungkin mengandung outlier (titik data yang jauh) karena RANSAC secara otomatis mengabaikan titik-titik tersebut.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # --- Footer ---
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
-</div>
-""", unsafe_allow_html=True)
-
-# Add download section before the footer
-st.markdown("---")
-st.subheader("Unduh Hasil Analisis")
-
-# Ask for filename
-filename = st.text_input("Nama file untuk dokumen Word (tanpa ekstensi .docx)", value="Hasil_Analisis_Abrasi")
-
-# Create download button
-if st.button("Unduh Dokumen Word"):
-    if not filename:
-        st.warning("Silakan masukkan nama file terlebih dahulu")
-    else:
-        # Create a Word document
-        doc = Document()
-        doc.add_heading('Hasil Analisis Abrasi Benang', level=1)
-        
-        # Add date and time
-        from datetime import datetime
-        doc.add_paragraph(f"Dibuat pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        
-        # Section 1: Data
-        doc.add_heading('Data Abrasi', level=2)
-        doc.add_paragraph('Berikut adalah data abrasi yang digunakan dalam analisis:')
-        
-        # Create a table for the data
-        table = doc.add_table(rows=1, cols=2)
-        hdr_cells = table.rows[0].cells
-        hdr_cells[0].text = 'Nilai X'
-        hdr_cells[1].text = 'Nilai Benang Putus (N)'
-        
-        for x, y in zip(st.session_state.data['x_values'], st.session_state.data['y_values']):
-            row_cells = table.add_row().cells
-            row_cells[0].text = str(x)
-            row_cells[1].text = str(y)
-        
-        # Section 2: Graph
-        doc.add_heading('Grafik Analisis', level=2)
-        doc.add_paragraph('Berikut adalah grafik hasil analisis:')
-        
-        # Save the plot to a temporary file
-        fig = create_abrasion_plot(
-            st.session_state.data['x_values'],
-            st.session_state.data['y_values'],
-            st.session_state.calculated_results,
-            analysis_choice
-        )
-        
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            fig.write_image(tmpfile.name)
-            doc.add_picture(tmpfile.name, width=Inches(6))
-        
-        # Section 3: Results
-        doc.add_heading('Hasil Perhitungan', level=2)
-        doc.add_paragraph(f'Nilai perpotongan pada X = {TARGET_X_VALUE}:')
-        
-        if analysis_choice == "Kurva Data Asli" or analysis_choice == "Tampilkan Semua":
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-                doc.add_paragraph(
-                    f"Kurva Data Asli: {st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N",
-                    style='List Bullet'
-                )
-        
-        if analysis_choice == "Garis Titik 10 & 20" or analysis_choice == "Tampilkan Semua":
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-                doc.add_paragraph(
-                    f"Garis Titik 10 & 20: {st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N",
-                    style='List Bullet'
-                )
-        
-        if analysis_choice == "Garis yang melewati banyak titik" or analysis_choice == "Tampilkan Semua":
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-                doc.add_paragraph(
-                    f"Garis RANSAC: {st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N",
-                    style='List Bullet'
-                )
-        
-        # Save the document to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_docx:
-            doc.save(tmp_docx.name)
-            
-            # Read the file and create download link
-            with open(tmp_docx.name, "rb") as f:
-                bytes_data = f.read()
-                b64 = base64.b64encode(bytes_data).decode()
-                href = f'<a href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{b64}" download="{filename}.docx">Klik di sini untuk mengunduh</a>'
-                st.markdown(href, unsafe_allow_html=True)
-        
-        st.success("Dokumen Word siap diunduh!")
-
-st.markdown("""
-<div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
+    <p>Powered by Streamlit & Plotly | Analisis Radix</p>
 </div>
 """, unsafe_allow_html=True)
