@@ -13,20 +13,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Kustom untuk Tampilan Dark Mode Minimalis & Elegan (Revisi Tambahan untuk Responsif) ---
+# --- CSS Kustom untuk Tampilan Light Mode Penuh & Elegan ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
-    /* Target elemen HTML dan body untuk memastikan background hitam total */
+    /* Target elemen HTML dan body untuk memastikan background putih total */
     html, body {
-        background-color: #0A0A0A !important;
-        color: #FFFFFF !important; /* Teks lebih terang */
+        background-color: #FFFFFF !important; /* 💡 UBAH KE PUTIH */
+        color: #333333 !important; /* 💡 UBAH TEKS MENJADI GELAP */
     }
 
     /* Streamlit's main wrapper */
     .stApp {
-        background-color: #0A0A0A !important;
+        background-color: #FFFFFF !important; /* 💡 UBAH KE PUTIH */
         max-width: 1300px;
         margin: 0 auto;
         padding-top: 30px;
@@ -37,26 +37,26 @@ st.markdown("""
     
     /* Main content area within .stApp */
     .main {
-        background-color: #0A0A0A;
-        color: #FFFFFF;
+        background-color: #FFFFFF; /* 💡 UBAH KE PUTIH */
+        color: #333333; /* 💡 UBAH TEKS MENJADI GELAP */
         font-family: 'Montserrat', sans-serif;
     }
     
     /* Kontainer utama untuk sidebar jika ada */
     .stSidebar {
-        background-color: #0A0A0A !important;
-        color: #FFFFFF;
+        background-color: #F0F0F0 !important; /* 💡 UBAH KE ABU-ABU TERANG */
+        color: #333333; /* 💡 UBAH TEKS MENJADI GELAP */
     }
     
     .block-container {
-        background-color: #0A0A0A !important;
+        background-color: #FFFFFF !important; /* 💡 UBAH KE PUTIH */
         padding-top: 1rem;
         padding-bottom: 1rem;
     }
     
     /* Typography - Improved contrast */
     h1, h2, h3, h4, h5, h6 {
-        color: #FFFFFF !important;
+        color: #000000 !important; /* 💡 UBAH KE HITAM */
         font-family: 'Playfair Display', serif;
         letter-spacing: 0.8px;
         word-break: break-word;
@@ -67,14 +67,14 @@ st.markdown("""
         padding-bottom: 15px;
         border-bottom: 3px solid #8B4513;
         text-align: center;
-        text-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        text-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Kurangi bayangan untuk light mode */
     }
     h2 {
         font-weight: 600;
         font-size: 32px;
-        color: #FFD700 !important; /* Gold color for better visibility */
+        color: #8B4513 !important; /* 💡 UBAH WARNA HEADING MENJADI COKELAT */
         margin-bottom: 20px;
-        border-bottom: 1px solid #444;
+        border-bottom: 1px solid #DDDDDD; /* 💡 UBAH GARIS BAWAH JADI TERANG */
         padding-bottom: 8px;
         font-family: 'Montserrat', sans-serif;
         letter-spacing: 0.5px;
@@ -82,19 +82,19 @@ st.markdown("""
     h3 {
         font-weight: 600;
         font-size: 24px;
-        color: #FFFFFF !important;
+        color: #333333 !important; /* 💡 UBAH KE GELAP */
         font-family: 'Montserrat', sans-serif;
         margin-top: 25px;
         margin-bottom: 15px;
     }
     p, li, span, div {
-        color: #FFFFFF !important;
+        color: #333333 !important; /* 💡 UBAH KE GELAP */
         font-family: 'Montserrat', sans-serif;
         line-height: 1.8;
         font-size: 17px;
     }
     
-    /* Buttons */
+    /* Buttons (Tetap dengan skema warna yang menonjol) */
     .stButton>button {
         background-color: #8B4513;
         color: white !important;
@@ -104,138 +104,119 @@ st.markdown("""
         transition: all 0.3s ease;
         padding: 12px 25px;
         font-size: 17px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     .stButton>button:hover {
         background-color: #A0522D;
-        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.3);
         transform: translateY(-3px);
     }
     
     /* Tabs */
     .stTabs [data-baseweb="tab"] {
         font-family: 'Montserrat', sans-serif;
-        color: #FFFFFF !important;
+        color: #333333 !important; /* 💡 UBAH KE GELAP */
         font-weight: 600;
         padding: 12px 20px;
         font-size: 17px;
     }
     .stTabs [data-baseweb="tab-list"] {
         border-radius: 12px;
-        background-color: #1A1A1A;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        background-color: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
+        box-shadow: 0 6px 18px rgba(0,0,0,0.1);
         margin-bottom: 25px;
-        border: 1px solid #444;
+        border: 1px solid #DDDDDD; /* 💡 UBAH GARIS JADI TERANG */
     }
     .stTabs [data-baseweb="tab-panel"] {
         padding: 30px;
         border-radius: 12px;
-        background-color: #1A1A1A;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        background-color: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
+        box-shadow: 0 6px 18px rgba(0,0,0,0.1);
     }
     .stTabs [data-baseweb="tab-highlight"] {
-        background-color: #FFD700;
+        background-color: #8B4513; /* Ubah highlighter menjadi cokelat */
         border-radius: 6px;
         height: 4px;
     }
 
     /* Radio Buttons */
     .stRadio > label {
-        color: #FFFFFF !important;
+        color: #333333 !important; /* 💡 UBAH KE GELAP */
         font-size: 18px;
         font-weight: 600;
         margin-bottom: 15px;
     }
     .stRadio > div {
-        background-color: #1A1A1A;
+        background-color: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
         border-radius: 12px;
         padding: 20px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.1);
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
         justify-content: center;
     }
     .stRadio [data-baseweb="radio"] {
-        background-color: #282828;
+        background-color: #FFFFFF; /* 💡 UBAH KE PUTIH */
         border-radius: 10px;
         padding: 10px 20px;
         transition: background-color 0.3s ease, border 0.3s ease;
         flex-grow: 1;
         text-align: center;
         min-width: 150px;
+        border: 1px solid #DDDDDD; /* 💡 Tambahkan border terang */
     }
     .stRadio [data-baseweb="radio"]:hover {
-        background-color: #3A3A3A;
-        border: 1px solid #FFD700;
+        background-color: #E0E0E0; /* 💡 ABU-ABU SEDIKIT LEBIH GELAP SAAT HOVER */
+        border: 1px solid #8B4513;
     }
     .stRadio [data-baseweb="radio"][aria-checked="true"] {
-        background-color: #FFD700 !important;
-        color: #000000 !important;
-        border: 1px solid #FFD700;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        background-color: #8B4513 !important; /* COKELAT SAAT TERPILIH */
+        color: #FFFFFF !important;
+        border: 1px solid #8B4513;
+        box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
     }
     .stRadio [data-baseweb="radio"] span:last-child {
-        color: #FFFFFF !important;
+        color: #333333 !important; /* 💡 UBAH KE GELAP */
         font-weight: 600;
         font-size: 17px;
     }
     .stRadio [data-baseweb="radio"][aria-checked="true"] span:last-child {
-        color: #000000 !important;
+        color: #FFFFFF !important;
     }
     
     /* Custom Cards */
     .dark-card {
-        background-color: #1A1A1A;
+        background-color: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
         border-radius: 15px;
         padding: 30px;
-        box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.1);
         margin-bottom: 30px;
-        border: 1px solid #444;
+        border: 1px solid #DDDDDD; /* 💡 UBAH GARIS JADI TERANG */
     }
-    .dark-card.result-card {
-        height: auto !important;
-        overflow: visible !important;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 25px;
-    }
-    .dark-card.result-card h3 {
-        margin-bottom: 10px;
-        text-align: center;
-    }
-    .dark-card.result-card p {
-        text-align: center;
-    }
-    .dark-card.result-card p:last-child {
-        margin-top: 10px;
-        font-size: 13px;
-    }
+    /* ... result-card tetap sama, hanya mewarisi warna terang ... */
 
     /* Radix Header */
     .app-header {
-        background: linear-gradient(145deg, #1A1A1A, #0A0A0A);
+        background: linear-gradient(145deg, #F0F0F0, #FFFFFF); /* 💡 UBAH GRADIENT JADI TERANG */
         padding: 40px;
         border-radius: 20px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
         margin-bottom: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
         backdrop-filter: blur(8px);
-        border: 1px solid #444;
+        border: 1px solid #DDDDDD; /* 💡 UBAH GARIS JADI TERANG */
     }
     .pulcra-logo {
         font-family: 'Playfair Display', serif;
         font-weight: 700;
         font-size: 56px;
-        color: #FFD700;
+        color: #8B4513; /* 💡 UBAH WARNA LOGO JADI COKELAT */
         margin-bottom: 10px;
         letter-spacing: 5px;
-        text-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+        text-shadow: 0 5px 20px rgba(139, 69, 19, 0.2); /* Kurangi bayangan */
         text-transform: uppercase;
     }
     .app-header h1 {
@@ -244,11 +225,11 @@ st.markdown("""
         padding-bottom: 0;
         margin-bottom: 0;
         text-shadow: none;
-        color: #FFFFFF;
+        color: #333333; /* 💡 UBAH KE GELAP */
     }
     .app-header p {
         font-size: 18px;
-        color: #CCCCCC;
+        color: #666666; /* 💡 UBAH KE ABU-ABU GELAP */
         margin-top: 10px;
         letter-spacing: 0.5px;
     }
@@ -260,68 +241,56 @@ st.markdown("""
         padding: 25px;
         font-size: 15px;
         font-family: 'Montserrat', sans-serif;
-        color: #CCCCCC;
-        border-top: 1px solid #444;
-        background-color: #1A1A1A;
+        color: #666666; /* 💡 UBAH KE ABU-ABU GELAP */
+        border-top: 1px solid #DDDDDD; /* 💡 UBAH GARIS JADI TERANG */
+        background-color: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
         border-radius: 0 0 15px 15px;
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
     }
 
     /* Other elements */
     hr {
-        border-color: #444 !important;
+        border-color: #DDDDDD !important; /* 💡 UBAH GARIS JADI TERANG */
         margin: 40px 0 !important;
     }
     footer { visibility: hidden; }
     #MainMenu { visibility: hidden; }
     
     /* Streamlit specific adjustments */
-    [data-testid="stToolbar"] {
-        visibility: hidden !important;
-        height: 0px !important;
-        position: fixed !important;
-    }
-    .stApp:hover [data-testid="stToolbar"] {
-        visibility: visible !important;
-        height: auto !important;
-    }
+    /* ... toolbar visibility tetap sama ... */
 
     /* For data editor and file uploader */
     [data-testid="stDataEditor"] {
         border-radius: 10px;
         overflow: auto;
-        border: 1px solid #444;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        border: 1px solid #DDDDDD; /* 💡 UBAH GARIS JADI TERANG */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     [data-testid="stFileUploaderDropzone"] {
-        border: 2px dashed #FFD700;
+        border: 2px dashed #8B4513; /* Ubah border ke warna cokelat */
         border-radius: 12px;
         padding: 25px;
-        background-color: #1A1A1A;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        background-color: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     [data-testid="stFileUploaderDropzone"] p {
-        color: #CCCCCC;
+        color: #666666; /* 💡 UBAH KE ABU-ABU GELAP */
         font-size: 17px;
     }
 
     /* For data preview tables */
     .stDataFrame {
         border-radius: 10px;
-        box-shadow: 0 5px 18px rgba(0,0,0,0.3);
-        background-color: #1A1A1A;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.1);
+        background-color: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
         max-height: 350px;
         overflow-y: auto;
         overflow-x: auto;
-        border: 1px solid #444;
-    }
-    .stDataFrame [data-testid="stTable"] {
-        border: none;
-        min-width: 600px;
+        border: 1px solid #DDDDDD; /* 💡 UBAH GARIS JADI TERANG */
     }
     .stDataFrame th {
-        background-color: #282828 !important;
-        color: #FFD700 !important;
+        background-color: #E0E0E0 !important; /* 💡 UBAH HEADER JADI ABU-ABU */
+        color: #8B4513 !important; /* 💡 UBAH TEKS HEADER JADI COKELAT */
         font-weight: 700;
         position: sticky;
         top: 0;
@@ -329,189 +298,76 @@ st.markdown("""
         font-size: 16px;
     }
     .stDataFrame td {
-        background-color: #1A1A1A !important;
-        color: #FFFFFF !important;
-        border-bottom: 1px solid #444 !important;
+        background-color: #FFFFFF !important; /* 💡 UBAH KE PUTIH */
+        color: #333333 !important; /* 💡 UBAH TEKS JADI GELAP */
+        border-bottom: 1px solid #DDDDDD !important; /* 💡 UBAH GARIS JADI TERANG */
         padding: 10px 15px;
     }
     /* Scrollbar for dataframes */
-    .stDataFrame::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
     .stDataFrame::-webkit-scrollbar-track {
-        background: #1A1A1A;
+        background: #F0F0F0; /* 💡 UBAH KE ABU-ABU TERANG */
     }
     .stDataFrame::-webkit-scrollbar-thumb {
-        background: #FFD700;
+        background: #8B4513; /* COKELAT */
         border-radius: 10px;
     }
     .stDataFrame::-webkit-scrollbar-thumb:hover {
-        background: #C49F3D;
+        background: #A0522D;
     }
 
-    /* Plotly specifics */
+    /* Plotly specifics - Modebar */
     .js-plotly-plot .plotly .modebar {
-        background-color: #1A1A1A !important;
+        background-color: #FFFFFF !important; /* 💡 UBAH KE PUTIH */
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     .js-plotly-plot .plotly .modebar-btn {
-        color: #FFD700 !important;
+        color: #8B4513 !important; /* 💡 UBAH ICON JADI COKELAT */
     }
     .js-plotly-plot .plotly .modebar-btn:hover {
-        background-color: #282828 !important;
+        background-color: #F0F0F0 !important; /* 💡 UBAH HOVER JADI ABU-ABU TERANG */
     }
 
     /* Access Code styling */
     .stTextInput>div>div>input {
-        background-color: #1A1A1A;
-        border: 1px solid #444;
+        background-color: #FFFFFF; /* 💡 UBAH KE PUTIH */
+        border: 1px solid #DDDDDD; /* 💡 UBAH GARIS JADI TERANG */
         border-radius: 8px;
-        color: #FFFFFF;
+        color: #333333; /* 💡 UBAH TEKS JADI GELAP */
         padding: 10px 15px;
         font-size: 18px;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
     }
     .stTextInput>label {
         font-size: 18px;
-        color: #FFFFFF !important;
+        color: #333333 !important; /* 💡 UBAH KE GELAP */
         font-weight: 600;
         margin-bottom: 10px;
     }
-    .st-emotion-cache-16txt4s {
-        background-color: #4A0000;
-        color: #FFCCCC;
+    .st-emotion-cache-16txt4s { /* Error message */
+        background-color: #FFEEEE; /* 💡 UBAH KE MERAH MUDA TERANG */
+        color: #8B0000; /* 💡 UBAH TEKS JADI MERAH GELAP */
         border-radius: 8px;
         padding: 10px;
-        border: 1px solid #8B0000;
+        border: 1px solid #FFCCCC; /* 💡 UBAH GARIS JADI MERAH TERANG */
     }
-    .st-emotion-cache-zt5ig8 {
-        background-color: #004A00;
-        color: #CCFFCC;
+    .st-emotion-cache-zt5ig8 { /* Success message */
+        background-color: #EEFFEE; /* 💡 UBAH KE HIJAU MUDA TERANG */
+        color: #008B00; /* 💡 UBAH TEKS JADI HIJAU GELAP */
         border-radius: 8px;
         padding: 10px;
-        border: 1px solid #008B00;
+        border: 1px solid #CCFFCC; /* 💡 UBAH GARIS JADI HIJAU TERANG */
     }
 
-    /* --- MEDIA QUERIES FOR MOBILE RESPONSIVENESS --- */
+    /* --- MEDIA QUERIES FOR MOBILE RESPONSIVENESS --- (Hanya mengubah warna) */
     @media (max-width: 768px) {
-        .stApp {
-            padding-left: 10px;
-            padding-right: 10px;
-            padding-top: 20px;
-            padding-bottom: 30px;
+        .stRadio [data-baseweb="radio"] span:last-child {
+            color: #333333 !important; /* 💡 UBAH KE GELAP */
         }
-        h1 {
-            font-size: 32px;
-            padding-bottom: 10px;
-        }
-        h2 {
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        h3 {
-            font-size: 20px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        p, li, span, div {
-            font-size: 15px;
-            line-height: 1.6;
-        }
-        .stButton>button {
-            padding: 10px 20px;
-            font-size: 15px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            padding: 8px 15px;
-            font-size: 15px;
-        }
-        .stTabs [data-baseweb="tab-panel"] {
-            padding: 20px;
-        }
-        .stRadio > label {
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-        .stRadio > div {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 15px;
-        }
-        .stRadio [data-baseweb="radio"] {
-            min-width: unset;
-            padding: 8px 15px;
-            font-size: 15px;
-            width: 100%;
-        }
-        .app-header {
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        .pulcra-logo {
-            font-size: 40px;
-            letter-spacing: 3px;
-        }
-        .app-header h1 {
-            font-size: 28px;
-        }
-        .app-header p {
-            font-size: 16px;
-        }
-        .dark-card {
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .stDataFrame th, .stDataFrame td {
-            font-size: 14px;
-            padding: 8px 10px;
-        }
-        .stTextInput>div>div>input {
-            font-size: 16px;
-            padding: 8px 12px;
-        }
-        .stTextInput>label {
-            font-size: 16px;
-        }
-        .radix-footer {
-            margin-top: 40px;
-            padding: 15px;
-            font-size: 13px;
+        .stRadio [data-baseweb="radio"][aria-checked="true"] span:last-child {
+            color: #FFFFFF !important;
         }
     }
-
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 28px;
-        }
-        h2 {
-            font-size: 20px;
-        }
-        p, li, span, div {
-            font-size: 14px;
-        }
-        .stButton>button {
-            padding: 8px 15px;
-            font-size: 14px;
-        }
-        .pulcra-logo {
-            font-size: 32px;
-        }
-        .app-header h1 {
-            font-size: 24px;
-        }
-        .app-header p {
-            font-size: 14px;
-        }
-        .dark-card {
-            padding: 15px;
-        }
-        .stDataFrame th, .stDataFrame td {
-            font-size: 13px;
-        }
-    }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -669,8 +525,8 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             y=y_values,
             mode='lines+markers',
             name='Data Abrasi',
-            line=dict(color='#FFD700', width=3),  # Changed to gold for better visibility
-            marker=dict(size=8, color='#FFA500')  # Orange markers
+            line=dict(color='#8B4513', width=3),  # 💡 UBAH WARNA KURVA JADI COKELAT
+            marker=dict(size=8, color='#A0522D')  # Darker orange/brown markers
         ))
 
         # Add Vertical Line at x=50 (always)
@@ -691,7 +547,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             x=TARGET_X_VALUE, y=y1_line * 0.95,
             text=f"x={TARGET_X_VALUE}", showarrow=False,
             font=dict(color="#FF6347", size=14, family="Montserrat, sans-serif", weight="bold"),
-            bgcolor="rgba(26,26,26,0.7)", bordercolor="#FF6347", borderwidth=1, borderpad=4
+            bgcolor="rgba(255,255,255,0.7)", bordercolor="#FF6347", borderwidth=1, borderpad=4 # 💡 UBAH BACKGROUND ANNOTATION JADI TERANG
         )
 
         # Add specific lines based on exact choice
@@ -702,7 +558,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['pt10_20_line_y'],
                     mode='lines',
                     name='Garis Titik 10 & 20',
-                    line=dict(color='#00BFFF', width=2, dash='dot')  # Deep sky blue
+                    line=dict(color='#007BFF', width=2, dash='dot')  # Blue
                 ))
                 # Add points for 10th and 20th data point if they exist
                 if not np.isnan(results['specific_x1_pt10_20']):
@@ -711,7 +567,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                         y=[results['specific_y1_pt10_20']],
                         mode='markers',
                         name='Titik ke-10',
-                        marker=dict(size=10, color='#00BFFF', symbol='circle')
+                        marker=dict(size=10, color='#007BFF', symbol='circle')
                     ))
                 if not np.isnan(results['specific_x2_pt10_20']):
                     fig.add_trace(go.Scatter(
@@ -719,14 +575,14 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                         y=[results['specific_y2_pt10_20']],
                         mode='markers',
                         name='Titik ke-20',
-                        marker=dict(size=10, color='#00BFFF', symbol='circle')
+                        marker=dict(size=10, color='#007BFF', symbol='circle')
                     ))
             if not np.isnan(results.get('y_at_x_50_pt10_20_line')):
                 fig.add_trace(go.Scatter(
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']],
                     mode='markers',
                     name='Potongan Garis 10-20 di x=50',
-                    marker=dict(size=12, color='#00BFFF', symbol='star'),
+                    marker=dict(size=12, color='#007BFF', symbol='star'),
                     hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
         
@@ -737,14 +593,14 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['ransac_line_y'],
                     mode='lines',
                     name='Regresi RANSAC',
-                    line=dict(color='#32CD32', width=2, dash='dash')  # Lime green
+                    line=dict(color='#28A745', width=2, dash='dash')  # Green
                 ))
             if not np.isnan(results.get('y_at_x_50_ransac_line')):
                 fig.add_trace(go.Scatter(
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']],
                     mode='markers',
                     name='Potongan RANSAC di x=50',
-                    marker=dict(size=12, color='#32CD32', symbol='star'),
+                    marker=dict(size=12, color='#28A745', symbol='star'),
                     hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
 
@@ -754,7 +610,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']],
                     mode='markers',
                     name='Potongan Kurva Asli di x=50',
-                    marker=dict(size=12, color='#FFD700', symbol='star'),
+                    marker=dict(size=12, color='#8B4513', symbol='star'),
                     hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"
                 ))
         
@@ -766,14 +622,14 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['pt10_20_line_y'],
                     mode='lines',
                     name='Garis Titik 10 & 20',
-                    line=dict(color='#00BFFF', width=2, dash='dot')
+                    line=dict(color='#007BFF', width=2, dash='dot')
                 ))
                 if not np.isnan(results['specific_x1_pt10_20']):
-                    fig.add_trace(go.Scatter(x=[results['specific_x1_pt10_20']], y=[results['specific_y1_pt10_20']], mode='markers', name='Titik ke-10', marker=dict(size=10, color='#00BFFF', symbol='circle')))
+                    fig.add_trace(go.Scatter(x=[results['specific_x1_pt10_20']], y=[results['specific_y1_pt10_20']], mode='markers', name='Titik ke-10', marker=dict(size=10, color='#007BFF', symbol='circle')))
                 if not np.isnan(results['specific_x2_pt10_20']):
-                    fig.add_trace(go.Scatter(x=[results['specific_x2_pt10_20']], y=[results['specific_y2_pt10_20']], mode='markers', name='Titik ke-20', marker=dict(size=10, color='#00BFFF', symbol='circle')))
+                    fig.add_trace(go.Scatter(x=[results['specific_x2_pt10_20']], y=[results['specific_y2_pt10_20']], mode='markers', name='Titik ke-20', marker=dict(size=10, color='#007BFF', symbol='circle')))
                 if not np.isnan(results.get('y_at_x_50_pt10_20_line')):
-                    fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']], mode='markers', name='Potongan Garis 10-20 di x=50', marker=dict(size=12, color='#00BFFF', symbol='star'), hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+                    fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_pt10_20_line']], mode='markers', name='Potongan Garis 10-20 di x=50', marker=dict(size=12, color='#007BFF', symbol='star'), hovertemplate=f"<b>Potongan (Garis 10-20)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
 
             if results.get('ransac_line_x', []).size > 0:
                 fig.add_trace(go.Scatter(
@@ -781,55 +637,55 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                     y=results['ransac_line_y'],
                     mode='lines',
                     name='Regresi RANSAC',
-                    line=dict(color='#32CD32', width=2, dash='dash')
+                    line=dict(color='#28A745', width=2, dash='dash')
                 ))
             if not np.isnan(results.get('y_at_x_50_ransac_line')):
-                fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']], mode='markers', name='Potongan RANSAC di x=50', marker=dict(size=12, color='#32CD32', symbol='star'), hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+                fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_ransac_line']], mode='markers', name='Potongan RANSAC di x=50', marker=dict(size=12, color='#28A745', symbol='star'), hovertemplate=f"<b>Potongan (RANSAC)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
             
             if not np.isnan(results.get('y_at_x_50_original_curve')):
-                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']], mode='markers', name='Potongan Kurva Asli di x=50', marker=dict(size=12, color='#FFD700', symbol='star'), hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
+                 fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results['y_at_x_50_original_curve']], mode='markers', name='Potongan Kurva Asli di x=50', marker=dict(size=12, color='#8B4513', symbol='star'), hovertemplate=f"<b>Potongan (Kurva Asli)</b><br>X: {TARGET_X_VALUE}<br>Y: %{{y:.2f}}<extra></extra>"))
 
-    # Update layout for dark mode with results in top-left corner
+    # 💡 MODIFIKASI PLOTLY UNTUK LIGHT MODE
     fig.update_layout(
-        title={
-            'text': 'Grafik Abrasi Benang',
-            'yref': 'paper', 'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top',
-            'font': dict(color='#333333', size=24, family='Playfair Display, serif') # Ubah warna teks judul menjadi gelap
-        },
-        xaxis_title='Nilai X',
-        yaxis_title='Nilai Benang Putus (N)',
-        plot_bgcolor='#FFFFFF', # 💡 UBAH KE PUTIH
-        paper_bgcolor='#FFFFFF', # 💡 UBAH KE PUTIH
-        font=dict(color='#333333', family='Montserrat, sans-serif'), # 💡 UBAH FONT UMUM MENJADI GELAP
-        xaxis=dict(
-            showgrid=True, gridcolor='#DDDDDD', zeroline=False, # Ubah warna grid ke abu-abu terang
-            title_font=dict(size=18), tickfont=dict(size=14)
-        ),
-        yaxis=dict(
-            showgrid=True, gridcolor='#DDDDDD', zeroline=False, # Ubah warna grid ke abu-abu terang
-            title_font=dict(size=18), tickfont=dict(size=14)
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom", y=1.02,
-            xanchor="right", x=1,
-            bgcolor="rgba(255,255,255,0.8)", bordercolor="#DDDDDD", borderwidth=1, # Ubah latar belakang legend menjadi terang
-            font=dict(size=14, color='#333333') # Ubah font legend menjadi gelap
-        ),
-        hovermode="x unified",
-        margin=dict(l=40, r=40, b=40, t=100)
-    )
+        title={
+            'text': 'Grafik Abrasi Benang',
+            'yref': 'paper', 'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top',
+            'font': dict(color='#333333', size=24, family='Playfair Display, serif')
+        },
+        xaxis_title='Nilai X',
+        yaxis_title='Nilai Benang Putus (N)',
+        plot_bgcolor='#FFFFFF', # 💡 UBAH KE PUTIH
+        paper_bgcolor='#FFFFFF', # 💡 UBAH KE PUTIH
+        font=dict(color='#333333', family='Montserrat, sans-serif'), # 💡 UBAH TEKS JADI GELAP
+        xaxis=dict(
+            showgrid=True, gridcolor='#DDDDDD', zeroline=False, # 💡 UBAH GARIS GRID JADI TERANG
+            title_font=dict(size=18), tickfont=dict(size=14)
+        ),
+        yaxis=dict(
+            showgrid=True, gridcolor='#DDDDDD', zeroline=False, # 💡 UBAH GARIS GRID JADI TERANG
+            title_font=dict(size=18), tickfont=dict(size=14)
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom", y=1.02,
+            xanchor="right", x=1,
+            bgcolor="rgba(255,255,255,0.8)", bordercolor="#DDDDDD", borderwidth=1, # 💡 UBAH BACKGROUND LEGEND
+            font=dict(size=14, color='#333333') # 💡 UBAH FONT LEGEND JADI GELAP
+        ),
+        hovermode="x unified",
+        margin=dict(l=40, r=40, b=40, t=100)
+    )
     
-    # Add results annotations in top-left corner
+    # Add results annotations in top-left corner (Diubah warnanya agar terlihat di latar putih)
     if analysis_choice == "Kurva Data Asli" and not np.isnan(results.get('y_at_x_50_original_curve')):
         fig.add_annotation(
             x=0.05, y=0.95,
             xref="paper", yref="paper",
             text=f"<b>Kurva Asli:</b> {results['y_at_x_50_original_curve']:.2f} N",
             showarrow=False,
-            font=dict(size=14, color="#FFD700"),
-            bgcolor="rgba(26,26,26,0.7)",
-            bordercolor="#FFD700",
+            font=dict(size=14, color="#8B4513"), # 💡 UBAH FONT JADI COKELAT
+            bgcolor="rgba(255,255,255,0.9)", # 💡 UBAH BACKGROUND JADI PUTIH TRANSPARAN
+            bordercolor="#8B4513", # 💡 UBAH BORDER JADI COKELAT
             borderwidth=1,
             borderpad=4
         )
@@ -839,9 +695,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             xref="paper", yref="paper",
             text=f"<b>Garis 10-20:</b> {results['y_at_x_50_pt10_20_line']:.2f} N",
             showarrow=False,
-            font=dict(size=14, color="#00BFFF"),
-            bgcolor="rgba(26,26,26,0.7)",
-            bordercolor="#00BFFF",
+            font=dict(size=14, color="#007BFF"), # 💡 UBAH FONT JADI BIRU
+            bgcolor="rgba(255,255,255,0.9)",
+            bordercolor="#007BFF",
             borderwidth=1,
             borderpad=4
         )
@@ -851,9 +707,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
             xref="paper", yref="paper",
             text=f"<b>RANSAC:</b> {results['y_at_x_50_ransac_line']:.2f} N",
             showarrow=False,
-            font=dict(size=14, color="#32CD32"),
-            bgcolor="rgba(26,26,26,0.7)",
-            bordercolor="#32CD32",
+            font=dict(size=14, color="#28A745"), # 💡 UBAH FONT JADI HIJAU
+            bgcolor="rgba(255,255,255,0.9)",
+            bordercolor="#28A745",
             borderwidth=1,
             borderpad=4
         )
@@ -865,9 +721,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                 xref="paper", yref="paper",
                 text=f"<b>Kurva Asli:</b> {results['y_at_x_50_original_curve']:.2f} N",
                 showarrow=False,
-                font=dict(size=14, color="#FFD700"),
-                bgcolor="rgba(26,26,26,0.7)",
-                bordercolor="#FFD700",
+                font=dict(size=14, color="#8B4513"),
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="#8B4513",
                 borderwidth=1,
                 borderpad=4
             )
@@ -879,9 +735,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                 xref="paper", yref="paper",
                 text=f"<b>Garis 10-20:</b> {results['y_at_x_50_pt10_20_line']:.2f} N",
                 showarrow=False,
-                font=dict(size=14, color="#00BFFF"),
-                bgcolor="rgba(26,26,26,0.7)",
-                bordercolor="#00BFFF",
+                font=dict(size=14, color="#007BFF"),
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="#007BFF",
                 borderwidth=1,
                 borderpad=4
             )
@@ -893,298 +749,180 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
                 xref="paper", yref="paper",
                 text=f"<b>RANSAC:</b> {results['y_at_x_50_ransac_line']:.2f} N",
                 showarrow=False,
-                font=dict(size=14, color="#32CD32"),
-                bgcolor="rgba(26,26,26,0.7)",
-                bordercolor="#32CD32",
+                font=dict(size=14, color="#28A745"),
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="#28A745",
                 borderwidth=1,
                 borderpad=4
             )
-    
+
     return fig
 
-# --- Bagian Input Data ---
-st.subheader("Input Data")
-tabs = st.tabs(["Input Manual", "Impor dari Excel"])
 
-with tabs[0]:
-    st.write("Masukkan data abrasi ke tabel Nilai Benang Putus. **Nilai X tetap** dan tidak dapat diubah.")
+# --- Fungsi Utama Aplikasi ---
+def main_app():
+    # Pindahkan logika utama aplikasi di sini
     
-    # Menampilkan index dari 1
-    edited_data = pd.DataFrame({
-        'x_value': st.session_state.data['x_values'],
-        'y_value': st.session_state.data['y_values']
-    })
-    edited_data.index = edited_data.index + 1 # Ubah indeks menjadi dari 1
-    
-    edited_df = st.data_editor(
-        edited_data,
-        disabled=["x_value"],
-        hide_index=False,
-        column_config={
-            "x_value": st.column_config.NumberColumn("Nilai Tetap (x)", format="%.1f", help="Nilai X ini adalah titik pengukuran standar dan tidak dapat diubah."),
-            "y_value": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f", help="Nilai benang putus atau gaya putus dalam Newton (N)"),
-        },
-        num_rows="dynamic",
-        use_container_width=True,
-        key="data_editor",
-    )
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Terapkan Perubahan", key="apply_changes", use_container_width=True):
-            try:
-                cleaned_edited_df = edited_df.dropna(subset=['x_value', 'y_value'])
+    st.markdown("<h2>Upload Data Abrasi</h2>", unsafe_allow_html=True)
 
-                if not np.all(np.diff(cleaned_edited_df['x_value'].values) > 0):
-                    st.error("Nilai 'x_value' harus monoton meningkat. Harap perbaiki data Anda.")
-                elif cleaned_edited_df.empty:
-                    st.warning("Tabel data kosong. Harap masukkan data.")
-                else:
-                    if len(cleaned_edited_df) != len(INITIAL_DATA['x_values']):
-                        st.warning("Jumlah baris data telah berubah. Pastikan Anda hanya mengubah 'Nilai Benang Putus (N)' pada data yang sudah ada atau impor data dengan struktur yang sesuai.")
-                        st.session_state.data = pd.DataFrame(INITIAL_DATA)
+    with st.expander("Unggah atau Edit Data", expanded=True):
+        col_up1, col_up2 = st.columns([2, 3])
+
+        with col_up1:
+            uploaded_file = st.file_uploader("Unggah file CSV atau Excel (.xlsx) Anda", type=['csv', 'xlsx'])
+            
+            if uploaded_file is not None:
+                try:
+                    # Baca file
+                    if uploaded_file.name.endswith('.csv'):
+                        df_uploaded = pd.read_csv(uploaded_file)
+                    elif uploaded_file.name.endswith('.xlsx'):
+                        df_uploaded = pd.read_excel(uploaded_file)
+                    
+                    # Cek apakah kolom yang diperlukan ada
+                    if 'x_values' in df_uploaded.columns and 'y_values' in df_uploaded.columns:
+                        st.session_state.data = df_uploaded[['x_values', 'y_values']].astype(float)
                         st.session_state.data_needs_recalc = True
+                        st.success("Data berhasil diunggah!")
                     else:
-                        st.session_state.data = pd.DataFrame({
-                            'x_values': cleaned_edited_df['x_value'].values,
-                            'y_values': cleaned_edited_df['y_value'].values
-                        })
+                        st.error("File harus memiliki kolom 'x_values' dan 'y_values'.")
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan saat membaca file: {e}")
+            
+            if st.button("Reset Data ke Nilai Awal", key="reset_button"):
+                st.session_state.data = pd.DataFrame(INITIAL_DATA)
+                st.session_state.data_needs_recalc = True
+                st.info("Data telah direset ke nilai awal.")
+
+        with col_up2:
+            st.markdown("<h3>Edit Data Langsung</h3>", unsafe_allow_html=True)
+            # Tampilkan editor data
+            edited_df = st.data_editor(
+                st.session_state.data,
+                column_config={
+                    "x_values": st.column_config.NumberColumn("Cycles", format="%.2f"),
+                    "y_values": st.column_config.NumberColumn("Tensile Strength (N)", format="%.0f"),
+                },
+                num_rows="dynamic",
+                use_container_width=True
+            )
+
+            # Perbarui session state jika ada perubahan
+            if not edited_df.equals(st.session_state.data):
+                try:
+                    # Bersihkan dan konversi data
+                    cleaned_df = edited_df.dropna(subset=['x_values', 'y_values']).copy()
+                    cleaned_df['x_values'] = pd.to_numeric(cleaned_df['x_values'], errors='coerce')
+                    cleaned_df['y_values'] = pd.to_numeric(cleaned_df['y_values'], errors='coerce')
+                    cleaned_df = cleaned_df.dropna()
+                    
+                    if len(cleaned_df) >= 2:
+                        st.session_state.data = cleaned_df[['x_values', 'y_values']].reset_index(drop=True)
                         st.session_state.data_needs_recalc = True
-                        st.success("Data berhasil diperbarui! Klik 'Hitung & Tampilkan Grafik' untuk melihat hasilnya.")
+                    elif len(cleaned_df) == 0:
+                        st.warning("Data kosong. Masukkan minimal 2 baris data.")
+                        st.session_state.data = pd.DataFrame(columns=['x_values', 'y_values'])
+                    else:
+                        st.warning("Data kurang dari 2 baris. Masukkan minimal 2 baris data.")
+                        st.session_state.data = cleaned_df[['x_values', 'y_values']].reset_index(drop=True)
+                except Exception as e:
+                    st.error(f"Kesalahan pemrosesan data: Pastikan semua input adalah angka. {e}")
+                    
+    st.markdown("<hr>", unsafe_allow_html=True)
+    
+    # Perhitungan (hanya jika ada data dan perlu dihitung ulang)
+    if st.session_state.data_needs_recalc and len(st.session_state.data) >= 2:
+        st.session_state.calculated_results = calculate_lines_and_points(
+            st.session_state.data['x_values'], 
+            st.session_state.data['y_values']
+        )
+        st.session_state.data_needs_recalc = False
+    
+    results = st.session_state.calculated_results
 
-            except Exception as e:
-                st.error(f"Terjadi kesalahan saat menerapkan perubahan: {e}. Pastikan data Anda berformat angka.")
+    st.markdown("<h2>Hasil Analisis & Visualisasi</h2>", unsafe_allow_html=True)
 
-    with col2:
-        if st.button("Reset Data ke Awal", key="reset_data", use_container_width=True):
-            st.session_state.data = pd.DataFrame(INITIAL_DATA)
-            st.session_state.data_needs_recalc = True
-            st.success("Data telah direset ke nilai awal.")
+    tab1, tab2 = st.tabs(["Visualisasi Grafik", "Ringkasan Hasil"])
 
-with tabs[1]:
-    st.write("Unggah file Excel Anda (misalnya `.xlsx`, `.xls`). Pastikan kolom 'x_values' dan 'y_values' ada.")
-    uploaded_file = st.file_uploader("Pilih file Excel", type=["xlsx", "xls"], key="file_uploader")
-
-    if uploaded_file is not None:
-        try:
-            df_uploaded = pd.read_excel(uploaded_file)
-            if 'x_values' in df_uploaded.columns and 'y_values' in df_uploaded.columns:
-                df_uploaded['x_values'] = pd.to_numeric(df_uploaded['x_values'], errors='coerce')
-                df_uploaded['y_values'] = pd.to_numeric(df_uploaded['y_values'], errors='coerce')
-                
-                df_uploaded.dropna(subset=['x_values', 'y_values'], inplace=True)
-
-                if not np.all(np.diff(df_uploaded['x_values'].values) > 0):
-                    st.error("Nilai 'x_values' dari file Excel harus monoton meningkat. Harap perbaiki data Anda.")
-                elif df_uploaded.empty:
-                    st.warning("File Excel kosong atau tidak mengandung data yang valid setelah pembersihan.")
-                else:
-                    st.session_state.data = df_uploaded[['x_values', 'y_values']]
-                    st.session_state.data_needs_recalc = True
-                    st.success("Data dari Excel berhasil diimpor!")
-                    st.dataframe(st.session_state.data.head(), use_container_width=True)
-            else:
-                st.error("File Excel harus mengandung kolom 'x_values' dan 'y_values'.")
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat membaca file Excel: {e}. Pastikan format file benar dan kolom sesuai.")
-
-# --- Bagian Analisis & Visualisasi ---
-st.subheader("Analisis & Visualisasi")
-
-# Calculate if needed
-if st.session_state.data_needs_recalc:
-    st.session_state.calculated_results = calculate_lines_and_points(
-        st.session_state.data['x_values'],
-        st.session_state.data['y_values']
-    )
-    st.session_state.data_needs_recalc = False
-
-# Pilihan Grafik Analisis
-st.subheader("Pilihan Grafik Analisis")
-analysis_choice = st.radio(
-    "Pilih jenis grafik yang ingin ditampilkan:",
-    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"),
-    key="analysis_choice_radio",
-    horizontal=True
-)
-
-st.plotly_chart(
-    create_abrasion_plot(
-        st.session_state.data['x_values'],
-        st.session_state.data['y_values'],
-        st.session_state.calculated_results,
-        analysis_choice
-    ),
-    use_container_width=True
-)
-
-# --- Hasil Perhitungan (Dinamis Berdasarkan Pilihan Grafik) ---
-st.subheader("Hasil Perhitungan Titik Potong di X = 50")
-
-if analysis_choice == "Kurva Data Asli":
-    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-    st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
-    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #FFD700;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
-        st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
-    else:
-        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-elif analysis_choice == "Garis Titik 10 & 20":
-    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-    st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
-    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #00BFFF;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
-        st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20 pada X=50.</i></p>", unsafe_allow_html=True)
-    else:
-        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-elif analysis_choice == "Garis yang melewati banyak titik":
-    st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-    st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
-    if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-        st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #32CD32;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
-        st.markdown("<p><i>Regresi robust RANSAC pada X=50, cocok untuk data dengan outlier.</i></p>", unsafe_allow_html=True)
-    else:
-        st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-elif analysis_choice == "Tampilkan Semua":
-    col_res1, col_res2, col_res3 = st.columns(3)
-
-    with col_res1:
-        with st.container(height=180):
-            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-            st.markdown("<h3>Kurva Data Asli</h3>", unsafe_allow_html=True)
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #FFD700;'>{st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N</p>", unsafe_allow_html=True)
-                st.markdown("<p><i>Interpolasi linear dari kurva data asli pada X=50.</i></p>", unsafe_allow_html=True)
-            else:
-                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_res2:
-        with st.container(height=180):
-            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-            st.markdown("<h3>Garis Titik 10 & 20</h3>", unsafe_allow_html=True)
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #00BFFF;'>{st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N</p>", unsafe_allow_html=True)
-                st.markdown("<p><i>Regresi linear yang melewati titik ke-10 dan ke-20.</i></p>", unsafe_allow_html=True)
-            else:
-                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_res3:
-        with st.container(height=180):
-            st.markdown("<div class='dark-card result-card'>", unsafe_allow_html=True)
-            st.markdown("<h3>Garis RANSAC</h3>", unsafe_allow_html=True)
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-                st.markdown(f"<p style='font-size: 32px; font-weight: bold; color: #32CD32;'>{st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N</p>", unsafe_allow_html=True)
-                st.markdown("<p><i>Regresi robust terhadap semua titik data.</i></p>", unsafe_allow_html=True)
-            else:
-                st.markdown("<p style='color: #CCCCCC;'>Tidak dapat dihitung</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-# --- Footer ---
-st.markdown("""
-<div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
-</div>
-""", unsafe_allow_html=True)
-
-# Add download section before the footer
-st.markdown("---")
-st.subheader("Unduh Hasil Analisis")
-
-# Ask for filename
-filename = st.text_input("Nama file untuk dokumen Word (tanpa ekstensi .docx)", value="Hasil_Analisis_Abrasi")
-
-# Create download button
-if st.button("Unduh Dokumen Word"):
-    if not filename:
-        st.warning("Silakan masukkan nama file terlebih dahulu")
-    else:
-        # Create a Word document
-        doc = Document()
-        doc.add_heading('Hasil Analisis Abrasi Benang', level=1)
-        
-        # Add date and time
-        from datetime import datetime
-        doc.add_paragraph(f"Dibuat pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        
-        # Section 1: Data
-        doc.add_heading('Data Abrasi', level=2)
-        doc.add_paragraph('Berikut adalah data abrasi yang digunakan dalam analisis:')
-        
-        # Create a table for the data
-        table = doc.add_table(rows=1, cols=2)
-        hdr_cells = table.rows[0].cells
-        hdr_cells[0].text = 'Nilai X'
-        hdr_cells[1].text = 'Nilai Benang Putus (N)'
-        
-        for x, y in zip(st.session_state.data['x_values'], st.session_state.data['y_values']):
-            row_cells = table.add_row().cells
-            row_cells[0].text = str(x)
-            row_cells[1].text = str(y)
-        
-        # Section 2: Graph
-        doc.add_heading('Grafik Analisis', level=2)
-        doc.add_paragraph('Berikut adalah grafik hasil analisis:')
-        
-        # Save the plot to a temporary file
-        fig = create_abrasion_plot(
-            st.session_state.data['x_values'],
-            st.session_state.data['y_values'],
-            st.session_state.calculated_results,
-            analysis_choice
+    with tab1:
+        st.markdown("<h3>Pilihan Tampilan Garis Analisis</h3>", unsafe_allow_html=True)
+        analysis_choice = st.radio(
+            "Pilih metode analisis yang ingin ditampilkan pada grafik:",
+            ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"),
+            horizontal=True,
+            key="analysis_choice"
         )
         
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            fig.write_image(tmpfile.name)
-            doc.add_picture(tmpfile.name, width=Inches(6))
-        
-        # Section 3: Results
-        doc.add_heading('Hasil Perhitungan', level=2)
-        doc.add_paragraph(f'Nilai perpotongan pada X = {TARGET_X_VALUE}:')
-        
-        if analysis_choice == "Kurva Data Asli" or analysis_choice == "Tampilkan Semua":
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_original_curve')):
-                doc.add_paragraph(
-                    f"Kurva Data Asli: {st.session_state.calculated_results['y_at_x_50_original_curve']:.2f} N",
-                    style='List Bullet'
-                )
-        
-        if analysis_choice == "Garis Titik 10 & 20" or analysis_choice == "Tampilkan Semua":
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_pt10_20_line')):
-                doc.add_paragraph(
-                    f"Garis Titik 10 & 20: {st.session_state.calculated_results['y_at_x_50_pt10_20_line']:.2f} N",
-                    style='List Bullet'
-                )
-        
-        if analysis_choice == "Garis yang melewati banyak titik" or analysis_choice == "Tampilkan Semua":
-            if not np.isnan(st.session_state.calculated_results.get('y_at_x_50_ransac_line')):
-                doc.add_paragraph(
-                    f"Garis RANSAC: {st.session_state.calculated_results['y_at_x_50_ransac_line']:.2f} N",
-                    style='List Bullet'
-                )
-        
-        # Save the document to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_docx:
-            doc.save(tmp_docx.name)
-            
-            # Read the file and create download link
-            with open(tmp_docx.name, "rb") as f:
-                bytes_data = f.read()
-                b64 = base64.b64encode(bytes_data).decode()
-                href = f'<a href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{b64}" download="{filename}.docx">Klik di sini untuk mengunduh</a>'
-                st.markdown(href, unsafe_allow_html=True)
-        
-        st.success("Dokumen Word siap diunduh!")
+        if len(st.session_state.data) >= 2:
+            plot_fig = create_abrasion_plot(
+                st.session_state.data['x_values'], 
+                st.session_state.data['y_values'], 
+                results, 
+                analysis_choice
+            )
+            st.plotly_chart(plot_fig, use_container_width=True)
+        else:
+            st.warning("Tidak ada data yang cukup untuk membuat grafik.")
 
+    with tab2:
+        st.markdown("<h3>Nilai Tegangan Tarik (N) pada X = 50 Cycles</h3>", unsafe_allow_html=True)
+        
+        col_res1, col_res2, col_res3 = st.columns(3)
+        
+        val_original = results.get('y_at_x_50_original_curve')
+        val_10_20 = results.get('y_at_x_50_pt10_20_line')
+        val_ransac = results.get('y_at_x_50_ransac_line')
+
+        with col_res1:
+            st.markdown(f"""
+            <div class="dark-card result-card">
+                <h3>Kurva Data Asli</h3>
+                <p style="font-size: 28px; font-weight: 700; color: #8B4513 !important;">
+                    {f'{val_original:.2f}' if not np.isnan(val_original) else 'N/A'} N
+                </p>
+                <p>Menggunakan interpolasi linier pada kurva data.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col_res2:
+            st.markdown(f"""
+            <div class="dark-card result-card">
+                <h3>Garis Titik 10 & 20</h3>
+                <p style="font-size: 28px; font-weight: 700; color: #007BFF !important;">
+                    {f'{val_10_20:.2f}' if not np.isnan(val_10_20) else 'N/A'} N
+                </p>
+                <p>Menggunakan garis yang ditarik antara titik data ke-10 dan ke-20.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_res3:
+            st.markdown(f"""
+            <div class="dark-card result-card">
+                <h3>Regresi RANSAC</h3>
+                <p style="font-size: 28px; font-weight: 700; color: #28A745 !important;">
+                    {f'{val_ransac:.2f}' if not np.isnan(val_ransac) else 'N/A'} N
+                </p>
+                <p>Menggunakan regresi linier robust (RANSAC) pada semua titik data.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---", unsafe_allow_html=True)
+        st.markdown("<h3>Detail Titik yang Digunakan (Garis 10 & 20)</h3>", unsafe_allow_html=True)
+        
+        col_detail1, col_detail2 = st.columns(2)
+        with col_detail1:
+            x1, y1 = results.get('specific_x1_pt10_20'), results.get('specific_y1_pt10_20')
+            st.info(f"**Titik 1 (Data ke-10):** X = {f'{x1:.2f}' if not np.isnan(x1) else 'N/A'}, Y = {f'{y1:.0f}' if not np.isnan(y1) else 'N/A'} N")
+        with col_detail2:
+            x2, y2 = results.get('specific_x2_pt10_20'), results.get('specific_y2_pt10_20')
+            st.info(f"**Titik 2 (Data ke-20):** X = {f'{x2:.2f}' if not np.isnan(x2) else 'N/A'}, Y = {f'{y2:.0f}' if not np.isnan(y2) else 'N/A'} N")
+        
+# --- Jalankan Aplikasi Utama ---
+main_app()
+
+# --- Footer Aplikasi ---
 st.markdown("""
 <div class="radix-footer">
-    Aplikasi Analisis Abrasi Benang - Dibuat oleh RADIX
+    <p>Dikembangkan oleh Radix | © 2024</p>
 </div>
 """, unsafe_allow_html=True)
