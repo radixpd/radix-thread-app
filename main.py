@@ -20,7 +20,11 @@ from sklearn.linear_model import LinearRegression, RANSACRegressor
 # Dependensi opsional - jangan sampai bikin seluruh app crash kalau belum terinstal
 try:
     from docx import Document
-    from docx.shared import Inches
+    from docx.shared import Inches, Pt, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+    from docx.oxml import parse_xml
+    from docx.oxml.ns import nsdecls
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
@@ -191,8 +195,6 @@ COLOR_TARGET_LINE = "#FF6B6B"
 COLOR_PT10_20 = "#F4B740"
 COLOR_RANSAC = "#5FD068"
 
-# Tema latar belakang grafik. "dark" dipakai untuk tampilan di layar (menyatu
-# dengan tema aplikasi), sedangkan "light" dipakai sebagai opsi saat mengunduh.
 CHART_THEMES = {
     "dark": dict(
         plot_bgcolor="#1A1D24",
@@ -235,9 +237,6 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
     show_original = analysis_choice in ("Kurva Data Asli", "Tampilkan Semua")
 
     def add_value_label(x, y, color, ax, ay):
-        """Anotasi nilai di samping titik perpotongan, dengan kotak label kontras
-        (latar terang + teks gelap) supaya tetap terbaca di latar hitam maupun putih,
-        baik di layar maupun saat dicetak."""
         fig.add_annotation(
             x=x, y=y, text=f"{y:.1f} N",
             showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=1.5, arrowcolor=color,
@@ -249,28 +248,28 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
 
     if show_pt10_20 and results.get("pt10_20_line_x_range", np.array([])).size > 0:
         fig.add_trace(go.Scatter(x=results["pt10_20_line_x_range"], y=results["pt10_20_line_y"],
-                                  mode="lines", name="Garis Titik 10 & 20",
-                                  line=dict(color=COLOR_PT10_20, width=2, dash="dot")))
+                                 mode="lines", name="Garis Titik 10 & 20",
+                                 line=dict(color=COLOR_PT10_20, width=2, dash="dot")))
         if not np.isnan(results["y_at_x_50_pt10_20_line"]):
             fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_pt10_20_line"]],
-                                      mode="markers", name="Potongan Garis 10-20",
-                                      marker=dict(size=12, color=COLOR_PT10_20, symbol="star")))
+                                     mode="markers", name="Potongan Garis 10-20",
+                                     marker=dict(size=12, color=COLOR_PT10_20, symbol="star")))
             add_value_label(TARGET_X_VALUE, results["y_at_x_50_pt10_20_line"], COLOR_PT10_20, ax=45, ay=-35)
 
     if show_ransac and results.get("ransac_line_x", np.array([])).size > 0:
         fig.add_trace(go.Scatter(x=results["ransac_line_x"], y=results["ransac_line_y"],
-                                  mode="lines", name="Regresi RANSAC",
-                                  line=dict(color=COLOR_RANSAC, width=2, dash="dash")))
+                                 mode="lines", name="Regresi RANSAC",
+                                 line=dict(color=COLOR_RANSAC, width=2, dash="dash")))
         if not np.isnan(results["y_at_x_50_ransac_line"]):
             fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_ransac_line"]],
-                                      mode="markers", name="Potongan RANSAC",
-                                      marker=dict(size=12, color=COLOR_RANSAC, symbol="star")))
+                                     mode="markers", name="Potongan RANSAC",
+                                     marker=dict(size=12, color=COLOR_RANSAC, symbol="star")))
             add_value_label(TARGET_X_VALUE, results["y_at_x_50_ransac_line"], COLOR_RANSAC, ax=45, ay=35)
 
     if show_original and not np.isnan(results.get("y_at_x_50_original_curve", np.nan)):
         fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_original_curve"]],
-                                  mode="markers", name="Potongan Kurva Asli",
-                                  marker=dict(size=12, color=COLOR_DATA, symbol="star")))
+                                 mode="markers", name="Potongan Kurva Asli",
+                                 marker=dict(size=12, color=COLOR_DATA, symbol="star")))
         add_value_label(TARGET_X_VALUE, results["y_at_x_50_original_curve"], COLOR_DATA, ax=-55, ay=-20)
 
     fig.update_layout(
@@ -288,12 +287,6 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
 
 
 def style_figure_for_export(fig, width=1450, height=1000):
-    """
-    Mengembalikan salinan figure dengan margin, ukuran, dan ukuran font yang
-    lebih lega supaya tidak ada label yang terpotong saat di-export sebagai
-    gambar statis (PNG) atau disisipkan ke dokumen Word. Tampilan interaktif
-    di layar (yang responsif terhadap lebar container) tidak terpengaruh.
-    """
     export_fig = go.Figure(fig)
     export_fig.update_layout(
         width=width,
@@ -308,18 +301,12 @@ def style_figure_for_export(fig, width=1450, height=1000):
         xaxis=dict(title_font=dict(size=18), tickfont=dict(size=15)),
         yaxis=dict(title_font=dict(size=18), tickfont=dict(size=15)),
     )
-    # Pertahankan warna grid/sumbu dari figure asli, hanya ukuran fontnya yang diperbesar.
     export_fig.update_xaxes(showgrid=True, zeroline=False)
     export_fig.update_yaxes(showgrid=True, zeroline=False)
     return export_fig
 
 
 def build_print_html(img_base64: str, background_mode: str) -> str:
-    """
-    Membuat markup HTML pratinjau + tombol cetak. @page diset ke A4 lanskap
-    supaya saat tombol cetak ditekan, dialog print browser otomatis
-    menyarankan ukuran kertas & orientasi yang pas untuk grafik ini.
-    """
     bg_css = "#1A1D24" if background_mode == "dark" else "#FFFFFF"
     return f"""
     <style>
@@ -410,7 +397,7 @@ with tab_manual:
                 st.error("Nilai 'X' harus monoton meningkat. Harap perbaiki data Anda.")
             elif len(cleaned) != len(INITIAL_DATA["x_values"]):
                 st.warning("Jumlah baris berubah dari struktur standar — data dikembalikan ke nilai awal. "
-                            "Gunakan tab impor Excel untuk struktur data yang berbeda.")
+                           "Gunakan tab impor Excel untuk struktur data yang berbeda.")
                 st.session_state.data = pd.DataFrame(INITIAL_DATA)
             else:
                 st.session_state.data = pd.DataFrame({
@@ -463,7 +450,6 @@ analysis_choice = st.radio(
     horizontal=True,
 )
 
-# Grafik yang ditampilkan di layar selalu memakai tema gelap, menyatu dengan tema aplikasi.
 fig = create_abrasion_plot(
     st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice,
     background_mode="dark",
@@ -518,8 +504,6 @@ bg_label = st.radio(
 )
 background_mode = "dark" if bg_label == "Hitam" else "light"
 
-# Grafik versi unduhan (mengikuti pilihan warna latar di atas). Figure ini juga
-# dipakai untuk gambar di dalam dokumen Word pada bagian 5.
 download_fig = create_abrasion_plot(
     st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice,
     background_mode=background_mode,
@@ -569,19 +553,11 @@ else:
         if not filename.strip():
             st.warning("Masukkan nama file terlebih dahulu.")
         else:
-            from docx import Document
-            from docx.shared import Inches, Pt, RGBColor
-            from docx.enum.text import WD_ALIGN_PARAGRAPH
-            from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
-            from docx.oxml import OxmlElement, parse_xml
-            from docx.oxml.ns import nsdecls, qn
-
-            # Helper fungsi untuk mewarnai cell tabel (Shading)
+            # Fungsi pembantu internal untuk modifikasi XML tabel Word
             def set_cell_background(cell, fill_hex):
                 shading_xml = f'<w:shd {nsdecls("w")} w:fill="{fill_hex}"/>'
                 cell._tc.get_or_add_tcPr().append(parse_xml(shading_xml))
 
-            # Helper fungsi untuk mengatur border tipis abu-abu pada tabel
             def set_table_borders(table):
                 tblPr = table._tbl.tblPr
                 borders_xml = (
@@ -598,36 +574,33 @@ else:
 
             doc = Document()
 
-            # Mengatur Margin Halaman (Top, Bottom, Left, Right = 1 Inci)
-            sections = doc.sections
-            for section in sections:
+            # Set Margin Halaman standar (1 Inci)
+            for section in doc.sections:
                 section.top_margin = Inches(1)
                 section.bottom_margin = Inches(1)
                 section.left_margin = Inches(1)
                 section.right_margin = Inches(1)
 
-            # Gaya Font Default
+            # Atur Font Utama Dokumen
             style = doc.styles['Normal']
-            font = style.font
-            font.name = 'Arial'
-            font.size = Pt(10.5)
+            style.font.name = 'Arial'
+            style.font.size = Pt(10.5)
 
-            # --- JUDUL UTAMA ---
+            # --- JUDUL DOKUMEN ---
             title_p = doc.add_paragraph()
             title_run = title_p.add_run("Hasil Analisis Abrasi Benang")
             title_run.bold = True
             title_run.font.size = Pt(18)
-            title_run.font.color.rgb = RGBColor(0x00, 0x56, 0x91) # Biru Gelap Profesional
+            title_run.font.color.rgb = RGBColor(0x00, 0x56, 0x91)
             title_p.paragraph_format.space_after = Pt(4)
 
-            # Sub-info Tanggal Pembuatan
             date_p = doc.add_paragraph()
             date_run = date_p.add_run(f"Dibuat pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             date_run.font.size = Pt(9.5)
-            date_run.font.color.rgb = RGBColor(0x7F, 0x8C, 0x8D) # Abu-abu
+            date_run.font.color.rgb = RGBColor(0x7F, 0x8C, 0x8D)
             date_p.paragraph_format.space_after = Pt(24)
 
-            # --- KONTEN DATA ABRASI ---
+            # --- BAGIAN 1: TABEL DATA ---
             h1 = doc.add_paragraph()
             h1_run = h1.add_run("Data Abrasi")
             h1_run.bold = True
@@ -635,54 +608,58 @@ else:
             h1_run.font.color.rgb = RGBColor(0x00, 0x56, 0x91)
             h1.paragraph_format.space_after = Pt(8)
 
-            # Membuat Tabel Sesuai Gambar
             table = doc.add_table(rows=1, cols=2)
             table.alignment = WD_TABLE_ALIGNMENT.LEFT
             set_table_borders(table)
 
-            # Header Tabel (Nilai X | Nilai Benang Putus)
             hdr_cells = table.rows[0].cells
             hdr_cells[0].text = "Nilai X"
             hdr_cells[1].text = "Nilai Benang Putus (N)"
-            
-            # Styling Header (Latar Belakang Biru Cerah, Teks Putih Tebal)
-            for i, cell in enumerate(hdr_cells):
-                set_cell_background(cell, "00A2E8")  # Warna biru sesuai gambar contoh Anda
+
+            # Styling Header (Latar Biru, Teks Putih, Spacing Rapat Semesta 0pt/0cm)
+            for cell in hdr_cells:
+                set_cell_background(cell, "00A2E8")
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 p = cell.paragraphs[0]
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                p.paragraph_format.space_before = Pt(6)
+                p.paragraph_format.space_before = Pt(6)  # Ruang napas khusus teks header
                 p.paragraph_format.space_after = Pt(6)
+                p.paragraph_format.left_indent = Inches(0)
+                p.paragraph_format.right_indent = Inches(0)
                 for run in p.runs:
                     run.font.bold = True
                     run.font.color.rgb = RGBColor(255, 255, 255)
                     run.font.size = Pt(10)
 
-            # Mengisi Data ke Dalam Tabel
+            # Mengisi Data (Paksa Spacing: Before 0 pt, After 0 pt, Indent 0 cm)
             for x, y in zip(st.session_state.data["x_values"], st.session_state.data["y_values"]):
                 row_cells = table.add_row().cells
                 row_cells[0].text = f"{x:.1f}" if x % 1 != 0 else f"{x:.0f}"
                 row_cells[1].text = str(int(y) if y % 1 == 0 else y)
-                
-                # Format Teks di Sel Data (Rata Tengah)
+
                 for cell in row_cells:
                     cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                     p = cell.paragraphs[0]
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    p.paragraph_format.space_before = Pt(4)
-                    p.paragraph_format.space_after = Pt(4)
+                    
+                    # Pemaksaan Spacing Sesuai Kebutuhan Anda (Rapat Total)
+                    p.paragraph_format.space_before = Pt(0)
+                    p.paragraph_format.space_after = Pt(0)
+                    p.paragraph_format.line_spacing = 1.0
+                    p.paragraph_format.left_indent = Inches(0)
+                    p.paragraph_format.right_indent = Inches(0)
                     for run in p.runs:
                         run.font.size = Pt(9.5)
 
-            # Atur Lebar Kolom Tabel Agar Rapi (Kolom 1: 2.0 inci, Kolom 2: 2.5 inci)
+            # Atur Lebar Kolom Tabel Berurutan
             for row in table.rows:
                 row.cells[0].width = Inches(2.0)
                 row.cells[1].width = Inches(2.5)
 
-            # --- GRAFIK ANALISIS ---
+            # --- BAGIAN 2: GRAFIK ANALISIS ---
             if KALEIDO_AVAILABLE:
-                doc.add_page_break() # Pisah ke halaman baru untuk grafik seperti gambar contoh
-                
+                doc.add_page_break()  # Pisah halaman agar estetik seperti cetakan dokumen contoh
+
                 h2 = doc.add_paragraph()
                 h2_run = h2.add_run("Grafik Analisis")
                 h2_run.bold = True
@@ -693,11 +670,9 @@ else:
 
                 try:
                     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_img:
-                        # Menggunakan download_fig dengan background light (Putih) agar bersih di Word
                         export_fig_docx = style_figure_for_export(download_fig)
                         export_fig_docx.write_image(tmp_img.name, scale=2)
-                        
-                        # Tambahkan gambar ke word dengan lebar proporsional (5.5 Inci)
+
                         img_p = doc.add_paragraph()
                         img_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                         img_p.add_run().add_picture(tmp_img.name, width=Inches(5.5))
@@ -707,7 +682,7 @@ else:
             else:
                 doc.add_paragraph("(Paket 'kaleido' belum terinstal sehingga grafik tidak disertakan.)")
 
-            # --- HASIL PERHITUNGAN ---
+            # --- BAGIAN 3: HASIL PERHITUNGAN ---
             h3 = doc.add_paragraph()
             h3_run = h3.add_run("Hasil Perhitungan")
             h3_run.bold = True
@@ -734,7 +709,7 @@ else:
                     run_val = calc_p.add_run(f"{val:.2f} N")
                     run_val.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
 
-            # Simpan Dokumen ke Buffer Streamlit
+            # Ekspor Dokumen ke Buffer
             buf = io.BytesIO()
             doc.save(buf)
             buf.seek(0)
