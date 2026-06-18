@@ -4,6 +4,7 @@ Tampilan disederhanakan: mengandalkan tema bawaan Streamlit (lihat .streamlit/co
 alih-alih CSS override yang berat, supaya konsisten dan mudah dirawat.
 """
 
+import base64
 import io
 import tempfile
 from datetime import datetime
@@ -12,6 +13,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 from scipy import interpolate
 from sklearn.linear_model import LinearRegression, RANSACRegressor
 
@@ -269,7 +271,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
     return fig
 
 
-def style_figure_for_export(fig, width=1400, height=800):
+def style_figure_for_export(fig, width=1450, height=1000):
     """
     Mengembalikan salinan figure dengan margin, ukuran, dan ukuran font yang
     lebih lega supaya tidak ada label yang terpotong saat di-export sebagai
@@ -294,6 +296,64 @@ def style_figure_for_export(fig, width=1400, height=800):
     export_fig.update_xaxes(showgrid=True, zeroline=False)
     export_fig.update_yaxes(showgrid=True, zeroline=False)
     return export_fig
+
+
+def build_print_html(img_base64: str, background_mode: str) -> str:
+    """
+    Membuat markup HTML pratinjau + tombol cetak. @page diset ke A4 lanskap
+    supaya saat tombol cetak ditekan, dialog print browser otomatis
+    menyarankan ukuran kertas & orientasi yang pas untuk grafik ini.
+    """
+    bg_css = "#1A1D24" if background_mode == "dark" else "#FFFFFF"
+    return f"""
+    <style>
+      @page {{ size: A4 landscape; margin: 8mm; }}
+      html, body {{ margin: 0; padding: 0; font-family: 'Inter', sans-serif; }}
+      .page-wrap {{
+        background-color: {bg_css};
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 18px;
+        border-radius: 14px;
+      }}
+      .chart-img {{
+        width: 100%;
+        max-width: 980px;
+        height: auto;
+        display: block;
+        border-radius: 8px;
+      }}
+      .print-btn {{
+        margin-top: 16px;
+        padding: 10px 26px;
+        background: #5B8DEF;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }}
+      .print-btn:hover {{ background: #4a7adf; }}
+      @media print {{
+        .no-print {{ display: none !important; }}
+        .page-wrap {{
+          padding: 0;
+          border-radius: 0;
+          min-height: 100vh;
+          justify-content: center;
+        }}
+        .chart-img {{ max-width: 100%; max-height: 100vh; }}
+      }}
+    </style>
+    <div class="page-wrap">
+      <img class="chart-img" src="data:image/png;base64,{img_base64}" />
+      <button class="print-btn no-print" onclick="window.print()">🖨️ Cetak Grafik (A4)</button>
+    </div>
+    """
 
 
 # ----------------------------------------------------------------------------
@@ -425,14 +485,17 @@ else:
 
 
 # ----------------------------------------------------------------------------
-# Unduh grafik sebagai gambar (PNG), dengan pilihan warna latar
+# Unduh & cetak grafik, dengan pilihan warna latar
 # ----------------------------------------------------------------------------
 st.divider()
-st.subheader("4. Unduh Grafik")
-st.caption("Pilih warna latar belakang grafik sebelum mengunduhnya sebagai gambar PNG.")
+st.subheader("4. Unduh & Cetak Grafik")
+st.caption(
+    "Pilih warna latar belakang grafik, lalu unduh sebagai PNG atau cetak langsung — "
+    "otomatis pas untuk kertas A4 orientasi lanskap."
+)
 
 bg_label = st.radio(
-    "Warna latar grafik untuk diunduh:",
+    "Warna latar grafik:",
     ("Hitam", "Putih"),
     horizontal=True,
     key="chart_bg_choice",
@@ -447,11 +510,16 @@ download_fig = create_abrasion_plot(
 )
 
 if not KALEIDO_AVAILABLE:
-    st.info("Fitur unduh grafik sebagai gambar membutuhkan paket `kaleido`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
+    st.info("Fitur unduh/cetak grafik membutuhkan paket `kaleido`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
 else:
+    img_bytes = None
     try:
         export_fig = style_figure_for_export(download_fig)
         img_bytes = export_fig.to_image(format="png", scale=2)
+    except Exception as e:
+        st.error(f"Tidak dapat membuat gambar grafik: {e}")
+
+    if img_bytes:
         st.download_button(
             f"⬇️ Unduh Grafik PNG (Latar {bg_label})",
             data=img_bytes,
@@ -459,8 +527,15 @@ else:
             mime="image/png",
             use_container_width=True,
         )
-    except Exception as e:
-        st.error(f"Tidak dapat membuat gambar grafik: {e}")
+
+        st.markdown(f"**Pratinjau Cetak — Latar {bg_label} (A4 Lanskap)**")
+        img_b64 = base64.b64encode(img_bytes).decode()
+        components.html(build_print_html(img_b64, background_mode), height=640, scrolling=False)
+        st.caption(
+            "Klik tombol 🖨️ di atas untuk membuka dialog cetak. Pastikan opsi "
+            "*'Background graphics'* / *'Grafik latar belakang'* pada dialog cetak browser "
+            "dicentang agar warna latar tercetak sesuai pilihan."
+        )
 
 
 # ----------------------------------------------------------------------------
