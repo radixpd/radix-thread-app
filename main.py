@@ -41,7 +41,9 @@ except ImportError:
 # ----------------------------------------------------------------------------
 st.set_page_config(page_title="Analisis Abrasi Benang", page_icon="🧵", layout="wide")
 
-ACCESS_CODE = "RADIX2025", "PULCRA2026"
+# FITUR BARU: Daftar password yang valid untuk masuk ke aplikasi
+VALID_PASSWORDS = ["RADIX2025", "PULCRA2026", "RAHASIA123", "USER77"]
+
 TARGET_X_VALUE = 50
 
 INITIAL_DATA = {
@@ -53,7 +55,7 @@ INITIAL_DATA = {
                  667, 770, 805, 974],
 }
 
-# Sedikit polish visual saja - bukan override total seperti sebelumnya
+# Polish visual ringan bawaan inter font
 st.markdown(
     """
     <style>
@@ -77,7 +79,7 @@ if "password_entered" not in st.session_state:
 
 
 # ----------------------------------------------------------------------------
-# Gerbang akses
+# Gerbang akses dengan Sistem Daftar Password
 # ----------------------------------------------------------------------------
 def check_password() -> bool:
     if st.session_state.password_entered:
@@ -87,13 +89,14 @@ def check_password() -> bool:
     _, mid, _ = st.columns([1, 1.2, 1])
     with mid:
         with st.container(border=True):
-            pw = st.text_input("Kode akses", type="password", placeholder="Masukkan kode akses")
+            pw = st.text_input("Kode akses", type="password", placeholder="Masukkan salah satu kode akses")
             if st.button("Masuk", use_container_width=True, type="primary"):
-                if pw == ACCESS_CODE:
+                # Mengecek apakah password yang diinput ada di dalam daftar VALID_PASSWORDS
+                if pw in VALID_PASSWORDS:
                     st.session_state.password_entered = True
                     st.rerun()
                 else:
-                    st.error("Kode akses salah. Silakan coba lagi.")
+                    st.error("Kode akses salah atau tidak terdaftar. Silakan coba lagi.")
     return False
 
 
@@ -102,7 +105,7 @@ if not check_password():
 
 
 # ----------------------------------------------------------------------------
-# Header
+# Header Aplikasi (Hanya muncul jika login sukses)
 # ----------------------------------------------------------------------------
 st.markdown(
     """
@@ -117,7 +120,7 @@ st.markdown(
 
 
 # ----------------------------------------------------------------------------
-# Kalkulasi (di-cache supaya tidak dihitung ulang setiap interaksi)
+# Kalkulasi Analisis
 # ----------------------------------------------------------------------------
 @st.cache_data(show_spinner="Menghitung analisis data...")
 def calculate_lines_and_points(x_values_series, y_values_series):
@@ -148,7 +151,7 @@ def calculate_lines_and_points(x_values_series, y_values_series):
     except ValueError as e:
         st.warning(f"Tidak dapat melakukan interpolasi kurva asli: {e}")
 
-    # Garis antara titik ke-10 dan ke-20 (fallback ke titik pertama/terakhir)
+    # Garis antara titik ke-10 dan ke-20
     if len(x_np) >= 20:
         results["specific_x1_pt10_20"], results["specific_y1_pt10_20"] = x_np[9], y_np[9]
         results["specific_x2_pt10_20"], results["specific_y2_pt10_20"] = x_np[19], y_np[19]
@@ -188,7 +191,7 @@ def calculate_lines_and_points(x_values_series, y_values_series):
 
 
 # ----------------------------------------------------------------------------
-# Palet warna konsisten untuk grafik & hasil
+# Palet Warna Grafik
 # ----------------------------------------------------------------------------
 COLOR_DATA = "#5B8DEF"
 COLOR_TARGET_LINE = "#FF6B6B"
@@ -196,18 +199,8 @@ COLOR_PT10_20 = "#F4B740"
 COLOR_RANSAC = "#5FD068"
 
 CHART_THEMES = {
-    "dark": dict(
-        plot_bgcolor="#1A1D24",
-        paper_bgcolor="#1A1D24",
-        font_color="#E8E8E8",
-        gridcolor="#2A2E37",
-    ),
-    "light": dict(
-        plot_bgcolor="#FFFFFF",
-        paper_bgcolor="#FFFFFF",
-        font_color="#1A1D24",
-        gridcolor="#E2E2E2",
-    ),
+    "dark": dict(plot_bgcolor="#1A1D24", paper_bgcolor="#1A1D24", font_color="#E8E8E8", gridcolor="#2A2E37"),
+    "light": dict(plot_bgcolor="#FFFFFF", paper_bgcolor="#FFFFFF", font_color="#1A1D24", gridcolor="#E2E2E2"),
 }
 
 
@@ -240,10 +233,8 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
         fig.add_annotation(
             x=x, y=y, text=f"{y:.1f} N",
             showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=1.5, arrowcolor=color,
-            ax=ax, ay=ay,
-            font=dict(color="#1A1D24", size=13),
-            bgcolor="rgba(255,255,255,0.92)",
-            bordercolor=color, borderwidth=1.5, borderpad=4,
+            ax=ax, ay=ay, font=dict(color="#1A1D24", size=13),
+            bgcolor="rgba(255,255,255,0.92)", bordercolor=color, borderwidth=1.5, borderpad=4,
         )
 
     if show_pt10_20 and results.get("pt10_20_line_x_range", np.array([])).size > 0:
@@ -279,9 +270,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
         xaxis=dict(showgrid=True, gridcolor=theme["gridcolor"], zeroline=False),
         yaxis=dict(showgrid=True, gridcolor=theme["gridcolor"], zeroline=False),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        hovermode="x unified",
-        margin=dict(l=10, r=10, b=10, t=40),
-        height=480,
+        hovermode="x unified", margin=dict(l=10, r=10, b=10, t=40), height=480,
     )
     return fig
 
@@ -289,15 +278,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
 def style_figure_for_export(fig, width=1450, height=1000):
     export_fig = go.Figure(fig)
     export_fig.update_layout(
-        width=width,
-        height=height,
-        margin=dict(l=110, r=60, b=90, t=110),
-        font=dict(size=18),
+        width=width, height=height, margin=dict(l=110, r=60, b=90, t=110), font=dict(size=18),
         title_font=dict(size=20),
-        legend=dict(
-            orientation="h", yanchor="bottom", y=1.04, xanchor="center", x=0.5,
-            font=dict(size=15),
-        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.04, xanchor="center", x=0.5, font=dict(size=15)),
         xaxis=dict(title_font=dict(size=18), tickfont=dict(size=15)),
         yaxis=dict(title_font=dict(size=18), tickfont=dict(size=15)),
     )
@@ -313,42 +296,18 @@ def build_print_html(img_base64: str, background_mode: str) -> str:
       @page {{ size: A4 landscape; margin: 8mm; }}
       html, body {{ margin: 0; padding: 0; font-family: 'Inter', sans-serif; }}
       .page-wrap {{
-        background-color: {bg_css};
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 18px;
-        border-radius: 14px;
+        background-color: {bg_css}; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        display: flex; flex-direction: column; align-items: center; padding: 18px; border-radius: 14px;
       }}
-      .chart-img {{
-        width: 100%;
-        max-width: 640px;
-        height: auto;
-        display: block;
-        border-radius: 8px;
-      }}
+      .chart-img {{ width: 100%; max-width: 640px; height: auto; display: block; border-radius: 8px; }}
       .print-btn {{
-        margin-top: 16px;
-        padding: 10px 26px;
-        background: #5B8DEF;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
+        margin-top: 16px; padding: 10px 26px; background: #5B8DEF; color: #fff;
+        border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
       }}
       .print-btn:hover {{ background: #4a7adf; }}
       @media print {{
         .no-print {{ display: none !important; }}
-        .page-wrap {{
-          padding: 0;
-          border-radius: 0;
-          min-height: 100vh;
-          justify-content: center;
-        }}
+        .page-wrap {{ padding: 0; border-radius: 0; min-height: 100vh; justify-content: center; }}
         .chart-img {{ max-width: 100%; max-height: 100vh; }}
       }}
     </style>
@@ -360,31 +319,23 @@ def build_print_html(img_base64: str, background_mode: str) -> str:
 
 
 # ----------------------------------------------------------------------------
-# Input data
+# Bagian 1: Input Data
 # ----------------------------------------------------------------------------
 st.subheader("1. Input Data")
 tab_manual, tab_excel = st.tabs(["✍️ Input Manual", "📁 Impor dari Excel"])
 
 with tab_manual:
     st.caption("Nilai X tetap dan tidak dapat diubah. Edit kolom 'Nilai Benang Putus (N)' sesuai kebutuhan.")
-
-    edited_data = pd.DataFrame({
-        "x_value": st.session_state.data["x_values"],
-        "y_value": st.session_state.data["y_values"],
-    })
+    edited_data = pd.DataFrame({"x_value": st.session_state.data["x_values"], "y_value": st.session_state.data["y_values"]})
     edited_data.index = edited_data.index + 1
 
     edited_df = st.data_editor(
-        edited_data,
-        disabled=["x_value"],
-        hide_index=False,
+        edited_data, disabled=["x_value"], hide_index=False,
         column_config={
             "x_value": st.column_config.NumberColumn("Nilai Tetap (X)", format="%.1f"),
             "y_value": st.column_config.NumberColumn("Nilai Benang Putus (N)", format="%.2f"),
         },
-        num_rows="dynamic",
-        use_container_width=True,
-        key="data_editor",
+        num_rows="dynamic", use_container_width=True, key="data_editor",
     )
 
     col1, col2 = st.columns(2)
@@ -396,14 +347,10 @@ with tab_manual:
             elif not np.all(np.diff(cleaned["x_value"].values) > 0):
                 st.error("Nilai 'X' harus monoton meningkat. Harap perbaiki data Anda.")
             elif len(cleaned) != len(INITIAL_DATA["x_values"]):
-                st.warning("Jumlah baris berubah dari struktur standar — data dikembalikan ke nilai awal. "
-                           "Gunakan tab impor Excel untuk struktur data yang berbeda.")
+                st.warning("Jumlah baris berubah dari struktur standar — data dikembalikan ke nilai awal.")
                 st.session_state.data = pd.DataFrame(INITIAL_DATA)
             else:
-                st.session_state.data = pd.DataFrame({
-                    "x_values": cleaned["x_value"].values,
-                    "y_values": cleaned["y_value"].values,
-                })
+                st.session_state.data = pd.DataFrame({"x_values": cleaned["x_value"].values, "y_values": cleaned["y_value"].values})
                 st.success("Data berhasil diperbarui.")
     with col2:
         if st.button("↺ Reset ke Data Awal", use_container_width=True):
@@ -423,13 +370,12 @@ with tab_excel:
                 df_uploaded.dropna(subset=["x_values", "y_values"], inplace=True)
 
                 if df_uploaded.empty:
-                    st.warning("File tidak mengandung data valid setelah pembersihan.")
+                    st.warning("File tidak mengandung data valid.")
                 elif not np.all(np.diff(df_uploaded["x_values"].values) > 0):
                     st.error("Nilai 'x_values' harus monoton meningkat.")
                 else:
                     st.session_state.data = df_uploaded[["x_values", "y_values"]].reset_index(drop=True)
                     st.success("Data berhasil diimpor.")
-                    st.dataframe(st.session_state.data.head(), use_container_width=True)
             else:
                 st.error("File Excel harus memiliki kolom 'x_values' dan 'y_values'.")
         except Exception as e:
@@ -437,35 +383,28 @@ with tab_excel:
 
 
 # ----------------------------------------------------------------------------
-# Analisis & visualisasi
+# Bagian 2: Analisis & Visualisasi
 # ----------------------------------------------------------------------------
 st.divider()
 st.subheader("2. Analisis & Visualisasi")
 
 results = calculate_lines_and_points(st.session_state.data["x_values"], st.session_state.data["y_values"])
-
 analysis_choice = st.radio(
     "Pilih jenis garis analisis:",
-    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"),
-    horizontal=True,
+    ("Kurva Data Asli", "Garis Titik 10 & 20", "Garis yang melewati banyak titik", "Tampilkan Semua"), horizontal=True,
 )
 
-fig = create_abrasion_plot(
-    st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice,
-    background_mode="dark",
-)
+fig = create_abrasion_plot(st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice, background_mode="dark")
 st.plotly_chart(fig, use_container_width=True)
 
 
 # ----------------------------------------------------------------------------
-# Hasil perhitungan
+# Bagian 3: Hasil Perhitungan
 # ----------------------------------------------------------------------------
 def fmt(value) -> str:
     return f"{value:.2f} N" if value is not None and not (isinstance(value, float) and np.isnan(value)) else "—"
 
-
 st.subheader(f"3. Hasil Perhitungan Titik Potong di X = {TARGET_X_VALUE}")
-
 METRIC_INFO = {
     "Kurva Data Asli": ("y_at_x_50_original_curve", "Kurva Data Asli", "Interpolasi linear pada X = 50"),
     "Garis Titik 10 & 20": ("y_at_x_50_pt10_20_line", "Garis Titik 10 & 20", "Garis lurus melalui titik ke-10 dan ke-20"),
@@ -487,30 +426,18 @@ else:
 
 
 # ----------------------------------------------------------------------------
-# Unduh & cetak grafik, dengan pilihan warna latar
+# Bagian 4: Unduh & Cetak Grafik
 # ----------------------------------------------------------------------------
 st.divider()
 st.subheader("4. Unduh & Cetak Grafik")
-st.caption(
-    "Pilih warna latar belakang grafik, lalu unduh sebagai PNG atau cetak langsung — "
-    "otomatis pas untuk kertas A4 orientasi lanskap."
-)
 
-bg_label = st.radio(
-    "Warna latar grafik:",
-    ("Hitam", "Putih"),
-    horizontal=True,
-    key="chart_bg_choice",
-)
+bg_label = st.radio("Warna latar grafik:", ("Hitam", "Putih"), horizontal=True, key="chart_bg_choice")
 background_mode = "dark" if bg_label == "Hitam" else "light"
 
-download_fig = create_abrasion_plot(
-    st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice,
-    background_mode=background_mode,
-)
+download_fig = create_abrasion_plot(st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice, background_mode=background_mode)
 
 if not KALEIDO_AVAILABLE:
-    st.info("Fitur unduh/cetak grafik membutuhkan paket `kaleido`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
+    st.info("Fitur unduh/cetak grafik membutuhkan paket `kaleido`.")
 else:
     img_bytes = None
     try:
@@ -520,32 +447,20 @@ else:
         st.error(f"Tidak dapat membuat gambar grafik: {e}")
 
     if img_bytes:
-        st.download_button(
-            f"⬇️ Unduh Grafik PNG (Latar {bg_label})",
-            data=img_bytes,
-            file_name=f"grafik_abrasi_latar_{bg_label.lower()}.png",
-            mime="image/png",
-            use_container_width=True,
-        )
-
+        st.download_button(f"⬇️ Unduh Grafik PNG (Latar {bg_label})", data=img_bytes, file_name=f"grafik_abrasi_latar_{bg_label.lower()}.png", mime="image/png", use_container_width=True)
         st.markdown(f"**Pratinjau Cetak — Latar {bg_label} (A4 Lanskap)**")
         img_b64 = base64.b64encode(img_bytes).decode()
         components.html(build_print_html(img_b64, background_mode), height=600, scrolling=True)
-        st.caption(
-            "Klik tombol 🖨️ di atas untuk membuka dialog cetak. Pastikan opsi "
-            "*'Background graphics'* / *'Grafik latar belakang'* pada dialog cetak browser "
-            "dicentang agar warna latar tercetak sesuai pilihan."
-        )
 
 
 # ----------------------------------------------------------------------------
-# Unduh hasil sebagai dokumen Word
+# Bagian 5: Dokumen Word (Rapi Pas - 0 pt / 0 cm)
 # ----------------------------------------------------------------------------
 st.divider()
 st.subheader("5. Unduh Hasil Analisis (Dokumen Word)")
 
 if not DOCX_AVAILABLE:
-    st.info("Fitur ekspor Word membutuhkan paket `python-docx`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
+    st.info("Fitur ekspor Word membutuhkan paket `python-docx`.")
 else:
     filename = st.text_input("Nama file (tanpa ekstensi .docx)", value="Hasil_Analisis_Abrasi")
 
@@ -553,7 +468,6 @@ else:
         if not filename.strip():
             st.warning("Masukkan nama file terlebih dahulu.")
         else:
-            # Fungsi pembantu internal untuk modifikasi XML tabel Word
             def set_cell_background(cell, fill_hex):
                 shading_xml = f'<w:shd {nsdecls("w")} w:fill="{fill_hex}"/>'
                 cell._tc.get_or_add_tcPr().append(parse_xml(shading_xml))
@@ -574,19 +488,17 @@ else:
 
             doc = Document()
 
-            # Set Margin Halaman standar (1 Inci)
             for section in doc.sections:
                 section.top_margin = Inches(1)
                 section.bottom_margin = Inches(1)
                 section.left_margin = Inches(1)
                 section.right_margin = Inches(1)
 
-            # Atur Font Utama Dokumen
             style = doc.styles['Normal']
             style.font.name = 'Arial'
             style.font.size = Pt(10.5)
 
-            # --- JUDUL DOKUMEN ---
+            # Judul
             title_p = doc.add_paragraph()
             title_run = title_p.add_run("Hasil Analisis Abrasi Benang")
             title_run.bold = True
@@ -600,7 +512,7 @@ else:
             date_run.font.color.rgb = RGBColor(0x7F, 0x8C, 0x8D)
             date_p.paragraph_format.space_after = Pt(24)
 
-            # --- BAGIAN 1: TABEL DATA ---
+            # Tabel Data
             h1 = doc.add_paragraph()
             h1_run = h1.add_run("Data Abrasi")
             h1_run.bold = True
@@ -616,13 +528,12 @@ else:
             hdr_cells[0].text = "Nilai X"
             hdr_cells[1].text = "Nilai Benang Putus (N)"
 
-            # Styling Header (Latar Biru, Teks Putih, Spacing Rapat Semesta 0pt/0cm)
             for cell in hdr_cells:
                 set_cell_background(cell, "00A2E8")
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 p = cell.paragraphs[0]
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                p.paragraph_format.space_before = Pt(6)  # Ruang napas khusus teks header
+                p.paragraph_format.space_before = Pt(6)
                 p.paragraph_format.space_after = Pt(6)
                 p.paragraph_format.left_indent = Inches(0)
                 p.paragraph_format.right_indent = Inches(0)
@@ -631,7 +542,7 @@ else:
                     run.font.color.rgb = RGBColor(255, 255, 255)
                     run.font.size = Pt(10)
 
-            # Mengisi Data (Paksa Spacing: Before 0 pt, After 0 pt, Indent 0 cm)
+            # Loop isi baris data (Set Rapat 0 pt / 0 cm)
             for x, y in zip(st.session_state.data["x_values"], st.session_state.data["y_values"]):
                 row_cells = table.add_row().cells
                 row_cells[0].text = f"{x:.1f}" if x % 1 != 0 else f"{x:.0f}"
@@ -642,7 +553,7 @@ else:
                     p = cell.paragraphs[0]
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     
-                    # Pemaksaan Spacing Sesuai Kebutuhan Anda (Rapat Total)
+                    # Pemaksaan Spacing Sel Sesuai Gambar Acuan
                     p.paragraph_format.space_before = Pt(0)
                     p.paragraph_format.space_after = Pt(0)
                     p.paragraph_format.line_spacing = 1.0
@@ -651,15 +562,13 @@ else:
                     for run in p.runs:
                         run.font.size = Pt(9.5)
 
-            # Atur Lebar Kolom Tabel Berurutan
             for row in table.rows:
                 row.cells[0].width = Inches(2.0)
                 row.cells[1].width = Inches(2.5)
 
-            # --- BAGIAN 2: GRAFIK ANALISIS ---
+            # Grafik Analisis (Halaman Baru)
             if KALEIDO_AVAILABLE:
-                doc.add_page_break()  # Pisah halaman agar estetik seperti cetakan dokumen contoh
-
+                doc.add_page_break()
                 h2 = doc.add_paragraph()
                 h2_run = h2.add_run("Grafik Analisis")
                 h2_run.bold = True
@@ -679,10 +588,8 @@ else:
                         img_p.paragraph_format.space_after = Pt(24)
                 except Exception as e:
                     doc.add_paragraph(f"(Grafik tidak dapat disertakan: {e})")
-            else:
-                doc.add_paragraph("(Paket 'kaleido' belum terinstal sehingga grafik tidak disertakan.)")
 
-            # --- BAGIAN 3: HASIL PERHITUNGAN ---
+            # Hasil Perhitungan
             h3 = doc.add_paragraph()
             h3_run = h3.add_run("Hasil Perhitungan")
             h3_run.bold = True
@@ -696,9 +603,7 @@ else:
             sub_h3_run.font.size = Pt(11)
             sub_h3.paragraph_format.space_after = Pt(8)
 
-            keys_to_show = (
-                METRIC_INFO.values() if analysis_choice == "Tampilkan Semua" else [METRIC_INFO[analysis_choice]]
-            )
+            keys_to_show = METRIC_INFO.values() if analysis_choice == "Tampilkan Semua" else [METRIC_INFO[analysis_choice]]
             for key, label, _ in keys_to_show:
                 val = results.get(key)
                 if val is not None and not np.isnan(val):
@@ -709,20 +614,16 @@ else:
                     run_val = calc_p.add_run(f"{val:.2f} N")
                     run_val.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
 
-            # Ekspor Dokumen ke Buffer
             buf = io.BytesIO()
             doc.save(buf)
             buf.seek(0)
 
             st.success("Dokumen Word dengan format rapi berhasil dibuat!")
             st.download_button(
-                "⬇️ Unduh Dokumen Word",
-                data=buf,
-                file_name=f"{filename}.docx",
+                "⬇️ Unduh Dokumen Word", data=buf, file_name=f"{filename}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True,
             )
-
 
 # ----------------------------------------------------------------------------
 # Footer
