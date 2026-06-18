@@ -24,7 +24,7 @@ except ImportError:
     DOCX_AVAILABLE = False
 
 try:
-    import kaleido  # noqa: F401  (dibutuhkan plotly fig.write_image)
+    import kaleido  # noqa: F401  (dibutuhkan plotly fig.write_image / to_image)
     KALEIDO_AVAILABLE = True
 except ImportError:
     KALEIDO_AVAILABLE = False
@@ -189,11 +189,30 @@ COLOR_TARGET_LINE = "#FF6B6B"
 COLOR_PT10_20 = "#F4B740"
 COLOR_RANSAC = "#5FD068"
 
+# Tema latar belakang grafik. "dark" dipakai untuk tampilan di layar (menyatu
+# dengan tema aplikasi), sedangkan "light" dipakai sebagai opsi saat mengunduh.
+CHART_THEMES = {
+    "dark": dict(
+        plot_bgcolor="#1A1D24",
+        paper_bgcolor="#1A1D24",
+        font_color="#E8E8E8",
+        gridcolor="#2A2E37",
+    ),
+    "light": dict(
+        plot_bgcolor="#FFFFFF",
+        paper_bgcolor="#FFFFFF",
+        font_color="#1A1D24",
+        gridcolor="#E2E2E2",
+    ),
+}
 
-def create_abrasion_plot(x_values, y_values, results, analysis_choice):
+
+def create_abrasion_plot(x_values, y_values, results, analysis_choice, background_mode="dark"):
     fig = go.Figure()
     if x_values.empty or y_values.empty:
         return fig
+
+    theme = CHART_THEMES.get(background_mode, CHART_THEMES["dark"])
 
     fig.add_trace(go.Scatter(
         x=x_values, y=y_values, mode="lines+markers", name="Data Abrasi",
@@ -238,10 +257,10 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
 
     fig.update_layout(
         xaxis_title="Nilai X", yaxis_title="Nilai Benang Putus (N)",
-        plot_bgcolor="#1A1D24", paper_bgcolor="#1A1D24",
-        font=dict(color="#E8E8E8"),
-        xaxis=dict(showgrid=True, gridcolor="#2A2E37", zeroline=False),
-        yaxis=dict(showgrid=True, gridcolor="#2A2E37", zeroline=False),
+        plot_bgcolor=theme["plot_bgcolor"], paper_bgcolor=theme["paper_bgcolor"],
+        font=dict(color=theme["font_color"]),
+        xaxis=dict(showgrid=True, gridcolor=theme["gridcolor"], zeroline=False),
+        yaxis=dict(showgrid=True, gridcolor=theme["gridcolor"], zeroline=False),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         hovermode="x unified",
         margin=dict(l=10, r=10, b=10, t=40),
@@ -341,8 +360,10 @@ analysis_choice = st.radio(
     horizontal=True,
 )
 
+# Grafik yang ditampilkan di layar selalu memakai tema gelap, menyatu dengan tema aplikasi.
 fig = create_abrasion_plot(
     st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice,
+    background_mode="dark",
 )
 st.plotly_chart(fig, use_container_width=True)
 
@@ -377,10 +398,48 @@ else:
 
 
 # ----------------------------------------------------------------------------
+# Unduh grafik sebagai gambar (PNG), dengan pilihan warna latar
+# ----------------------------------------------------------------------------
+st.divider()
+st.subheader("4. Unduh Grafik")
+st.caption("Pilih warna latar belakang grafik sebelum mengunduhnya sebagai gambar PNG.")
+
+bg_label = st.radio(
+    "Warna latar grafik untuk diunduh:",
+    ("Hitam", "Putih"),
+    horizontal=True,
+    key="chart_bg_choice",
+)
+background_mode = "dark" if bg_label == "Hitam" else "light"
+
+# Grafik versi unduhan (mengikuti pilihan warna latar di atas). Figure ini juga
+# dipakai untuk gambar di dalam dokumen Word pada bagian 5.
+download_fig = create_abrasion_plot(
+    st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice,
+    background_mode=background_mode,
+)
+
+if not KALEIDO_AVAILABLE:
+    st.info("Fitur unduh grafik sebagai gambar membutuhkan paket `kaleido`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
+else:
+    try:
+        img_bytes = download_fig.to_image(format="png", scale=2, width=1200, height=650)
+        st.download_button(
+            f"⬇️ Unduh Grafik PNG (Latar {bg_label})",
+            data=img_bytes,
+            file_name=f"grafik_abrasi_latar_{bg_label.lower()}.png",
+            mime="image/png",
+            use_container_width=True,
+        )
+    except Exception as e:
+        st.error(f"Tidak dapat membuat gambar grafik: {e}")
+
+
+# ----------------------------------------------------------------------------
 # Unduh hasil sebagai dokumen Word
 # ----------------------------------------------------------------------------
 st.divider()
-st.subheader("4. Unduh Hasil Analisis")
+st.subheader("5. Unduh Hasil Analisis (Dokumen Word)")
 
 if not DOCX_AVAILABLE:
     st.info("Fitur ekspor Word membutuhkan paket `python-docx`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
@@ -407,7 +466,9 @@ else:
                 doc.add_heading("Grafik Analisis", level=2)
                 try:
                     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_img:
-                        fig.write_image(tmp_img.name)
+                        # Memakai grafik dengan latar yang sama seperti dipilih di bagian 4
+                        # (latar putih umumnya lebih cocok untuk dicetak/dilampirkan).
+                        download_fig.write_image(tmp_img.name)
                         doc.add_picture(tmp_img.name, width=Inches(6))
                 except Exception as e:
                     doc.add_paragraph(f"(Grafik tidak dapat disertakan: {e})")
