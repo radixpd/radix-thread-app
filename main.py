@@ -41,7 +41,7 @@ except ImportError:
 # ----------------------------------------------------------------------------
 st.set_page_config(page_title="Analisis Abrasi Benang", page_icon="🧵", layout="wide")
 
-ACCESS_CODE = "RADIX2025"
+ACCESS_CODE = "RADIX2025", "PULCRA2026"
 TARGET_X_VALUE = 50
 
 INITIAL_DATA = {
