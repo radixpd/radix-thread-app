@@ -1,11 +1,11 @@
 """
 Analisis Abrasi Benang - RADIX
-Tampilan disederhanakan: mengandalkan tema bawaan Streamlit (lihat .streamlit/config.toml)
-alih-alih CSS override yang berat, supaya konsisten dan mudah dirawat.
+Identitas visual terinspirasi proses pencelupan benang: latar indigo (vat dye),
+aksen tembaga/bobbin, garis jahitan sebagai pembatas seksi. Warna utama diatur
+lewat .streamlit/config.toml supaya semua komponen native Streamlit konsisten.
 """
 
 import io
-import tempfile
 from datetime import datetime
 
 import numpy as np
@@ -24,14 +24,14 @@ except ImportError:
     DOCX_AVAILABLE = False
 
 try:
-    import kaleido  # noqa: F401  (dibutuhkan plotly fig.write_image)
+    import kaleido  # noqa: F401  (dibutuhkan plotly fig.to_image)
     KALEIDO_AVAILABLE = True
 except ImportError:
     KALEIDO_AVAILABLE = False
 
 
 # ----------------------------------------------------------------------------
-# Konfigurasi halaman
+# Konfigurasi halaman & konstanta
 # ----------------------------------------------------------------------------
 st.set_page_config(page_title="Analisis Abrasi Benang", page_icon="🧵", layout="wide")
 
@@ -47,18 +47,84 @@ INITIAL_DATA = {
                  667, 770, 805, 974],
 }
 
-# Sedikit polish visual saja - bukan override total seperti sebelumnya
+# ----------------------------------------------------------------------------
+# Palet warna & tema grafik (satu sumber kebenaran, dipakai di layar maupun ekspor)
+# ----------------------------------------------------------------------------
+CHART_THEMES = {
+    # tampilan di layar - menyatu dengan panel indigo
+    "dark": dict(bg="#1B2A4A", grid="#2E3E61", text="#EDE6D8",
+                 data="#8FB4D9", target="#D9844F", pt1020="#E8B84B", ransac="#9DB37A"),
+    # ekspor latar putih (laporan Word & unduhan PNG "Putih")
+    "light": dict(bg="#FFFFFF", grid="#E6E6E6", text="#20283A",
+                  data="#3B6EA5", target="#B5552A", pt1020="#B8860B", ransac="#5C7A3C"),
+    # unduhan PNG "Hitam"
+    "black": dict(bg="#000000", grid="#262626", text="#F2F2F2",
+                  data="#8FB4D9", target="#E58A52", pt1020="#E8B84B", ransac="#9DB37A"),
+}
+
+# ----------------------------------------------------------------------------
+# Polish visual: tipografi & elemen bertema benang (chip nomor seksi, garis jahitan)
+# ----------------------------------------------------------------------------
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"]  { font-family: 'Inter', sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+    html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
+    h1, h2, h3 { font-family: 'Fraunces', serif; letter-spacing: 0.2px; }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+
+    .app-header { text-align:center; padding: 1rem 0 1.6rem; }
+    .app-header .eyebrow {
+        font-family:'IBM Plex Mono', monospace; letter-spacing:3px; font-size:0.75rem;
+        color:#C1693C; text-transform:uppercase;
+    }
+    .app-header h1 { font-size:2.3rem; margin:0.5rem 0 0.3rem; }
+    .app-header p.sub { color:#A9A398; font-size:1rem; margin:0; }
+
+    .section-title { display:flex; align-items:center; gap:0.7rem; margin: 1.7rem 0 0.9rem; }
+    .section-title .chip {
+        font-family:'IBM Plex Mono', monospace; font-size:0.78rem; font-weight:600;
+        background: rgba(193,105,60,0.16); color:#E0935E; border:1px solid rgba(193,105,60,0.45);
+        border-radius:6px; padding:0.18rem 0.55rem;
+    }
+    .section-title h2 { margin:0; font-size:1.3rem; }
+
+    .stitch-divider {
+        height:1px; margin: 1.9rem 0;
+        background-image: repeating-linear-gradient(90deg, #8A6A52 0px, #8A6A52 9px, transparent 9px, transparent 17px);
+        opacity: 0.55;
+    }
+
+    [data-testid="stMetricValue"] { font-family:'IBM Plex Mono', monospace; }
+    .stButton>button { border-radius:8px; transition: transform 0.12s ease; }
+    .stButton>button:hover { transform: translateY(-1px); }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+SPOOL_ICON = """
+<svg width="46" height="46" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="30" cy="12" rx="18" ry="6" stroke="#C1693C" stroke-width="2.2"/>
+  <ellipse cx="30" cy="48" rx="18" ry="6" stroke="#C1693C" stroke-width="2.2"/>
+  <line x1="12" y1="12" x2="12" y2="48" stroke="#C1693C" stroke-width="2.2"/>
+  <line x1="48" y1="12" x2="48" y2="48" stroke="#C1693C" stroke-width="2.2"/>
+  <path d="M16 17 L44 43 M44 17 L16 43 M14 30 L46 30" stroke="#E8B84B" stroke-width="1.6" stroke-linecap="round"/>
+</svg>
+"""
+
+
+def stitch_divider():
+    st.markdown('<div class="stitch-divider"></div>', unsafe_allow_html=True)
+
+
+def section_title(number: int, title: str):
+    st.markdown(
+        f'<div class="section-title"><span class="chip">{number:02d}</span><h2>{title}</h2></div>',
+        unsafe_allow_html=True,
+    )
 
 
 # ----------------------------------------------------------------------------
@@ -77,7 +143,8 @@ def check_password() -> bool:
     if st.session_state.password_entered:
         return True
 
-    st.markdown("<h3 style='text-align:center;'>🔒 Akses Aplikasi</h3>", unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align:center;">{SPOOL_ICON}</div>', unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center;'>Akses Aplikasi</h3>", unsafe_allow_html=True)
     _, mid, _ = st.columns([1, 1.2, 1])
     with mid:
         with st.container(border=True):
@@ -99,13 +166,14 @@ if not check_password():
 # Header
 # ----------------------------------------------------------------------------
 st.markdown(
-    """
-    <div style="text-align:center; padding: 0.5rem 0 1.5rem 0;">
-        <p style="letter-spacing:3px; font-size:0.8rem; color:#9aa0a6; margin-bottom:0.2rem;">PULCRA · RADIX</p>
-        <h1 style="margin:0;">🧵 Analisis Abrasi Benang</h1>
-        <p style="color:#9aa0a6; margin-top:0.3rem;">Visualisasi data dan perhitungan titik potong pada X = {x}</p>
+    f"""
+    <div class="app-header">
+        {SPOOL_ICON}
+        <p class="eyebrow">PULCRA · RADIX LAB</p>
+        <h1>Analisis Abrasi Benang</h1>
+        <p class="sub">Visualisasi data dan perhitungan titik potong pada X = {TARGET_X_VALUE}</p>
     </div>
-    """.format(x=TARGET_X_VALUE),
+    """,
     unsafe_allow_html=True,
 )
 
@@ -182,22 +250,17 @@ def calculate_lines_and_points(x_values_series, y_values_series):
 
 
 # ----------------------------------------------------------------------------
-# Palet warna konsisten untuk grafik & hasil
+# Grafik - satu fungsi, tiga tema warna (layar / putih / hitam)
 # ----------------------------------------------------------------------------
-COLOR_DATA = "#5B8DEF"
-COLOR_TARGET_LINE = "#FF6B6B"
-COLOR_PT10_20 = "#F4B740"
-COLOR_RANSAC = "#5FD068"
-
-
-def create_abrasion_plot(x_values, y_values, results, analysis_choice):
+def create_abrasion_plot(x_values, y_values, results, analysis_choice, theme="dark"):
+    palette = CHART_THEMES[theme]
     fig = go.Figure()
     if x_values.empty or y_values.empty:
         return fig
 
     fig.add_trace(go.Scatter(
         x=x_values, y=y_values, mode="lines+markers", name="Data Abrasi",
-        line=dict(color=COLOR_DATA, width=3), marker=dict(size=7, color=COLOR_DATA),
+        line=dict(color=palette["data"], width=3), marker=dict(size=7, color=palette["data"]),
     ))
 
     y_min, y_max = y_values.min(), y_values.max()
@@ -205,9 +268,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
     y0 = y_min - span * 0.1 if span > 0 else 0
     y1 = y_max + span * 0.1 if span > 0 else 1000
     fig.add_shape(type="line", x0=TARGET_X_VALUE, y0=y0, x1=TARGET_X_VALUE, y1=y1,
-                  line=dict(color=COLOR_TARGET_LINE, width=2, dash="dash"), layer="below")
+                  line=dict(color=palette["target"], width=2, dash="dash"), layer="below")
     fig.add_annotation(x=TARGET_X_VALUE, y=y1, text=f"x = {TARGET_X_VALUE}", showarrow=False,
-                        yanchor="bottom", font=dict(color=COLOR_TARGET_LINE, size=13))
+                        yanchor="bottom", font=dict(color=palette["target"], size=13))
 
     show_pt10_20 = analysis_choice in ("Garis Titik 10 & 20", "Tampilkan Semua")
     show_ransac = analysis_choice in ("Garis yang melewati banyak titik", "Tampilkan Semua")
@@ -216,32 +279,32 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
     if show_pt10_20 and results.get("pt10_20_line_x_range", np.array([])).size > 0:
         fig.add_trace(go.Scatter(x=results["pt10_20_line_x_range"], y=results["pt10_20_line_y"],
                                   mode="lines", name="Garis Titik 10 & 20",
-                                  line=dict(color=COLOR_PT10_20, width=2, dash="dot")))
+                                  line=dict(color=palette["pt1020"], width=2, dash="dot")))
         if not np.isnan(results["y_at_x_50_pt10_20_line"]):
             fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_pt10_20_line"]],
                                       mode="markers", name="Potongan Garis 10-20",
-                                      marker=dict(size=12, color=COLOR_PT10_20, symbol="star")))
+                                      marker=dict(size=12, color=palette["pt1020"], symbol="star")))
 
     if show_ransac and results.get("ransac_line_x", np.array([])).size > 0:
         fig.add_trace(go.Scatter(x=results["ransac_line_x"], y=results["ransac_line_y"],
                                   mode="lines", name="Regresi RANSAC",
-                                  line=dict(color=COLOR_RANSAC, width=2, dash="dash")))
+                                  line=dict(color=palette["ransac"], width=2, dash="dash")))
         if not np.isnan(results["y_at_x_50_ransac_line"]):
             fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_ransac_line"]],
                                       mode="markers", name="Potongan RANSAC",
-                                      marker=dict(size=12, color=COLOR_RANSAC, symbol="star")))
+                                      marker=dict(size=12, color=palette["ransac"], symbol="star")))
 
     if show_original and not np.isnan(results.get("y_at_x_50_original_curve", np.nan)):
         fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_original_curve"]],
                                   mode="markers", name="Potongan Kurva Asli",
-                                  marker=dict(size=12, color=COLOR_DATA, symbol="star")))
+                                  marker=dict(size=12, color=palette["data"], symbol="star")))
 
     fig.update_layout(
         xaxis_title="Nilai X", yaxis_title="Nilai Benang Putus (N)",
-        plot_bgcolor="#1A1D24", paper_bgcolor="#1A1D24",
-        font=dict(color="#E8E8E8"),
-        xaxis=dict(showgrid=True, gridcolor="#2A2E37", zeroline=False),
-        yaxis=dict(showgrid=True, gridcolor="#2A2E37", zeroline=False),
+        plot_bgcolor=palette["bg"], paper_bgcolor=palette["bg"],
+        font=dict(color=palette["text"]),
+        xaxis=dict(showgrid=True, gridcolor=palette["grid"], zeroline=False),
+        yaxis=dict(showgrid=True, gridcolor=palette["grid"], zeroline=False),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         hovermode="x unified",
         margin=dict(l=10, r=10, b=10, t=40),
@@ -251,9 +314,9 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice):
 
 
 # ----------------------------------------------------------------------------
-# Input data
+# 01. Input data
 # ----------------------------------------------------------------------------
-st.subheader("1. Input Data")
+section_title(1, "Input Data")
 tab_manual, tab_excel = st.tabs(["✍️ Input Manual", "📁 Impor dari Excel"])
 
 with tab_manual:
@@ -328,10 +391,10 @@ with tab_excel:
 
 
 # ----------------------------------------------------------------------------
-# Analisis & visualisasi
+# 02. Analisis & visualisasi
 # ----------------------------------------------------------------------------
-st.divider()
-st.subheader("2. Analisis & Visualisasi")
+stitch_divider()
+section_title(2, "Analisis & Visualisasi")
 
 results = calculate_lines_and_points(st.session_state.data["x_values"], st.session_state.data["y_values"])
 
@@ -342,19 +405,20 @@ analysis_choice = st.radio(
 )
 
 fig = create_abrasion_plot(
-    st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice,
+    st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice, theme="dark",
 )
 st.plotly_chart(fig, use_container_width=True)
 
 
 # ----------------------------------------------------------------------------
-# Hasil perhitungan
+# 03. Hasil perhitungan
 # ----------------------------------------------------------------------------
 def fmt(value) -> str:
     return f"{value:.2f} N" if value is not None and not (isinstance(value, float) and np.isnan(value)) else "—"
 
 
-st.subheader(f"3. Hasil Perhitungan Titik Potong di X = {TARGET_X_VALUE}")
+stitch_divider()
+section_title(3, f"Hasil Perhitungan Titik Potong di X = {TARGET_X_VALUE}")
 
 METRIC_INFO = {
     "Kurva Data Asli": ("y_at_x_50_original_curve", "Kurva Data Asli", "Interpolasi linear pada X = 50"),
@@ -377,10 +441,41 @@ else:
 
 
 # ----------------------------------------------------------------------------
-# Unduh hasil sebagai dokumen Word
+# 04. Unduh grafik (PNG) - pilih warna latar
 # ----------------------------------------------------------------------------
-st.divider()
-st.subheader("4. Unduh Hasil Analisis")
+stitch_divider()
+section_title(4, "Unduh Grafik")
+
+if not KALEIDO_AVAILABLE:
+    st.info("Fitur unduh grafik membutuhkan paket `kaleido`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
+else:
+    col_bg, col_btn = st.columns([2, 1])
+    with col_bg:
+        bg_label = st.radio("Warna latar grafik", ["Putih", "Hitam"], horizontal=True, key="chart_bg_choice")
+    bg_theme = "light" if bg_label == "Putih" else "black"
+
+    export_chart_fig = create_abrasion_plot(
+        st.session_state.data["x_values"], st.session_state.data["y_values"],
+        results, analysis_choice, theme=bg_theme,
+    )
+    png_bytes = export_chart_fig.to_image(format="png", scale=3)
+
+    with col_btn:
+        st.write("")  # sejajarkan tombol dengan radio
+        st.download_button(
+            "⬇️ Unduh PNG",
+            data=png_bytes,
+            file_name=f"grafik_abrasi_x50_{bg_label.lower()}.png",
+            mime="image/png",
+            use_container_width=True,
+        )
+
+
+# ----------------------------------------------------------------------------
+# 05. Unduh laporan (Word)
+# ----------------------------------------------------------------------------
+stitch_divider()
+section_title(5, "Unduh Laporan Lengkap")
 
 if not DOCX_AVAILABLE:
     st.info("Fitur ekspor Word membutuhkan paket `python-docx`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
@@ -406,9 +501,12 @@ else:
             if KALEIDO_AVAILABLE:
                 doc.add_heading("Grafik Analisis", level=2)
                 try:
-                    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_img:
-                        fig.write_image(tmp_img.name)
-                        doc.add_picture(tmp_img.name, width=Inches(6))
+                    report_fig = create_abrasion_plot(
+                        st.session_state.data["x_values"], st.session_state.data["y_values"],
+                        results, analysis_choice, theme="light",
+                    )
+                    img_bytes = report_fig.to_image(format="png", scale=2)
+                    doc.add_picture(io.BytesIO(img_bytes), width=Inches(6))
                 except Exception as e:
                     doc.add_paragraph(f"(Grafik tidak dapat disertakan: {e})")
             else:
@@ -440,5 +538,5 @@ else:
 # ----------------------------------------------------------------------------
 # Footer
 # ----------------------------------------------------------------------------
-st.divider()
+stitch_divider()
 st.caption("Aplikasi Analisis Abrasi Benang — dibuat oleh RADIX")
