@@ -431,8 +431,9 @@ else:
 st.divider()
 st.subheader("4. Unduh & Cetak Grafik")
 
-bg_label = st.radio("Warna latar grafik:", ("Hitam", "Putih"), horizontal=True, key="chart_bg_choice")
-background_mode = "dark" if bg_label == "Hitam" else "light"
+# Mengubah urutan agar "Putih" menjadi pilihan default awal
+bg_label = st.radio("Warna latar grafik:", ("Putih", "Hitam"), horizontal=True, key="chart_bg_choice")
+background_mode = "light" if bg_label == "Putih" else "dark"
 
 download_fig = create_abrasion_plot(st.session_state.data["x_values"], st.session_state.data["y_values"], results, analysis_choice, background_mode=background_mode)
 
