@@ -569,53 +569,183 @@ else:
         if not filename.strip():
             st.warning("Masukkan nama file terlebih dahulu.")
         else:
+            from docx import Document
+            from docx.shared import Inches, Pt, RGBColor
+            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+            from docx.oxml import OxmlElement, parse_xml
+            from docx.oxml.ns import nsdecls, qn
+
+            # Helper fungsi untuk mewarnai cell tabel (Shading)
+            def set_cell_background(cell, fill_hex):
+                shading_xml = f'<w:shd {nsdecls("w")} w:fill="{fill_hex}"/>'
+                cell._tc.get_or_add_tcPr().append(parse_xml(shading_xml))
+
+            # Helper fungsi untuk mengatur border tipis abu-abu pada tabel
+            def set_table_borders(table):
+                tblPr = table._tbl.tblPr
+                borders_xml = (
+                    f'<w:tblBorders {nsdecls("w")}>'
+                    f'  <w:top w:val="single" w:sz="4" w:space="0" w:color="CCCCCC"/>'
+                    f'  <w:left w:val="single" w:sz="4" w:space="0" w:color="CCCCCC"/>'
+                    f'  <w:bottom w:val="single" w:sz="4" w:space="0" w:color="CCCCCC"/>'
+                    f'  <w:right w:val="single" w:sz="4" w:space="0" w:color="CCCCCC"/>'
+                    f'  <w:insideH w:val="single" w:sz="4" w:space="0" w:color="E0E0E0"/>'
+                    f'  <w:insideV w:val="single" w:sz="4" w:space="0" w:color="E0E0E0"/>'
+                    f'</w:tblBorders>'
+                )
+                tblPr.append(parse_xml(borders_xml))
+
             doc = Document()
-            doc.add_heading("Hasil Analisis Abrasi Benang", level=1)
-            doc.add_paragraph(f"Dibuat pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-            doc.add_heading("Data Abrasi", level=2)
+            # Mengatur Margin Halaman (Top, Bottom, Left, Right = 1 Inci)
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+
+            # Gaya Font Default
+            style = doc.styles['Normal']
+            font = style.font
+            font.name = 'Arial'
+            font.size = Pt(10.5)
+
+            # --- JUDUL UTAMA ---
+            title_p = doc.add_paragraph()
+            title_run = title_p.add_run("Hasil Analisis Abrasi Benang")
+            title_run.bold = True
+            title_run.font.size = Pt(18)
+            title_run.font.color.rgb = RGBColor(0x00, 0x56, 0x91) # Biru Gelap Profesional
+            title_p.paragraph_format.space_after = Pt(4)
+
+            # Sub-info Tanggal Pembuatan
+            date_p = doc.add_paragraph()
+            date_run = date_p.add_run(f"Dibuat pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            date_run.font.size = Pt(9.5)
+            date_run.font.color.rgb = RGBColor(0x7F, 0x8C, 0x8D) # Abu-abu
+            date_p.paragraph_format.space_after = Pt(24)
+
+            # --- KONTEN DATA ABRASI ---
+            h1 = doc.add_paragraph()
+            h1_run = h1.add_run("Data Abrasi")
+            h1_run.bold = True
+            h1_run.font.size = Pt(13)
+            h1_run.font.color.rgb = RGBColor(0x00, 0x56, 0x91)
+            h1.paragraph_format.space_after = Pt(8)
+
+            # Membuat Tabel Sesuai Gambar
             table = doc.add_table(rows=1, cols=2)
-            hdr = table.rows[0].cells
-            hdr[0].text, hdr[1].text = "Nilai X", "Nilai Benang Putus (N)"
-            for x, y in zip(st.session_state.data["x_values"], st.session_state.data["y_values"]):
-                row = table.add_row().cells
-                row[0].text, row[1].text = str(x), str(y)
+            table.alignment = WD_TABLE_ALIGNMENT.LEFT
+            set_table_borders(table)
 
+            # Header Tabel (Nilai X | Nilai Benang Putus)
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = "Nilai X"
+            hdr_cells[1].text = "Nilai Benang Putus (N)"
+            
+            # Styling Header (Latar Belakang Biru Cerah, Teks Putih Tebal)
+            for i, cell in enumerate(hdr_cells):
+                set_cell_background(cell, "00A2E8")  # Warna biru sesuai gambar contoh Anda
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                p = cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.paragraph_format.space_before = Pt(6)
+                p.paragraph_format.space_after = Pt(6)
+                for run in p.runs:
+                    run.font.bold = True
+                    run.font.color.rgb = RGBColor(255, 255, 255)
+                    run.font.size = Pt(10)
+
+            # Mengisi Data ke Dalam Tabel
+            for x, y in zip(st.session_state.data["x_values"], st.session_state.data["y_values"]):
+                row_cells = table.add_row().cells
+                row_cells[0].text = f"{x:.1f}" if x % 1 != 0 else f"{x:.0f}"
+                row_cells[1].text = str(int(y) if y % 1 == 0 else y)
+                
+                # Format Teks di Sel Data (Rata Tengah)
+                for cell in row_cells:
+                    cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                    p = cell.paragraphs[0]
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    p.paragraph_format.space_before = Pt(4)
+                    p.paragraph_format.space_after = Pt(4)
+                    for run in p.runs:
+                        run.font.size = Pt(9.5)
+
+            # Atur Lebar Kolom Tabel Agar Rapi (Kolom 1: 2.0 inci, Kolom 2: 2.5 inci)
+            for row in table.rows:
+                row.cells[0].width = Inches(2.0)
+                row.cells[1].width = Inches(2.5)
+
+            # --- GRAFIK ANALISIS ---
             if KALEIDO_AVAILABLE:
-                doc.add_heading("Grafik Analisis", level=2)
+                doc.add_page_break() # Pisah ke halaman baru untuk grafik seperti gambar contoh
+                
+                h2 = doc.add_paragraph()
+                h2_run = h2.add_run("Grafik Analisis")
+                h2_run.bold = True
+                h2_run.font.size = Pt(13)
+                h2_run.font.color.rgb = RGBColor(0x00, 0x56, 0x91)
+                h2.paragraph_format.space_before = Pt(12)
+                h2.paragraph_format.space_after = Pt(12)
+
                 try:
                     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_img:
-                        # Memakai grafik dengan latar yang sama seperti dipilih di bagian 4
-                        # (latar putih umumnya lebih cocok untuk dicetak/dilampirkan), dengan
-                        # margin & font yang diperbesar agar tidak ada label yang terpotong.
+                        # Menggunakan download_fig dengan background light (Putih) agar bersih di Word
                         export_fig_docx = style_figure_for_export(download_fig)
                         export_fig_docx.write_image(tmp_img.name, scale=2)
-                        doc.add_picture(tmp_img.name, width=Inches(6))
+                        
+                        # Tambahkan gambar ke word dengan lebar proporsional (5.5 Inci)
+                        img_p = doc.add_paragraph()
+                        img_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                        img_p.add_run().add_picture(tmp_img.name, width=Inches(5.5))
+                        img_p.paragraph_format.space_after = Pt(24)
                 except Exception as e:
                     doc.add_paragraph(f"(Grafik tidak dapat disertakan: {e})")
             else:
                 doc.add_paragraph("(Paket 'kaleido' belum terinstal sehingga grafik tidak disertakan.)")
 
-            doc.add_heading("Hasil Perhitungan", level=2)
-            doc.add_paragraph(f"Nilai perpotongan pada X = {TARGET_X_VALUE}:")
+            # --- HASIL PERHITUNGAN ---
+            h3 = doc.add_paragraph()
+            h3_run = h3.add_run("Hasil Perhitungan")
+            h3_run.bold = True
+            h3_run.font.size = Pt(13)
+            h3_run.font.color.rgb = RGBColor(0x00, 0x56, 0x91)
+            h3.paragraph_format.space_before = Pt(12)
+            h3.paragraph_format.space_after = Pt(6)
+
+            sub_h3 = doc.add_paragraph()
+            sub_h3_run = sub_h3.add_run(f"Nilai perpotongan pada X = {TARGET_X_VALUE}:")
+            sub_h3_run.font.size = Pt(11)
+            sub_h3.paragraph_format.space_after = Pt(8)
+
             keys_to_show = (
                 METRIC_INFO.values() if analysis_choice == "Tampilkan Semua" else [METRIC_INFO[analysis_choice]]
             )
             for key, label, _ in keys_to_show:
                 val = results.get(key)
                 if val is not None and not np.isnan(val):
-                    doc.add_paragraph(f"{label}: {val:.2f} N", style="List Bullet")
+                    calc_p = doc.add_paragraph(style="List Bullet")
+                    calc_p.paragraph_format.space_after = Pt(4)
+                    run_label = calc_p.add_run(f"{label}: ")
+                    run_label.bold = True
+                    run_val = calc_p.add_run(f"{val:.2f} N")
+                    run_val.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
 
+            # Simpan Dokumen ke Buffer Streamlit
             buf = io.BytesIO()
             doc.save(buf)
             buf.seek(0)
 
-            st.success("Dokumen siap diunduh.")
+            st.success("Dokumen Word dengan format rapi berhasil dibuat!")
             st.download_button(
                 "⬇️ Unduh Dokumen Word",
                 data=buf,
                 file_name=f"{filename}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
             )
 
 
