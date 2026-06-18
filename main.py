@@ -234,6 +234,19 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
     show_ransac = analysis_choice in ("Garis yang melewati banyak titik", "Tampilkan Semua")
     show_original = analysis_choice in ("Kurva Data Asli", "Tampilkan Semua")
 
+    def add_value_label(x, y, color, ax, ay):
+        """Anotasi nilai di samping titik perpotongan, dengan kotak label kontras
+        (latar terang + teks gelap) supaya tetap terbaca di latar hitam maupun putih,
+        baik di layar maupun saat dicetak."""
+        fig.add_annotation(
+            x=x, y=y, text=f"{y:.1f} N",
+            showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=1.5, arrowcolor=color,
+            ax=ax, ay=ay,
+            font=dict(color="#1A1D24", size=13),
+            bgcolor="rgba(255,255,255,0.92)",
+            bordercolor=color, borderwidth=1.5, borderpad=4,
+        )
+
     if show_pt10_20 and results.get("pt10_20_line_x_range", np.array([])).size > 0:
         fig.add_trace(go.Scatter(x=results["pt10_20_line_x_range"], y=results["pt10_20_line_y"],
                                   mode="lines", name="Garis Titik 10 & 20",
@@ -242,6 +255,7 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
             fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_pt10_20_line"]],
                                       mode="markers", name="Potongan Garis 10-20",
                                       marker=dict(size=12, color=COLOR_PT10_20, symbol="star")))
+            add_value_label(TARGET_X_VALUE, results["y_at_x_50_pt10_20_line"], COLOR_PT10_20, ax=45, ay=-35)
 
     if show_ransac and results.get("ransac_line_x", np.array([])).size > 0:
         fig.add_trace(go.Scatter(x=results["ransac_line_x"], y=results["ransac_line_y"],
@@ -251,11 +265,13 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
             fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_ransac_line"]],
                                       mode="markers", name="Potongan RANSAC",
                                       marker=dict(size=12, color=COLOR_RANSAC, symbol="star")))
+            add_value_label(TARGET_X_VALUE, results["y_at_x_50_ransac_line"], COLOR_RANSAC, ax=45, ay=35)
 
     if show_original and not np.isnan(results.get("y_at_x_50_original_curve", np.nan)):
         fig.add_trace(go.Scatter(x=[TARGET_X_VALUE], y=[results["y_at_x_50_original_curve"]],
                                   mode="markers", name="Potongan Kurva Asli",
                                   marker=dict(size=12, color=COLOR_DATA, symbol="star")))
+        add_value_label(TARGET_X_VALUE, results["y_at_x_50_original_curve"], COLOR_DATA, ax=-55, ay=-20)
 
     fig.update_layout(
         xaxis_title="Nilai X", yaxis_title="Nilai Benang Putus (N)",
