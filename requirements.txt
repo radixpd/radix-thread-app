@@ -6,4 +6,4 @@ scipy
 scikit-learn
 openpyxl
 python-docx
-kaleido
+kaleido==0.2.1
