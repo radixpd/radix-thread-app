@@ -321,7 +321,7 @@ def build_print_html(img_base64: str, background_mode: str) -> str:
       }}
       .chart-img {{
         width: 100%;
-        max-width: 980px;
+        max-width: 640px;
         height: auto;
         display: block;
         border-radius: 8px;
@@ -530,7 +530,7 @@ else:
 
         st.markdown(f"**Pratinjau Cetak — Latar {bg_label} (A4 Lanskap)**")
         img_b64 = base64.b64encode(img_bytes).decode()
-        components.html(build_print_html(img_b64, background_mode), height=640, scrolling=False)
+        components.html(build_print_html(img_b64, background_mode), height=600, scrolling=True)
         st.caption(
             "Klik tombol 🖨️ di atas untuk membuka dialog cetak. Pastikan opsi "
             "*'Background graphics'* / *'Grafik latar belakang'* pada dialog cetak browser "
