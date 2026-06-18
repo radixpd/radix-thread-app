@@ -269,6 +269,33 @@ def create_abrasion_plot(x_values, y_values, results, analysis_choice, backgroun
     return fig
 
 
+def style_figure_for_export(fig, width=1400, height=800):
+    """
+    Mengembalikan salinan figure dengan margin, ukuran, dan ukuran font yang
+    lebih lega supaya tidak ada label yang terpotong saat di-export sebagai
+    gambar statis (PNG) atau disisipkan ke dokumen Word. Tampilan interaktif
+    di layar (yang responsif terhadap lebar container) tidak terpengaruh.
+    """
+    export_fig = go.Figure(fig)
+    export_fig.update_layout(
+        width=width,
+        height=height,
+        margin=dict(l=110, r=60, b=90, t=110),
+        font=dict(size=18),
+        title_font=dict(size=20),
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.04, xanchor="center", x=0.5,
+            font=dict(size=15),
+        ),
+        xaxis=dict(title_font=dict(size=18), tickfont=dict(size=15)),
+        yaxis=dict(title_font=dict(size=18), tickfont=dict(size=15)),
+    )
+    # Pertahankan warna grid/sumbu dari figure asli, hanya ukuran fontnya yang diperbesar.
+    export_fig.update_xaxes(showgrid=True, zeroline=False)
+    export_fig.update_yaxes(showgrid=True, zeroline=False)
+    return export_fig
+
+
 # ----------------------------------------------------------------------------
 # Input data
 # ----------------------------------------------------------------------------
@@ -423,7 +450,8 @@ if not KALEIDO_AVAILABLE:
     st.info("Fitur unduh grafik sebagai gambar membutuhkan paket `kaleido`. Tambahkan ke requirements.txt untuk mengaktifkan fitur ini.")
 else:
     try:
-        img_bytes = download_fig.to_image(format="png", scale=2, width=1200, height=650)
+        export_fig = style_figure_for_export(download_fig)
+        img_bytes = export_fig.to_image(format="png", scale=2)
         st.download_button(
             f"⬇️ Unduh Grafik PNG (Latar {bg_label})",
             data=img_bytes,
@@ -467,8 +495,10 @@ else:
                 try:
                     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_img:
                         # Memakai grafik dengan latar yang sama seperti dipilih di bagian 4
-                        # (latar putih umumnya lebih cocok untuk dicetak/dilampirkan).
-                        download_fig.write_image(tmp_img.name)
+                        # (latar putih umumnya lebih cocok untuk dicetak/dilampirkan), dengan
+                        # margin & font yang diperbesar agar tidak ada label yang terpotong.
+                        export_fig_docx = style_figure_for_export(download_fig)
+                        export_fig_docx.write_image(tmp_img.name, scale=2)
                         doc.add_picture(tmp_img.name, width=Inches(6))
                 except Exception as e:
                     doc.add_paragraph(f"(Grafik tidak dapat disertakan: {e})")
